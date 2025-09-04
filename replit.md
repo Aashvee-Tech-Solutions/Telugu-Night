@@ -1,88 +1,83 @@
-# Event Ticket Booking App
+# Replit.md
 
 ## Overview
-
-A modern event ticket booking application built with React and TypeScript. The app provides a sophisticated landing page for events with an integrated ticket booking system. Currently showcases a "Telugu Night" event with features for ticket purchasing, guest management, coupon application, and payment processing. The application uses a component-based architecture with shadcn/ui components for a polished user interface.
+This project is a comprehensive event management system for "Telugu Night," a Telugu DJ night event. It automates QR ticket generation and delivery, provides a dynamic admin panel with role-based access control, manages bookings with payment verification, integrates with Google Sheets, and handles guest management with unique codes. The system includes a coupon system and UPI payment processing, all built within a monorepo structure separating client, server, and shared components.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
 ### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **UI Framework**: shadcn/ui (built on Radix UI)
+- **Styling**: Tailwind CSS
+- **Routing**: Wouter
+- **State Management**: TanStack Query (React Query)
+- **Forms**: React Hook Form with Zod validation
 
-**Framework**: React 18 with TypeScript for type safety and modern development practices.
+### Backend Architecture
+- **Runtime**: Node.js with TypeScript (ESM modules)
+- **Framework**: Express.js with custom middleware
+- **Database**: PostgreSQL with Drizzle ORM
+- **Session Management**: PostgreSQL-based sessions with `connect-pg-simple`
 
-**Build Tool**: Vite for fast development and optimized production builds.
+### Data Storage
+- **Primary Database**: PostgreSQL (configured for Neon Database)
+- **ORM**: Drizzle ORM with migrations support
+- **Schema Location**: Shared between client and server in `/shared/schema.ts`
 
-**Routing**: React Router DOM for client-side navigation with a simple two-page structure (Index and NotFound).
+### Key Components
+- **Client-Side**: Event landing page, multi-step ticket booking form with dynamic pricing and guest management, role-based admin panel, and reusable UI components.
+- **Server-Side**: Email service (two-stage), UPI payment processing with QR generation, authentication service (5 permission levels), Google Sheets integration, and storage interface.
+- **Shared**: Database schema and TypeScript types, including role-based permissions.
 
-**State Management**: React Query (TanStack Query) for server state management and caching, with React's built-in useState for local component state.
+### Data Flow
+Client requests (TanStack Query) are processed by Express.js, which interacts with the PostgreSQL database via Drizzle ORM, returning JSON responses to the client.
 
-### UI/UX Design System
-
-**Component Library**: shadcn/ui components built on top of Radix UI primitives for accessibility and customization.
-
-**Styling**: Tailwind CSS with a comprehensive design system defined in CSS custom properties using HSL color values.
-
-**Theme**: Dark theme with purple/blue gradient accent colors, custom shadows, and smooth transitions.
-
-**Responsive Design**: Mobile-first approach with responsive breakpoints and mobile-specific hooks.
-
-### Component Structure
-
-**Main Components**:
-- `EventLanding`: Primary event showcase component with hero section, features, and booking integration
-- `TicketBookingForm`: Multi-step ticket purchasing flow with guest management and payment
-
-**UI Components**: Extensive collection of reusable components including forms, dialogs, cards, buttons, and navigation elements.
-
-### Data Management
-
-**Form Handling**: Controlled components with React Hook Form integration for complex form validation and state management.
-
-**Toast Notifications**: Dual toast system using both shadcn/ui toast and Sonner for user feedback.
-
-**Local Storage**: Browser storage for form persistence and user preferences.
-
-### Development Tools
-
-**Type Safety**: Full TypeScript implementation with strict type checking and custom type definitions.
-
-**Code Organization**: Clean separation of concerns with dedicated directories for components, hooks, pages, and utilities.
-
-**Utility Functions**: Custom utility functions for className merging and common operations.
+### Core Features
+- Automated QR ticket generation and delivery.
+- Dynamic admin panel with 5 role-based access levels.
+- Multi-login system.
+- Booking management with mandatory payment screenshot upload and verification.
+- Two-stage email notifications (payment confirmation and QR ticket delivery).
+- Guest management with unique 6-digit alphanumeric codes and individual scan tracking.
+- Coupon system.
+- UPI payment processing with app-specific links and manual entry options.
+- Automated data synchronization with Google Sheets (including reset and fresh sync).
+- Comprehensive scanner for event entry, supporting individual guest check-in and duplicate scan prevention.
+- Dynamic ticket pricing based on phases (Early Bird, Phase 1) with mutual exclusivity and admin controls.
+- Real-time attendance tracking and dashboard analytics.
+- Persistent storage using PostgreSQL.
+- Google Calendar integration for event attendees.
+- Public storage for payment screenshots.
 
 ## External Dependencies
 
-### Core Libraries
-- **React Router DOM**: Client-side routing and navigation
-- **TanStack React Query**: Server state management and data fetching
-- **React Hook Form**: Form state management and validation
+### Database
+- **Neon Database**: PostgreSQL hosting service.
+- **Connection**: `@neondatabase/serverless` driver.
 
-### UI Framework
-- **Radix UI**: Unstyled, accessible UI primitives for complex components
-- **Tailwind CSS**: Utility-first CSS framework for styling
-- **Lucide React**: Icon library for consistent iconography
-- **class-variance-authority**: Utility for creating variant-based component APIs
-- **clsx & tailwind-merge**: Conditional className utilities
+### UI Libraries
+- **Radix UI**: Accessible component primitives.
+- **Lucide React**: Icon library.
+- **Embla Carousel**: Carousel component.
+- **Date-fns**: Date manipulation utilities.
+
+### Payment
+- **UPI**: UPI app integration (PhonePe, Paytm, Google Pay, BHIM).
+
+### Email
+- **SMTP**: External SMTP service for email delivery.
+
+### Google Services
+- **Google Sheets API**: For data synchronization.
+- **Google Calendar API**: For event integration.
 
 ### Development Tools
-- **Vite**: Build tool and development server
-- **TypeScript**: Static type checking
-- **ESLint & Prettier**: Code linting and formatting (implied by structure)
-
-### Enhanced UX Libraries
-- **Sonner**: Toast notification system
-- **Vaul**: Drawer component for mobile interactions
-- **Embla Carousel**: Touch-friendly carousel component
-- **input-otp**: OTP/PIN input component
-
-### Potential Integrations
-The architecture supports easy integration of:
-- Payment processing systems (Stripe, PayPal, etc.)
-- Email services for ticket confirmation
-- Database systems for ticket storage and management
-- Authentication providers for user accounts
-- Analytics tracking for event insights
+- **Replit Integration**: Custom Vite plugins.
+- **TypeScript**: For type safety.
+- **ESBuild**: For production bundling.
+- **Multer**: For handling multipart/form-data, primarily file uploads.
+- **qr-scanner**: For QR code detection.

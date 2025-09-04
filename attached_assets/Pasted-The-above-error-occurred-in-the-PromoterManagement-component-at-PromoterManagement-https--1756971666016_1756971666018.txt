@@ -1,0 +1,27 @@
+The above error occurred in the <PromoterManagement> component:
+
+    at PromoterManagement (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/src/components/PromoterManagement.tsx:32:21)
+    at div
+    at https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=18992c97:42:13
+    at Presence (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YN3QL25T.js?v=18992c97:24:11)
+    at https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=18992c97:385:13
+    at _c5 (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at PermissionGuard (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/src/components/PermissionGuard.tsx:18:3)
+    at div
+    at https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=18992c97:42:13
+    at Provider (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=18992c97:38:15)
+    at https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=18992c97:263:7
+    at div
+    at DynamicAdminPanel (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/src/pages/DynamicAdminPanel.tsx:56:51)
+    at AdminRoute
+    at Route (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18992c97:323:16)
+    at Switch (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18992c97:379:17)
+    at Router (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18992c97:291:17)
+    at Provider (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=18992c97:38:15)
+    at TooltipProvider (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=18992c97:61:5)
+    at QueryClientProvider (https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=18992c97:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+promoter.totalRevenue?.toFixed is not a function
