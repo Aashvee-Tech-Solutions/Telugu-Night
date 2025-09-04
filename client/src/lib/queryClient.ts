@@ -10,7 +10,10 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
   
   // Add authorization for admin routes
   if (url.includes('/api/admin/')) {
-    const adminToken = localStorage.getItem('adminToken');
+    // Try multiple possible token sources
+    const adminToken = localStorage.getItem('adminToken') || 
+                      localStorage.getItem('admin_token') ||
+                      localStorage.getItem('token');
     if (adminToken) {
       headers['Authorization'] = `Bearer ${adminToken}`;
     }
@@ -19,7 +22,14 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
   const response = await fetch(url, { headers });
   
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    let errorMessage;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+    } catch {
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
   
   return response.json();
@@ -43,7 +53,10 @@ export const apiRequest = async (method: string, url: string, data?: any, header
   
   // Add authorization for admin routes
   if (url.includes('/api/admin/')) {
-    const adminToken = localStorage.getItem('adminToken');
+    // Try multiple possible token sources
+    const adminToken = localStorage.getItem('adminToken') || 
+                      localStorage.getItem('admin_token') ||
+                      localStorage.getItem('token');
     if (adminToken) {
       requestHeaders['Authorization'] = `Bearer ${adminToken}`;
     }

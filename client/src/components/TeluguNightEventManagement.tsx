@@ -49,15 +49,17 @@ export default function TeluguNightEventManagement() {
   const { toast } = useToast();
   
   // Fetch Telugu Night configuration
-  const { data: config, isLoading } = useQuery({
+  const { data: config, isLoading, error: configError } = useQuery({
     queryKey: ['/api/admin/telugu-night-config'],
     retry: 1,
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
 
   // Fetch current ticket counts
-  const { data: ticketCounts } = useQuery({
+  const { data: ticketCounts, error: countsError } = useQuery({
     queryKey: ['/api/admin/telugu-night-counts'],
     retry: 1,
+    refetchInterval: 15000, // Refetch every 15 seconds for real-time counts
   });
 
   const [eventData, setEventData] = useState({
@@ -121,24 +123,18 @@ export default function TeluguNightEventManagement() {
   // Toggle phase activation
   const togglePhaseMutation = useMutation({
     mutationFn: async ({ phase, active }: { phase: string; active: boolean }) => {
-      // Map phase names to config field names
-      const phaseMap: Record<string, string> = {
-        'earlybird': 'isEarlyBirdActive',
-        'phase1': 'isPhase1Active',
-        'phase2': 'isPhase2Active'
-      };
-      
-      const configField = phaseMap[phase];
-      if (!configField) {
-        throw new Error(`Invalid phase: ${phase}`);
-      }
-      
-      return apiRequest('PUT', '/api/admin/telugu-night-config', { 
-        [configField]: active 
+      return apiRequest('PATCH', '/api/admin/telugu-night-config/phase', { 
+        phase, 
+        active 
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      toast({
+        title: "Phase updated",
+        description: data.message || `Phase ${data.phase || 'phase'} ${data.active ? 'activated' : 'deactivated'} successfully`,
+      });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/telugu-night-config'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/telugu-night-counts'] });
     },
     onError: (error: Error) => {
       toast({
@@ -176,10 +172,37 @@ export default function TeluguNightEventManagement() {
     }
   }, [currentConfig]);
 
+  // Show error messages for authentication or API issues
+  useEffect(() => {
+    if (configError) {
+      toast({
+        title: "Configuration Error",
+        description: configError.message || "Failed to load event configuration",
+        variant: "destructive",
+      });
+    }
+    if (countsError) {
+      toast({
+        title: "Counts Error", 
+        description: countsError.message || "Failed to load ticket counts",
+        variant: "destructive",
+      });
+    }
+  }, [configError, countsError, toast]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (configError && configError.message.includes("Access denied")) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <div className="text-red-500 text-lg mb-4">Authentication Required</div>
+        <div className="text-gray-600">Please log in to access the configuration panel</div>
       </div>
     );
   }
