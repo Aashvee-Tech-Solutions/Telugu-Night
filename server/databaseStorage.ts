@@ -79,7 +79,17 @@ export class DatabaseStorage implements IStorage {
   private adminSessions: Map<string, AdminSession>;
   private temporaryCoupons: Map<number, Coupon>;
   private currentCouponId: number;
-  private ticketCountCache: { earlyBirdCount: number; earlyBirdLimit: number; phase1Count: number; lastUpdated: number } | null = null;
+  private ticketCountCache: { 
+    earlyBirdCount: number; 
+    earlyBirdLimit: number; 
+    phase1Count: number;
+    phase1Limit: number;
+    phase2Count: number;
+    phase2Limit: number;
+    totalSold: number;
+    maxCapacity: number;
+    lastUpdated: number;
+  } | null = null;
   private bookingsCache: { data: Booking[]; lastUpdated: number } | null = null;
   private readonly CACHE_TTL = 30000; // 30 seconds cache
 
@@ -405,13 +415,27 @@ export class DatabaseStorage implements IStorage {
 
 
   // Ticket counting operations
-  async getTicketCounts(): Promise<{ earlyBirdCount: number; earlyBirdLimit: number; phase1Count: number }> {
+  async getTicketCounts(): Promise<{ 
+    earlyBirdCount: number; 
+    earlyBirdLimit: number; 
+    phase1Count: number;
+    phase1Limit: number;
+    phase2Count: number;
+    phase2Limit: number;
+    totalSold: number;
+    maxCapacity: number;
+  }> {
     // Check cache first
     if (this.ticketCountCache && Date.now() - this.ticketCountCache.lastUpdated < this.CACHE_TTL) {
       return {
         earlyBirdCount: this.ticketCountCache.earlyBirdCount,
         earlyBirdLimit: this.ticketCountCache.earlyBirdLimit,
-        phase1Count: this.ticketCountCache.phase1Count
+        phase1Count: this.ticketCountCache.phase1Count,
+        phase1Limit: this.ticketCountCache.phase1Limit || 200,
+        phase2Count: this.ticketCountCache.phase2Count || 0,
+        phase2Limit: this.ticketCountCache.phase2Limit || 210,
+        totalSold: this.ticketCountCache.totalSold || 0,
+        maxCapacity: this.ticketCountCache.maxCapacity || 500
       };
     }
 
@@ -422,7 +446,12 @@ export class DatabaseStorage implements IStorage {
       const result = {
         earlyBirdCount: counter ? (counter.earlyBirdCount || 0) : 0,
         earlyBirdLimit: config ? (config.earlyBirdLimit || 90) : 90,
-        phase1Count: counter ? (counter.phase1Count || 0) : 0
+        phase1Count: counter ? (counter.phase1Count || 0) : 0,
+        phase1Limit: config ? (config.phase1Limit || 200) : 200,
+        phase2Count: counter ? (counter.phase2Count || 0) : 0,
+        phase2Limit: config ? (config.phase2Limit || 210) : 210,
+        totalSold: counter ? (counter.totalSold || 0) : 0,
+        maxCapacity: config ? (config.maxCapacity || 500) : 500,
       };
 
       // Update cache
@@ -434,7 +463,16 @@ export class DatabaseStorage implements IStorage {
       return result;
     } catch (error) {
       console.error('Failed to get ticket counts:', error);
-      return { earlyBirdCount: 0, earlyBirdLimit: 90, phase1Count: 0 };
+      return { 
+        earlyBirdCount: 0, 
+        earlyBirdLimit: 90, 
+        phase1Count: 0,
+        phase1Limit: 200,
+        phase2Count: 0,
+        phase2Limit: 210,
+        totalSold: 0,
+        maxCapacity: 500
+      };
     }
   }
 
@@ -455,19 +493,47 @@ export class DatabaseStorage implements IStorage {
 
   async updateTicketCounts(ticketType: string, ticketCount: number): Promise<void> {
     try {
-      const updateField = ticketType === 'early_bird' ? 'earlyBirdCount' : 'phase1Count';
+      let updateField: string;
+      if (ticketType === 'early_bird') {
+        updateField = 'earlyBirdCount';
+      } else if (ticketType === 'phase_1') {
+        updateField = 'phase1Count';
+      } else if (ticketType === 'phase_2') {
+        updateField = 'phase2Count';
+      } else {
+        throw new Error(`Invalid ticket type: ${ticketType}`);
+      }
+      
       const currentCounts = await this.getTicketCounts();
-      const newCount = currentCounts[updateField === 'earlyBirdCount' ? 'earlyBirdCount' : 'phase1Count'] + ticketCount;
+      const currentCount = currentCounts[updateField === 'earlyBirdCount' ? 'earlyBirdCount' : 
+                                         updateField === 'phase1Count' ? 'phase1Count' : 'phase2Count'];
+      const newCount = currentCount + ticketCount;
+      const newTotalSold = currentCounts.totalSold + ticketCount;
       
-      const updateData: any = {};
-      updateData[updateField] = newCount;
+      const updateData: any = {
+        [updateField]: newCount,
+        totalSold: newTotalSold,
+        lastUpdated: new Date()
+      };
       
-      await db.update(teluguNightCounter).set(updateData);
+      // Get or create counter record
+      const [existingCounter] = await db.select().from(teluguNightCounter).limit(1);
+      
+      if (existingCounter) {
+        await db.update(teluguNightCounter).set(updateData);
+      } else {
+        await db.insert(teluguNightCounter).values({
+          earlyBirdCount: updateField === 'earlyBirdCount' ? newCount : 0,
+          phase1Count: updateField === 'phase1Count' ? newCount : 0,
+          phase2Count: updateField === 'phase2Count' ? newCount : 0,
+          totalSold: newTotalSold
+        });
+      }
       
       // Invalidate ticket count cache
       this.ticketCountCache = null;
       
-      console.log(`✅ Updated ${updateField}: ${newCount} (added ${ticketCount})`);
+      console.log(`✅ Updated ${updateField}: ${newCount} (added ${ticketCount}), totalSold: ${newTotalSold}`);
     } catch (error) {
       console.error('Failed to update ticket counts:', error);
       throw new Error('Failed to update ticket counts');
@@ -476,13 +542,28 @@ export class DatabaseStorage implements IStorage {
 
   async decreaseTicketCounts(ticketType: string, ticketCount: number): Promise<void> {
     try {
-      const updateField = ticketType === 'early_bird' ? 'earlyBirdCount' : 'phase1Count';
-      const currentCounts = await this.getTicketCounts();
-      const currentCount = currentCounts[updateField === 'earlyBirdCount' ? 'earlyBirdCount' : 'phase1Count'];
-      const newCount = Math.max(0, currentCount - ticketCount); // Ensure count doesn't go negative
+      let updateField: string;
+      if (ticketType === 'early_bird') {
+        updateField = 'earlyBirdCount';
+      } else if (ticketType === 'phase_1') {
+        updateField = 'phase1Count';
+      } else if (ticketType === 'phase_2') {
+        updateField = 'phase2Count';
+      } else {
+        throw new Error(`Invalid ticket type: ${ticketType}`);
+      }
       
-      const updateData: any = {};
-      updateData[updateField] = newCount;
+      const currentCounts = await this.getTicketCounts();
+      const currentCount = currentCounts[updateField === 'earlyBirdCount' ? 'earlyBirdCount' : 
+                                         updateField === 'phase1Count' ? 'phase1Count' : 'phase2Count'];
+      const newCount = Math.max(0, currentCount - ticketCount); // Ensure count doesn't go negative
+      const newTotalSold = Math.max(0, currentCounts.totalSold - ticketCount);
+      
+      const updateData: any = {
+        [updateField]: newCount,
+        totalSold: newTotalSold,
+        lastUpdated: new Date()
+      };
       
       await db.update(teluguNightCounter).set(updateData);
       

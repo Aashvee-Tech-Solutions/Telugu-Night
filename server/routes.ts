@@ -668,6 +668,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Phase switching endpoint with full mutual exclusivity logic
+  app.patch('/api/admin/telugu-night-config/phase', authenticate, requirePermission(PERMISSIONS.SYSTEM_SETTINGS), async (req, res) => {
+    try {
+      const { phase, active } = req.body;
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      if (!phase || typeof active !== 'boolean') {
+        return res.status(400).json({ message: 'Phase and active status are required' });
+      }
+
+      // Get current configuration
+      const currentConfig = await storage.getTicketConfig();
+      let finalConfig = { ...currentConfig };
+
+      // Implement comprehensive mutual exclusivity logic
+      if (phase === 'earlybird') {
+        finalConfig.isEarlyBirdActive = active;
+        if (active) {
+          // If Early Bird is activated, deactivate other phases
+          finalConfig.isPhase1Active = false;
+          finalConfig.isPhase2Active = false;
+          console.log('🎫 Early Bird activated - Phase 1 and Phase 2 automatically deactivated');
+        }
+      } else if (phase === 'phase1') {
+        finalConfig.isPhase1Active = active;
+        if (active) {
+          // If Phase 1 is activated, deactivate other phases
+          finalConfig.isEarlyBirdActive = false;
+          finalConfig.isPhase2Active = false;
+          console.log('🎫 Phase 1 activated - Early Bird and Phase 2 automatically deactivated');
+        }
+      } else if (phase === 'phase2') {
+        finalConfig.isPhase2Active = active;
+        if (active) {
+          // If Phase 2 is activated, deactivate other phases
+          finalConfig.isEarlyBirdActive = false;
+          finalConfig.isPhase1Active = false;
+          console.log('🎫 Phase 2 activated - Early Bird and Phase 1 automatically deactivated');
+        }
+      } else {
+        return res.status(400).json({ message: 'Invalid phase. Must be: earlybird, phase1, or phase2' });
+      }
+
+      await storage.updateTicketConfig(finalConfig, userId);
+      const updatedConfig = await storage.getTicketConfig();
+      const counts = await storage.getTicketCounts();
+      
+      res.json({ 
+        message: `${phase} ${active ? 'activated' : 'deactivated'} successfully`,
+        config: updatedConfig, 
+        counts 
+      });
+    } catch (error) {
+      console.error('Error toggling phase:', error);
+      res.status(500).json({ message: 'Failed to toggle phase' });
+    }
+  });
+
   // GET /api/admin/analytics - Get booking analytics
   app.get('/api/admin/analytics', authenticate, requirePermission(PERMISSIONS.VIEW_ANALYTICS), async (req, res) => {
     try {
