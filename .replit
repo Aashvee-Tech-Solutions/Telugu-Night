@@ -1,1 +1,4 @@
 modules = ["python-3.11"]
+
+[agent]
+integrations = ["javascript_sendgrid==1.0.0"]
