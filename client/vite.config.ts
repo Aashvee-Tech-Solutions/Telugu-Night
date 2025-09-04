@@ -16,12 +16,14 @@ export default defineConfig(async () => {
     server: {
       host: '0.0.0.0',
       port: 5000,
-      strictPort: true
+      strictPort: true,
+      allowedHosts: ['qr-gatepass-manager-hemanthvardhan7.replit.app']
     },
     preview: {
       host: '0.0.0.0',
       port: process.env.PORT ? parseInt(process.env.PORT) : 5000,
-      strictPort: false
+      strictPort: false,
+      allowedHosts: ['qr-gatepass-manager-hemanthvardhan7.replit.app']
     }
   }
 })
