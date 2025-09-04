@@ -294,12 +294,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // User might not exist, continue
       }
       
-      // Create new admin user
+      // Create new admin user with all permissions
       const [newUser] = await db.insert(users).values({
         username: 'aashvee',
         password: hashedPassword,
-        role: 'admin',
-        permissions: ['VIEW_BOOKINGS', 'VERIFY_PAYMENTS', 'MANAGE_COUPONS', 'SEND_TICKETS', 'SCANNER_ACCESS', 'MANAGE_BOOKINGS'],
+        role: 'super_admin',
+        permissions: [
+          'VIEW_BOOKINGS', 'VERIFY_PAYMENTS', 'MANAGE_COUPONS', 'SEND_TICKETS', 
+          'SCANNER_ACCESS', 'MANAGE_BOOKINGS', 'SYSTEM_SETTINGS', 'VIEW_ANALYTICS',
+          'MANAGE_EVENTS', 'MANAGE_PHASES', 'MANAGE_TICKET_TYPES', 'VIEW_USERS'
+        ],
         isActive: true
       }).returning();
       
