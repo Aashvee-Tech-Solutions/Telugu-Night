@@ -582,24 +582,38 @@ export class DatabaseStorage implements IStorage {
     try {
       const [config] = await db.select().from(teluguNightConfig).limit(1);
       return config || {
-        earlyBirdPrice: "300",
-        phase1Price: "350", 
+        earlyBirdPrice: 300,
+        phase1Price: 350, 
+        phase2Price: 400,
         earlyBirdLimit: 90,
         phase1Limit: 200,
+        phase2Limit: 210,
         isEarlyBirdActive: true,
-        isPhase1Active: true,
-        convenientFee: "12.96"
+        isPhase1Active: false,
+        isPhase2Active: false,
+        convenientFee: "12.96",
+        eventTitle: "Telugu Night 2.0",
+        venue: "Hyderabad",
+        maxCapacity: 500,
+        bookingOpen: false
       };
     } catch (error) {
       console.error('Failed to get ticket config:', error);
       return {
-        earlyBirdPrice: "300",
-        phase1Price: "350",
+        earlyBirdPrice: 300,
+        phase1Price: 350,
+        phase2Price: 400,
         earlyBirdLimit: 90,
         phase1Limit: 200,
+        phase2Limit: 210,
         isEarlyBirdActive: true,
-        isPhase1Active: true,
-        convenientFee: "12.96"
+        isPhase1Active: false,
+        isPhase2Active: false,
+        convenientFee: "12.96",
+        eventTitle: "Telugu Night 2.0",
+        venue: "Hyderabad",
+        maxCapacity: 500,
+        bookingOpen: false
       };
     }
   }
@@ -624,6 +638,18 @@ export class DatabaseStorage implements IStorage {
           delete cleanConfig.eventDate;
         }
       }
+
+      // Handle pricing fields - ensure they are integers
+      if (cleanConfig.earlyBirdPrice !== undefined) {
+        cleanConfig.earlyBirdPrice = parseInt(cleanConfig.earlyBirdPrice);
+      }
+      if (cleanConfig.phase1Price !== undefined) {
+        cleanConfig.phase1Price = parseInt(cleanConfig.phase1Price);
+      }
+      if (cleanConfig.phase2Price !== undefined) {
+        cleanConfig.phase2Price = parseInt(cleanConfig.phase2Price);
+      }
+      // convenientFee remains as string/number for numeric field
       
       // Remove any undefined or null values that might cause issues
       Object.keys(cleanConfig).forEach(key => {

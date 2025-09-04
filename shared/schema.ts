@@ -153,10 +153,10 @@ export const teluguNightConfig = pgTable("telugu_night_config", {
   maxCapacity: integer("max_capacity").default(500),
   bookingOpen: boolean("booking_open").default(false),
   
-  // Phase configuration
-  earlyBirdPrice: numeric("early_bird_price", { precision: 10, scale: 2 }).default("300"),
-  phase1Price: numeric("phase1_price", { precision: 10, scale: 2 }).default("350"),
-  phase2Price: numeric("phase2_price", { precision: 10, scale: 2 }).default("400"),
+  // Phase configuration - aligned with actual database structure
+  earlyBirdPrice: integer("early_bird_price").default(300),
+  phase1Price: integer("phase1_price").default(350), 
+  phase2Price: integer("phase2_price").default(400),
   
   earlyBirdLimit: integer("early_bird_limit").default(90),
   phase1Limit: integer("phase1_limit").default(200),
