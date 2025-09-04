@@ -1,4 +1,6 @@
-modules = ["python-3.11"]
+modules = ["python-3.11", "nodejs-20"]
 
 [agent]
-integrations = ["javascript_sendgrid==1.0.0"]
+
+[nix]
+channel = "stable-25_05"
