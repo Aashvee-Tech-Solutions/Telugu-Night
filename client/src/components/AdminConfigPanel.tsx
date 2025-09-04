@@ -160,19 +160,16 @@ export const AdminConfigPanel = ({ isOpen, onClose }: AdminConfigPanelProps) => 
                     <Star className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
                     <p className="font-semibold text-lg">{config.currentSold.earlyBird}</p>
                     <p className="text-sm text-gray-500">Early Bird</p>
-                    <p className="text-xs text-gray-400">of {config.earlyBirdLimit} limit</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <Clock className="w-8 h-8 mx-auto mb-2 text-blue-500" />
                     <p className="font-semibold text-lg">{config.currentSold.phase1}</p>
                     <p className="text-sm text-gray-500">Phase 1</p>
-                    <p className="text-xs text-gray-400">of {config.phase1Limit} limit</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <Zap className="w-8 h-8 mx-auto mb-2 text-orange-500" />
                     <p className="font-semibold text-lg">{config.currentSold.phase2}</p>
                     <p className="text-sm text-gray-500">Phase 2</p>
-                    <p className="text-xs text-gray-400">of {config.phase2Limit} limit</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg bg-primary/10">
                     <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
@@ -180,7 +177,6 @@ export const AdminConfigPanel = ({ isOpen, onClose }: AdminConfigPanelProps) => 
                       {config.currentSold.earlyBird + config.currentSold.phase1 + config.currentSold.phase2}
                     </p>
                     <p className="text-sm text-gray-500">Total Sold</p>
-                    <p className="text-xs text-gray-400">of {eventData.maxCapacity} capacity</p>
                   </div>
                 </div>
               </CardContent>
@@ -212,7 +208,7 @@ export const AdminConfigPanel = ({ isOpen, onClose }: AdminConfigPanelProps) => 
                     </div>
                     <div className="space-y-2">
                       <p className="text-lg font-semibold">₹{config.earlyBirdPrice}</p>
-                      <p className="text-sm text-gray-500">{config.currentSold.earlyBird} / {config.earlyBirdLimit} sold</p>
+                      <p className="text-sm text-gray-500">{config.currentSold.earlyBird} sold</p>
                       <Badge variant={config.isEarlyBirdActive ? "default" : "secondary"}>
                         {config.isEarlyBirdActive ? "Active" : "Inactive"}
                       </Badge>
@@ -234,7 +230,7 @@ export const AdminConfigPanel = ({ isOpen, onClose }: AdminConfigPanelProps) => 
                     </div>
                     <div className="space-y-2">
                       <p className="text-lg font-semibold">₹{config.phase1Price}</p>
-                      <p className="text-sm text-gray-500">{config.currentSold.phase1} / {config.phase1Limit} sold</p>
+                      <p className="text-sm text-gray-500">{config.currentSold.phase1} sold</p>
                       <Badge variant={config.isPhase1Active ? "default" : "secondary"}>
                         {config.isPhase1Active ? "Active" : "Inactive"}
                       </Badge>
@@ -256,7 +252,7 @@ export const AdminConfigPanel = ({ isOpen, onClose }: AdminConfigPanelProps) => 
                     </div>
                     <div className="space-y-2">
                       <p className="text-lg font-semibold">₹{config.phase2Price}</p>
-                      <p className="text-sm text-gray-500">{config.currentSold.phase2} / {config.phase2Limit} sold</p>
+                      <p className="text-sm text-gray-500">{config.currentSold.phase2} sold</p>
                       <Badge variant={config.isPhase2Active ? "default" : "secondary"}>
                         {config.isPhase2Active ? "Active" : "Inactive"}
                       </Badge>

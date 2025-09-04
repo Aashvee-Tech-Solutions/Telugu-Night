@@ -100,7 +100,7 @@ export const TicketBookingForm = ({ onBack, eventDetails }: TicketBookingFormPro
       if (formData.ticketCount > currentTier.available) {
         toast({
           title: "Not Enough Tickets",
-          description: `Only ${currentTier.available} tickets available in ${currentTier.name} tier.`,
+          description: `Requested tickets exceed availability for ${currentTier.name} tier.`,
           variant: "destructive",
         });
         return;
@@ -206,9 +206,6 @@ export const TicketBookingForm = ({ onBack, eventDetails }: TicketBookingFormPro
                                   <Badge variant="default" className="text-xs">Current</Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-muted-foreground">
-                                {tier.available} of {tier.total} available
-                              </p>
                             </div>
                             <div className="text-right">
                               <p className="text-lg font-semibold">₹{tier.price}</p>
