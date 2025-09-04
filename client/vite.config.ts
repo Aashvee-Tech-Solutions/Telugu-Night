@@ -17,13 +17,23 @@ export default defineConfig(async () => {
       host: '0.0.0.0',
       port: 5000,
       strictPort: true,
-      allowedHosts: ['qr-gatepass-manager-hemanthvardhan7.replit.app']
+      allowedHosts: [
+        'qr-gatepass-manager-hemanthvardhan7.replit.app',
+        '21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev',
+        '.replit.dev',
+        '.replit.app'
+      ]
     },
     preview: {
       host: '0.0.0.0',
       port: process.env.PORT ? parseInt(process.env.PORT) : 5000,
       strictPort: false,
-      allowedHosts: ['qr-gatepass-manager-hemanthvardhan7.replit.app']
+      allowedHosts: [
+        'qr-gatepass-manager-hemanthvardhan7.replit.app',
+        '21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev',
+        '.replit.dev',
+        '.replit.app'
+      ]
     }
   }
 })
