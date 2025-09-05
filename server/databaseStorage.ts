@@ -668,17 +668,43 @@ export class DatabaseStorage implements IStorage {
         }
       }
 
-      // Handle pricing fields - ensure they are integers
-      if (cleanConfig.earlyBirdPrice !== undefined) {
-        cleanConfig.earlyBirdPrice = parseInt(cleanConfig.earlyBirdPrice);
+      // Handle pricing fields - ensure they are valid integers
+      if (cleanConfig.earlyBirdPrice !== undefined && cleanConfig.earlyBirdPrice !== '') {
+        const parsed = parseInt(cleanConfig.earlyBirdPrice);
+        cleanConfig.earlyBirdPrice = isNaN(parsed) ? 300 : parsed;
       }
-      if (cleanConfig.phase1Price !== undefined) {
-        cleanConfig.phase1Price = parseInt(cleanConfig.phase1Price);
+      if (cleanConfig.phase1Price !== undefined && cleanConfig.phase1Price !== '') {
+        const parsed = parseInt(cleanConfig.phase1Price);
+        cleanConfig.phase1Price = isNaN(parsed) ? 350 : parsed;
       }
-      if (cleanConfig.phase2Price !== undefined) {
-        cleanConfig.phase2Price = parseInt(cleanConfig.phase2Price);
+      if (cleanConfig.phase2Price !== undefined && cleanConfig.phase2Price !== '') {
+        const parsed = parseInt(cleanConfig.phase2Price);
+        cleanConfig.phase2Price = isNaN(parsed) ? 400 : parsed;
       }
-      // convenientFee remains as string/number for numeric field
+      
+      // Handle numeric fields properly for convenience fee
+      if (cleanConfig.convenientFee !== undefined && cleanConfig.convenientFee !== '') {
+        const parsed = parseFloat(cleanConfig.convenientFee);
+        cleanConfig.convenientFee = (isNaN(parsed) ? 12.96 : parsed).toString();
+      }
+      
+      // Handle limit fields - ensure they are valid integers
+      if (cleanConfig.earlyBirdLimit !== undefined && cleanConfig.earlyBirdLimit !== '') {
+        const parsed = parseInt(cleanConfig.earlyBirdLimit);
+        cleanConfig.earlyBirdLimit = isNaN(parsed) ? 90 : parsed;
+      }
+      if (cleanConfig.phase1Limit !== undefined && cleanConfig.phase1Limit !== '') {
+        const parsed = parseInt(cleanConfig.phase1Limit);
+        cleanConfig.phase1Limit = isNaN(parsed) ? 200 : parsed;
+      }
+      if (cleanConfig.phase2Limit !== undefined && cleanConfig.phase2Limit !== '') {
+        const parsed = parseInt(cleanConfig.phase2Limit);
+        cleanConfig.phase2Limit = isNaN(parsed) ? 210 : parsed;
+      }
+      if (cleanConfig.maxCapacity !== undefined && cleanConfig.maxCapacity !== '') {
+        const parsed = parseInt(cleanConfig.maxCapacity);
+        cleanConfig.maxCapacity = isNaN(parsed) ? 500 : parsed;
+      }
       
       // Remove any undefined or null values that might cause issues
       Object.keys(cleanConfig).forEach(key => {
@@ -687,20 +713,26 @@ export class DatabaseStorage implements IStorage {
         }
       });
       
+      console.log('🔄 Updating ticket configuration with data:', {
+        cleanConfig,
+        updatedBy,
+        hasExistingConfig: !!existingConfig
+      });
+
       if (existingConfig) {
         await db.update(teluguNightConfig).set({
           ...cleanConfig,
           updatedAt: new Date(),
           updatedBy
         });
+        console.log('✅ Updated existing ticket configuration');
       } else {
         await db.insert(teluguNightConfig).values({
           ...cleanConfig,
           updatedBy
         });
+        console.log('✅ Inserted new ticket configuration');
       }
-      
-      console.log('✅ Updated ticket configuration');
     } catch (error) {
       console.error('Failed to update ticket config:', error);
       throw new Error('Failed to update ticket configuration');
