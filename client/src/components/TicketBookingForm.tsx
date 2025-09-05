@@ -823,6 +823,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                     onClick={async () => {
                       try {
                         console.log('Pay Now clicked, paymentLink:', paymentLink);
+                        console.log('PaymentLink type:', typeof paymentLink);
+                        console.log('PaymentLink length:', paymentLink?.length);
                         
                         // Check if Cashfree SDK is loaded
                         if (!(window as any).Cashfree) {
@@ -837,7 +839,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         
                         // Initialize Cashfree SDK
                         const cashfree = (window as any).Cashfree({
-                          mode: "production" // Use "sandbox" for testing
+                          mode: "sandbox" // Use "sandbox" for testing
                         });
                         
                         console.log('Cashfree SDK initialized:', cashfree);
@@ -849,6 +851,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         };
                         
                         console.log('Opening checkout with options:', checkoutOptions);
+                        console.log('Payment Session ID being used:', paymentLink);
                         cashfree.checkout(checkoutOptions);
                       } catch (error) {
                         console.error('Payment initialization failed:', error);
