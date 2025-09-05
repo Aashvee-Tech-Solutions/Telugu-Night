@@ -1,7 +1,7 @@
 import type { User, InsertUser, Booking, Coupon, InsertCoupon, Promoter, InsertPromoter, Event, EventPhase, TicketType } from '@shared/schema';
 import { db } from './db';
 import { users, bookings, coupons, teluguNightCounter, teluguNightConfig, promoters, events, eventPhases, ticketTypes } from '@shared/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 
 interface AdminSession {
   id: string;
@@ -268,8 +268,37 @@ export class DatabaseStorage implements IStorage {
     
     // Update ticket counts by subtracting the deleted tickets
     try {
-      // For Telugu Night 2.0, we use the counter table instead of ticket types
-      console.log(`✅ Booking ${id} deleted from database and ${bookingToDelete.ticketCount} tickets returned to inventory`);
+      // Update Telugu Night counter based on ticket type  
+      const ticketType = bookingToDelete.ticketType;
+      const ticketCount = bookingToDelete.ticketCount;
+      
+      if (ticketType === 'early_bird') {
+        await db
+          .update(teluguNightCounter)
+          .set({
+            earlyBirdCount: sql`early_bird_count - ${ticketCount}`,
+            totalSold: sql`total_sold - ${ticketCount}`,
+            lastUpdated: new Date()
+          });
+      } else if (ticketType === 'phase_1') {
+        await db
+          .update(teluguNightCounter)
+          .set({
+            phase1Count: sql`phase1_count - ${ticketCount}`,
+            totalSold: sql`total_sold - ${ticketCount}`,
+            lastUpdated: new Date()
+          });
+      } else if (ticketType === 'phase_2') {
+        await db
+          .update(teluguNightCounter)
+          .set({
+            phase2Count: sql`phase2_count - ${ticketCount}`,
+            totalSold: sql`total_sold - ${ticketCount}`,
+            lastUpdated: new Date()
+          });
+      }
+      
+      console.log(`✅ Booking ${id} deleted from database and ${ticketCount} ${ticketType} tickets returned to inventory`);
     } catch (error) {
       console.error('Failed to update ticket counts after deletion:', error);
       // Still proceed with deletion even if count update fails

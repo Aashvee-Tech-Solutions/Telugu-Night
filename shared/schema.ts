@@ -92,6 +92,7 @@ export const bookings = pgTable("bookings", {
   paymentStatus: text("payment_status", { enum: ["pending", "paid", "verified", "failed", "refunded"] }).default("pending"),
   paymentId: text("payment_id"), // Cashfree payment ID
   paymentMethod: text("payment_method"), // card, upi, netbanking
+  ticketType: text("ticket_type", { enum: ["early_bird", "phase_1", "phase_2"] }), // Telugu Night ticket type
   qrCodes: jsonb("qr_codes").$type<string[]>().default([]),
   passIds: jsonb("pass_ids").$type<string[]>().default([]), // Unique pass IDs for dashboard
   isScanned: boolean("is_scanned").default(false),
