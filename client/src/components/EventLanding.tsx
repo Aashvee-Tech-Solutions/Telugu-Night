@@ -133,7 +133,26 @@ export const EventLanding = () => {
             </div>
           </div>
           <div className="mt-6 pt-6 border-t border-border/50">
-            <p className="text-xs text-muted-foreground">© 2024 Telugu Night Event Management</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+              <a 
+                href="/terms-and-conditions" 
+                className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+                data-testid="link-terms-conditions"
+              >
+                Terms & Conditions
+              </a>
+              <span className="hidden sm:inline text-muted-foreground">|</span>
+              <a 
+                href="/privacy-policy" 
+                className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+                data-testid="link-privacy-policy"
+              >
+                Privacy Policy
+              </a>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              © 2024 events.qlora.in - Designed and Developed by <strong>Aashvee Tech Solutions Pvt Ltd</strong>
+            </p>
           </div>
         </div>
       </footer>

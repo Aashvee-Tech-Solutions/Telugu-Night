@@ -9,6 +9,8 @@ import AdminLogin from "./pages/AdminLogin";
 import PromoterLogin from "./pages/PromoterLogin";
 import PromoterDashboard from "./pages/PromoterDashboard";
 import BookingPage from "./pages/BookingPage";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Scanner from "./components/Scanner";
 import { queryClient } from "@/lib/queryClient";
 
@@ -36,6 +38,8 @@ const App = () => (
         <Switch>
           <Route path="/" component={Index} />
           <Route path="/book" component={BookingPage} />
+          <Route path="/terms-and-conditions" component={TermsAndConditions} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/farazkivumdha" component={AdminRoute} />
           <Route path="/promoter/login" component={PromoterLogin} />
           <Route path="/promoter/dashboard/:promoCode" component={PromoterDashboard} />
