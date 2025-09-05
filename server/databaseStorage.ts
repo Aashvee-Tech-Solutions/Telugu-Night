@@ -368,8 +368,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async validateCoupon(code: string): Promise<{ valid: boolean; discount: number; message: string }> {
-    // Check database coupons only - no test coupons
-    const coupon = await this.getCouponByCode(code.toUpperCase());
+    // Get coupon directly from database to check all conditions
+    const [coupon] = await db.select().from(coupons).where(eq(coupons.code, code.toUpperCase()));
     
     if (!coupon) {
       return { valid: false, discount: 0, message: 'Invalid coupon code' };
