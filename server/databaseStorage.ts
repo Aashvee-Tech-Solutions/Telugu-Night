@@ -659,9 +659,22 @@ export class DatabaseStorage implements IStorage {
       delete cleanConfig.createdAt;
       
       // Handle eventDate specifically - convert string to Date if needed
-      if (cleanConfig.eventDate) {
-        if (typeof cleanConfig.eventDate === 'string') {
-          cleanConfig.eventDate = new Date(cleanConfig.eventDate);
+      if (cleanConfig.eventDate !== undefined) {
+        if (cleanConfig.eventDate === '' || cleanConfig.eventDate === null) {
+          // Remove empty string or null to avoid timestamp errors
+          delete cleanConfig.eventDate;
+        } else if (typeof cleanConfig.eventDate === 'string') {
+          try {
+            const parsedDate = new Date(cleanConfig.eventDate);
+            if (isNaN(parsedDate.getTime())) {
+              // Invalid date, remove it
+              delete cleanConfig.eventDate;
+            } else {
+              cleanConfig.eventDate = parsedDate;
+            }
+          } catch (error) {
+            delete cleanConfig.eventDate;
+          }
         } else if (!(cleanConfig.eventDate instanceof Date)) {
           // If it's not a string or Date, remove it to avoid errors
           delete cleanConfig.eventDate;

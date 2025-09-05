@@ -441,8 +441,8 @@ export default function TeluguNightEventManagement() {
                 id="max-capacity"
                 type="number"
                 min="1"
-                value={eventData.maxCapacity}
-                onChange={(e) => setEventData({...eventData, maxCapacity: parseInt(e.target.value)})}
+                value={eventData.maxCapacity || ''}
+                onChange={(e) => setEventData({...eventData, maxCapacity: parseInt(e.target.value) || 0})}
                 data-testid="input-max-capacity"
               />
             </div>
@@ -470,8 +470,8 @@ export default function TeluguNightEventManagement() {
                   id="early-bird-price"
                   type="number"
                   min="1"
-                  value={eventData.earlyBirdPrice}
-                  onChange={(e) => setEventData({...eventData, earlyBirdPrice: parseInt(e.target.value)})}
+                  value={eventData.earlyBirdPrice || ''}
+                  onChange={(e) => setEventData({...eventData, earlyBirdPrice: parseInt(e.target.value) || 0})}
                   data-testid="input-early-bird-price"
                 />
               </div>
@@ -482,8 +482,8 @@ export default function TeluguNightEventManagement() {
                   id="phase1-price"
                   type="number"
                   min="1"
-                  value={eventData.phase1Price}
-                  onChange={(e) => setEventData({...eventData, phase1Price: parseInt(e.target.value)})}
+                  value={eventData.phase1Price || ''}
+                  onChange={(e) => setEventData({...eventData, phase1Price: parseInt(e.target.value) || 0})}
                   data-testid="input-phase1-price"
                 />
               </div>
@@ -494,8 +494,8 @@ export default function TeluguNightEventManagement() {
                   id="phase2-price"
                   type="number"
                   min="1"
-                  value={eventData.phase2Price}
-                  onChange={(e) => setEventData({...eventData, phase2Price: parseInt(e.target.value)})}
+                  value={eventData.phase2Price || ''}
+                  onChange={(e) => setEventData({...eventData, phase2Price: parseInt(e.target.value) || 0})}
                   data-testid="input-phase2-price"
                 />
               </div>
@@ -507,8 +507,8 @@ export default function TeluguNightEventManagement() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={eventData.convenientFee}
-                  onChange={(e) => setEventData({...eventData, convenientFee: parseFloat(e.target.value)})}
+                  value={eventData.convenientFee || ''}
+                  onChange={(e) => setEventData({...eventData, convenientFee: parseFloat(e.target.value) || 0})}
                   data-testid="input-convenience-fee"
                 />
               </div>
@@ -526,8 +526,8 @@ export default function TeluguNightEventManagement() {
                   id="early-bird-limit"
                   type="number"
                   min="1"
-                  value={eventData.earlyBirdLimit}
-                  onChange={(e) => setEventData({...eventData, earlyBirdLimit: parseInt(e.target.value)})}
+                  value={eventData.earlyBirdLimit || ''}
+                  onChange={(e) => setEventData({...eventData, earlyBirdLimit: parseInt(e.target.value) || 0})}
                   data-testid="input-early-bird-limit"
                 />
               </div>
@@ -538,8 +538,8 @@ export default function TeluguNightEventManagement() {
                   id="phase1-limit"
                   type="number"
                   min="1"
-                  value={eventData.phase1Limit}
-                  onChange={(e) => setEventData({...eventData, phase1Limit: parseInt(e.target.value)})}
+                  value={eventData.phase1Limit || ''}
+                  onChange={(e) => setEventData({...eventData, phase1Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase1-limit"
                 />
               </div>
@@ -550,8 +550,8 @@ export default function TeluguNightEventManagement() {
                   id="phase2-limit"
                   type="number"
                   min="1"
-                  value={eventData.phase2Limit}
-                  onChange={(e) => setEventData({...eventData, phase2Limit: parseInt(e.target.value)})}
+                  value={eventData.phase2Limit || ''}
+                  onChange={(e) => setEventData({...eventData, phase2Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase2-limit"
                 />
               </div>
