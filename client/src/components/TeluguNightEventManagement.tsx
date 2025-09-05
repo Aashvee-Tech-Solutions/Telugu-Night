@@ -146,7 +146,12 @@ export default function TeluguNightEventManagement() {
   });
 
   const handleSaveConfig = () => {
-    updateConfigMutation.mutate(eventData);
+    // Clean the data before sending - remove empty strings
+    const cleanedData = { ...eventData };
+    if (cleanedData.eventDate === '') {
+      delete cleanedData.eventDate;
+    }
+    updateConfigMutation.mutate(cleanedData);
   };
 
   const currentConfig = (config as any)?.config as TeluguNightConfig;

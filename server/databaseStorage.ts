@@ -719,9 +719,9 @@ export class DatabaseStorage implements IStorage {
         cleanConfig.maxCapacity = isNaN(parsed) ? 500 : parsed;
       }
       
-      // Remove any undefined or null values that might cause issues
+      // Remove any undefined, null, or empty string values that might cause issues
       Object.keys(cleanConfig).forEach(key => {
-        if (cleanConfig[key] === undefined || cleanConfig[key] === null) {
+        if (cleanConfig[key] === undefined || cleanConfig[key] === null || cleanConfig[key] === '') {
           delete cleanConfig[key];
         }
       });
