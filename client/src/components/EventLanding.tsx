@@ -110,48 +110,48 @@ export const EventLanding = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-secondary/20 py-8 px-4">
+      <footer className="bg-slate-800 dark:bg-slate-900 text-white py-12 px-4 border-t-4 border-primary shadow-2xl">
         <div className="max-w-6xl mx-auto text-center">
-          <h3 className="text-xl md:text-2xl font-bold mb-4 text-primary">Telugu Night</h3>
-          <p className="text-sm md:text-base text-muted-foreground mb-6">Experience the vibrant culture of Telugu music and dance</p>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 md:gap-8 text-sm text-muted-foreground">
-            <div className="p-3 bg-background/50 rounded-lg">
-              <p className="font-semibold text-primary">Venue</p>
-              <p className="text-xs md:text-sm">DTR, Down to Road Manipal</p>
+          <h3 className="text-2xl md:text-3xl font-bold mb-6 text-white">Telugu Night</h3>
+          <p className="text-base md:text-lg text-slate-200 mb-8">Experience the vibrant culture of Telugu music and dance</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 text-sm mb-8">
+            <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
+              <p className="font-bold text-primary text-base mb-2">📍 Venue</p>
+              <p className="text-slate-200 text-sm">DTR, Down to Road Manipal</p>
             </div>
-            <div className="p-3 bg-background/50 rounded-lg">
-              <p className="font-semibold text-primary">Date</p>
-              <p className="text-xs md:text-sm">December 15, 2024</p>
+            <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
+              <p className="font-bold text-primary text-base mb-2">📅 Date</p>
+              <p className="text-slate-200 text-sm">December 15, 2024</p>
             </div>
-            <div className="p-3 bg-background/50 rounded-lg">
-              <p className="font-semibold text-primary">Time</p>
-              <p className="text-xs md:text-sm">8:00 PM - 2:00 AM</p>
+            <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
+              <p className="font-bold text-primary text-base mb-2">🕐 Time</p>
+              <p className="text-slate-200 text-sm">8:00 PM - 2:00 AM</p>
             </div>
-            <div className="p-3 bg-background/50 rounded-lg">
-              <p className="font-semibold text-primary">Price</p>
-              <p className="text-xs md:text-sm">₹300 (₹200 Food Coupon + ₹100)</p>
+            <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
+              <p className="font-bold text-primary text-base mb-2">💰 Price</p>
+              <p className="text-slate-200 text-sm">₹300 (₹200 Food Coupon + ₹100)</p>
             </div>
           </div>
-          <div className="mt-6 pt-6 border-t border-border/50">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+          <div className="mt-8 pt-8 border-t-2 border-slate-600">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-6">
               <a 
                 href="/terms-and-conditions" 
-                className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+                className="text-sm text-slate-300 hover:text-primary transition-colors underline font-medium"
                 data-testid="link-terms-conditions"
               >
                 Terms & Conditions
               </a>
-              <span className="hidden sm:inline text-muted-foreground">|</span>
+              <span className="hidden sm:inline text-slate-400 text-lg">|</span>
               <a 
                 href="/privacy-policy" 
-                className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+                className="text-sm text-slate-300 hover:text-primary transition-colors underline font-medium"
                 data-testid="link-privacy-policy"
               >
                 Privacy Policy
               </a>
             </div>
-            <p className="text-xs text-muted-foreground text-center">
-              © 2024 events.qlora.in - Designed and Developed by <strong>Aashvee Tech Solutions Pvt Ltd</strong>
+            <p className="text-sm text-slate-300 text-center leading-relaxed">
+              © 2024 <strong className="text-white">events.qlora.in</strong> - Designed and Developed by <strong className="text-primary">Aashvee Tech Solutions Pvt Ltd</strong>
             </p>
           </div>
         </div>
