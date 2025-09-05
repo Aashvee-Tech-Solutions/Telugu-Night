@@ -61,8 +61,8 @@ export class PaymentService {
           customer_phone: bookingData.customerPhone,
         },
         order_meta: {
-          return_url: `${process.env.FRONTEND_URL || 'https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev'}/payment/success?booking=${bookingData.bookingId}`,
-          notify_url: `${process.env.BACKEND_URL || 'https://21a92ee8-ddfa-4e5b-8475-a9fd540bb9d1-00-2psjlie2z8vv7.kirk.replit.dev'}/api/webhooks/cashfree`,
+          return_url: `${process.env.FRONTEND_URL || 'https://events.qlora.in'}/payment/success?booking=${bookingData.bookingId}`,
+          notify_url: `${process.env.BACKEND_URL || 'https://events.qlora.in'}/api/webhooks/cashfree`,
         },
       });
 
