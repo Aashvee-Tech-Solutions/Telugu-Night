@@ -3173,6 +3173,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public route for sending tickets from payment success page (no authentication required)
+  app.post('/api/public/bookings/:id/send-tickets', async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+
+      // Only allow ticket sending for verified payments
+      if (booking.paymentStatus !== 'verified') {
+        return res.status(400).json({ message: 'Payment not verified yet' });
+      }
+
+      // Check if QR codes already exist - if so, reuse them
+      const hasExistingQRCodes = booking.qrCodes && booking.qrCodes.length > 0;
+      const hasExistingGuestCodes = booking.guestCodes && booking.guestCodes.length > 0;
+      
+      if (hasExistingQRCodes && hasExistingGuestCodes) {
+        // Tickets already generated - just resend the existing email
+        console.log(`♻️ Public route: Reusing existing QR codes for booking ${bookingId}`);
+        
+        try {
+          await enhancedEmailService.sendTicketEmails({
+            ...booking,
+            qrCodes: booking.qrCodes || [],
+            passIds: booking.passIds || [],
+            guestCodes: booking.guestCodes || []
+          });
+          
+          return res.json({ 
+            message: 'QR tickets sent successfully!',
+            guestCodes: booking.guestCodes,
+            passIds: booking.passIds,
+            note: 'Existing QR codes resent'
+          });
+        } catch (emailError: any) {
+          console.error('Failed to resend existing tickets via public route:', emailError);
+          return res.status(500).json({ message: 'Failed to resend tickets' });
+        }
+      }
+
+      // Generate new tickets using the ticket generation service
+      console.log(`🆕 Public route: Generating new QR codes for booking ${bookingId}`);
+      
+      const result = await ticketGenerationService.generateTicketsForBooking(bookingId);
+      
+      if (result.status === 'completed') {
+        res.json({ 
+          message: 'QR tickets generated and sent successfully!',
+          guestCodes: result.guestCodes,
+          passIds: result.passIds,
+          note: 'New QR codes generated and sent'
+        });
+      } else {
+        res.status(500).json({ 
+          message: 'Failed to generate tickets',
+          errors: result.errors
+        });
+      }
+    } catch (error: any) {
+      console.error('Public route: Failed to send tickets:', error);
+      res.status(500).json({ message: 'Failed to process ticket request' });
+    }
+  });
+
   // Health check endpoint for production
   app.get('/health', (req, res) => {
     res.json({ 
