@@ -146,11 +146,21 @@ export default function TeluguNightEventManagement() {
   });
 
   const handleSaveConfig = () => {
-    // Clean the data before sending - remove empty strings
+    // Clean the data before sending - remove empty strings and zero values
     const cleanedData = { ...eventData };
-    if (cleanedData.eventDate === '') {
+    if (cleanedData.eventDate === '' || !cleanedData.eventDate) {
       delete cleanedData.eventDate;
     }
+    
+    // Ensure all numeric values are valid
+    const numericFields = ['earlyBirdPrice', 'phase1Price', 'phase2Price', 'earlyBirdLimit', 'phase1Limit', 'phase2Limit', 'maxCapacity', 'convenientFee'];
+    numericFields.forEach(field => {
+      if (cleanedData[field] === 0 || cleanedData[field] === '' || isNaN(cleanedData[field])) {
+        delete cleanedData[field]; // Let the backend use defaults or current values
+      }
+    });
+    
+    console.log('🎯 Sending cleaned config data:', cleanedData);
     updateConfigMutation.mutate(cleanedData);
   };
 
