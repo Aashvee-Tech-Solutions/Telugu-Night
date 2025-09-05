@@ -6,9 +6,9 @@ const PrivacyPolicy = () => {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 dark:from-slate-900 dark:via-slate-800 dark:to-emerald-900 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <Card className="bg-gradient-card border-border/50 shadow-card">
+        <Card className="bg-white/90 dark:bg-slate-800/90 border-green-200 dark:border-green-700 shadow-xl backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center justify-between mb-4">
               <Button
@@ -19,35 +19,35 @@ const PrivacyPolicy = () => {
                 ← Back to Home
               </Button>
             </div>
-            <CardTitle className="text-3xl text-center text-primary">
+            <CardTitle className="text-3xl text-center text-green-700 dark:text-green-300 font-bold">
               Privacy Policy
             </CardTitle>
-            <p className="text-center text-muted-foreground">
+            <p className="text-center text-slate-600 dark:text-slate-300 font-medium">
               Last updated: December 2024
             </p>
           </CardHeader>
-          <CardContent className="prose prose-slate dark:prose-invert max-w-none">
+          <CardContent className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-200">
             <div className="space-y-8">
               
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">Introduction</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">Introduction</h2>
                 <p className="mb-4">
                   <strong>Aashvee Tech Solutions Pvt Ltd</strong> ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use events.qlora.in ("Website", "Service", "Platform").
                 </p>
                 <p className="mb-4">
                   This policy applies to all users of our event booking platform, including customers booking tickets for Telugu Night and other events listed on our platform.
                 </p>
-                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <p className="text-blue-800 dark:text-blue-200">
+                <div className="p-4 bg-blue-100 dark:bg-blue-900/50 border-2 border-blue-400 dark:border-blue-500 rounded-lg shadow-lg">
+                  <p className="text-blue-800 dark:text-blue-200 font-semibold">
                     <strong>We do not sell or trade your personal data</strong> to third parties. Your privacy and data security are our top priorities.
                   </p>
                 </div>
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">1. Information We Collect</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">1. Information We Collect</h2>
                 
-                <h3 className="text-lg font-semibold mb-3">1.1 Information You Provide</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">1.1 Information You Provide</h3>
                 <p className="mb-4">When you use our Service, we may collect the following information:</p>
                 <ul className="list-disc list-inside ml-4 space-y-2 mb-4">
                   <li><strong>Personal Information:</strong> Name, email address, phone number</li>
@@ -56,7 +56,7 @@ const PrivacyPolicy = () => {
                   <li><strong>Communication Data:</strong> Messages sent through our platform</li>
                 </ul>
 
-                <h3 className="text-lg font-semibold mb-3">1.2 Information We Collect Automatically</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">1.2 Information We Collect Automatically</h3>
                 <ul className="list-disc list-inside ml-4 space-y-2 mb-4">
                   <li><strong>Technical Information:</strong> IP address, browser type, device information</li>
                   <li><strong>Usage Data:</strong> Pages visited, time spent on platform, booking patterns</li>
@@ -65,10 +65,10 @@ const PrivacyPolicy = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">2. How We Use Your Information</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">2. How We Use Your Information</h2>
                 <p className="mb-4">We use your personal information for the following purposes:</p>
                 
-                <h3 className="text-lg font-semibold mb-3">2.1 Service Provision</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">2.1 Service Provision</h3>
                 <ul className="list-disc list-inside ml-4 space-y-2 mb-4">
                   <li>Processing ticket bookings and payments</li>
                   <li>Generating and delivering QR codes via email</li>
@@ -77,14 +77,14 @@ const PrivacyPolicy = () => {
                   <li>Providing customer support</li>
                 </ul>
 
-                <h3 className="text-lg font-semibold mb-3">2.2 Communication</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">2.2 Communication</h3>
                 <ul className="list-disc list-inside ml-4 space-y-2 mb-4">
                   <li>Sending booking confirmations and QR tickets</li>
                   <li>Event updates and important notifications</li>
                   <li>Customer service communications</li>
                 </ul>
 
-                <h3 className="text-lg font-semibold mb-3">2.3 Business Operations</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">2.3 Business Operations</h3>
                 <ul className="list-disc list-inside ml-4 space-y-2 mb-4">
                   <li>Analytics and service improvement</li>
                   <li>Fraud prevention and security</li>
@@ -94,9 +94,9 @@ const PrivacyPolicy = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">3. Information Sharing</h2>
-                <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg mb-4">
-                  <p className="text-green-800 dark:text-green-200">
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">3. Information Sharing</h2>
+                <div className="p-4 bg-green-100 dark:bg-green-900/50 border-2 border-green-400 dark:border-green-500 rounded-lg mb-4 shadow-lg">
+                  <p className="text-green-800 dark:text-green-200 font-semibold">
                     <strong>We do not sell, rent, or trade your personal information</strong> with third parties for marketing purposes.
                   </p>
                 </div>
@@ -112,7 +112,7 @@ const PrivacyPolicy = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">4. Google Sheets Integration</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">4. Google Sheets Integration</h2>
                 <p className="mb-4">
                   We integrate with Google Sheets for administrative purposes to maintain booking records. This integration helps us:
                 </p>
@@ -127,7 +127,7 @@ const PrivacyPolicy = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">5. Data Security</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">5. Data Security</h2>
                 <p className="mb-4">We implement appropriate security measures to protect your personal information:</p>
                 <ul className="list-disc list-inside ml-4 space-y-2 mb-4">
                   <li><strong>Encryption:</strong> Data is encrypted during transmission</li>
@@ -141,24 +141,24 @@ const PrivacyPolicy = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">6. Your Rights</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">6. Your Rights</h2>
                 <p className="mb-4">You have the following rights regarding your personal data:</p>
                 
-                <h3 className="text-lg font-semibold mb-3">6.1 Access and Correction</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">6.1 Access and Correction</h3>
                 <p className="mb-4">You can request access to your personal data and ask us to correct any inaccuracies.</p>
                 
-                <h3 className="text-lg font-semibold mb-3">6.2 Data Portability</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">6.2 Data Portability</h3>
                 <p className="mb-4">You can request a copy of your personal data in a structured format.</p>
                 
-                <h3 className="text-lg font-semibold mb-3">6.3 Deletion</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">6.3 Deletion</h3>
                 <p className="mb-4">You can request deletion of your personal data, subject to legal and business requirements.</p>
                 
-                <h3 className="text-lg font-semibold mb-3">6.4 Communication Preferences</h3>
+                <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-3">6.4 Communication Preferences</h3>
                 <p className="mb-4">You can opt out of marketing communications while still receiving essential service-related messages.</p>
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">7. Data Retention</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">7. Data Retention</h2>
                 <p className="mb-4">We retain your personal information for the following periods:</p>
                 <ul className="list-disc list-inside ml-4 space-y-2 mb-4">
                   <li><strong>Booking Data:</strong> Retained for business records and potential future events</li>
@@ -169,7 +169,7 @@ const PrivacyPolicy = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">8. Cookies and Tracking</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">8. Cookies and Tracking</h2>
                 <p className="mb-4">Our website uses cookies and similar technologies to:</p>
                 <ul className="list-disc list-inside ml-4 space-y-2 mb-4">
                   <li>Maintain your session during booking</li>
@@ -181,21 +181,21 @@ const PrivacyPolicy = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">9. Third-Party Links</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">9. Third-Party Links</h2>
                 <p className="mb-4">
                   Our platform may contain links to external websites or services. We are not responsible for the privacy practices of these third parties. We recommend reviewing their privacy policies before providing any personal information.
                 </p>
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">10. Children's Privacy</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">10. Children's Privacy</h2>
                 <p className="mb-4">
                   Our Service is not intended for children under 18 years of age. We do not knowingly collect personal information from children under 18. If you become aware that a child has provided us with personal data, please contact us immediately.
                 </p>
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">11. Changes to This Policy</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">11. Changes to This Policy</h2>
                 <p className="mb-4">
                   We may update this Privacy Policy from time to time. We will notify users of significant changes by:
                 </p>
@@ -207,9 +207,9 @@ const PrivacyPolicy = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">12. Contact Us</h2>
+                <h2 className="text-xl font-bold text-green-700 dark:text-green-300 mb-4">12. Contact Us</h2>
                 <p className="mb-4">If you have any questions about this Privacy Policy or our data practices, please contact us:</p>
-                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <div className="p-4 bg-green-100 dark:bg-green-900/50 border-2 border-green-300 dark:border-green-600 rounded-lg shadow-md">
                   <p><strong>Aashvee Tech Solutions Pvt Ltd</strong></p>
                   <p>Platform: events.qlora.in</p>
                   <p>Email: mis@aashveetech.com</p>

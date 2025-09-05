@@ -6,9 +6,9 @@ const TermsAndConditions = () => {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <Card className="bg-gradient-card border-border/50 shadow-card">
+        <Card className="bg-white/90 dark:bg-slate-800/90 border-blue-200 dark:border-blue-700 shadow-xl backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center justify-between mb-4">
               <Button
@@ -19,31 +19,33 @@ const TermsAndConditions = () => {
                 ← Back to Home
               </Button>
             </div>
-            <CardTitle className="text-3xl text-center text-primary">
+            <CardTitle className="text-3xl text-center text-blue-700 dark:text-blue-300 font-bold">
               Terms & Conditions
             </CardTitle>
-            <p className="text-center text-muted-foreground">
+            <p className="text-center text-slate-600 dark:text-slate-300 font-medium">
               Last updated: December 2024
             </p>
           </CardHeader>
-          <CardContent className="prose prose-slate dark:prose-invert max-w-none">
+          <CardContent className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-200">
             <div className="space-y-8">
               
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">1. Introduction</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">1. Introduction</h2>
                 <p className="mb-4">
                   1.1 Welcome to events.qlora.in ("Website", "Service", "Platform"), an event booking and management system designed and developed by <strong>Aashvee Tech Solutions Pvt Ltd</strong>, a company registered in India.
                 </p>
                 <p className="mb-4">
                   1.2 By using our Service to book tickets for Telugu Night or any other events, you agree to be bound by these Terms & Conditions. Please read them carefully before using the Service.
                 </p>
-                <p className="mb-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <strong>IMPORTANT:</strong> This document includes important exclusions of warranties and limitations of liability in Section 8.
-                </p>
+                <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/50 border-2 border-red-400 dark:border-red-500 rounded-lg shadow-lg">
+                  <p className="text-red-800 dark:text-red-200 font-semibold">
+                    <strong>⚠️ IMPORTANT:</strong> <span className="text-red-700 dark:text-red-300">This document includes important exclusions of warranties and limitations of liability in Section 8.</span>
+                  </p>
+                </div>
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">2. Definitions</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">2. Definitions</h2>
                 <div className="space-y-4">
                   <div>
                     <p><strong>"Aashvee Tech Solutions"</strong> means Aashvee Tech Solutions Pvt Ltd, the company that owns and operates events.qlora.in</p>
@@ -67,7 +69,7 @@ const TermsAndConditions = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">3. Use of Service</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">3. Use of Service</h2>
                 <p className="mb-4">
                   3.1 <strong>Permitted Use:</strong> You may use our Service solely for booking tickets to events listed on our platform for personal, non-commercial purposes.
                 </p>
@@ -86,7 +88,7 @@ const TermsAndConditions = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">4. Booking and Payment</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">4. Booking and Payment</h2>
                 <p className="mb-4">
                   4.1 <strong>Booking Process:</strong> All bookings must be completed through our official payment gateways. Payment confirmation is required before ticket generation.
                 </p>
@@ -96,26 +98,28 @@ const TermsAndConditions = () => {
                 <p className="mb-4">
                   4.3 <strong>Ticket Delivery:</strong> Digital tickets with QR codes will be sent to your registered email address after payment verification.
                 </p>
-                <p className="mb-4 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                  <strong>No Shipping Required:</strong> All tickets are delivered digitally via email. No physical shipping is involved.
-                </p>
+                <div className="mb-4 p-4 bg-amber-100 dark:bg-amber-900/50 border-2 border-amber-400 dark:border-amber-500 rounded-lg shadow-md">
+                  <p className="text-amber-800 dark:text-amber-200 font-semibold">
+                    <strong>📧 No Shipping Required:</strong> <span className="text-amber-700 dark:text-amber-300">All tickets are delivered digitally via email. No physical shipping is involved.</span>
+                  </p>
+                </div>
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">5. Refunds and Cancellations</h2>
-                <div className="p-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg mb-4">
-                  <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-3">NO REFUND POLICY</h3>
-                  <p className="text-red-700 dark:text-red-300 mb-2">
-                    <strong>5.1 No Refunds:</strong> All ticket purchases are final. We do not offer refunds under any circumstances, including but not limited to:
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">5. Refunds and Cancellations</h2>
+                <div className="p-6 bg-red-100 dark:bg-red-900/50 border-2 border-red-400 dark:border-red-500 rounded-lg mb-4 shadow-xl">
+                  <h3 className="text-lg font-bold text-red-900 dark:text-red-100 mb-4 text-center uppercase tracking-wide bg-red-200 dark:bg-red-800 py-2 px-4 rounded">🚫 NO REFUND POLICY</h3>
+                  <p className="text-red-800 dark:text-red-200 mb-3 font-semibold">
+                    <strong>5.1 No Refunds:</strong> <span className="text-red-700 dark:text-red-300">All ticket purchases are final. We do not offer refunds under any circumstances, including but not limited to:</span>
                   </p>
-                  <ul className="list-disc list-inside ml-4 space-y-1 text-red-700 dark:text-red-300">
+                  <ul className="list-disc list-inside ml-4 space-y-2 text-red-800 dark:text-red-200 font-medium">
                     <li>Change of mind</li>
                     <li>Personal scheduling conflicts</li>
                     <li>Inability to attend the event</li>
                     <li>Technical issues with payment processing (after successful transaction)</li>
                   </ul>
-                  <p className="text-red-700 dark:text-red-300 mt-3">
-                    <strong>5.2 No Returns:</strong> As tickets are digital products delivered via email, returns are not applicable.
+                  <p className="text-red-800 dark:text-red-200 mt-4 font-semibold">
+                    <strong>5.2 No Returns:</strong> <span className="text-red-700 dark:text-red-300">As tickets are digital products delivered via email, returns are not applicable.</span>
                   </p>
                 </div>
                 <p className="mb-4">
@@ -124,7 +128,7 @@ const TermsAndConditions = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">6. Event Entry and QR Codes</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">6. Event Entry and QR Codes</h2>
                 <p className="mb-4">
                   6.1 <strong>Entry Requirements:</strong> A valid QR code is required for event entry. You must present your QR code at the venue for scanning.
                 </p>
@@ -137,7 +141,7 @@ const TermsAndConditions = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">7. Intellectual Property</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">7. Intellectual Property</h2>
                 <p className="mb-4">
                   7.1 All content on events.qlora.in, including design, code, and functionality, is the intellectual property of Aashvee Tech Solutions Pvt Ltd.
                 </p>
@@ -147,7 +151,7 @@ const TermsAndConditions = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">8. Limitation of Liability</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">8. Limitation of Liability</h2>
                 <p className="mb-4">
                   8.1 <strong>Service Availability:</strong> While we strive to maintain uninterrupted service, we cannot guarantee 100% uptime.
                 </p>
@@ -160,7 +164,7 @@ const TermsAndConditions = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">9. Privacy and Data Protection</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">9. Privacy and Data Protection</h2>
                 <p className="mb-4">
                   9.1 Your use of our Service is also governed by our Privacy Policy, which can be found at <a href="/privacy-policy" className="text-primary underline">events.qlora.in/privacy-policy</a>
                 </p>
@@ -170,11 +174,11 @@ const TermsAndConditions = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">10. Contact Information</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">10. Contact Information</h2>
                 <p className="mb-4">
                   10.1 For any questions regarding these Terms & Conditions, please contact us at:
                 </p>
-                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <div className="p-4 bg-blue-100 dark:bg-blue-900/50 border-2 border-blue-300 dark:border-blue-600 rounded-lg shadow-md">
                   <p><strong>Aashvee Tech Solutions Pvt Ltd</strong></p>
                   <p>Platform: events.qlora.in</p>
                   <p>Email: mis@aashveetech.com</p>
@@ -182,7 +186,7 @@ const TermsAndConditions = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-primary mb-4">11. Changes to Terms</h2>
+                <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4">11. Changes to Terms</h2>
                 <p className="mb-4">
                   11.1 We reserve the right to update these Terms & Conditions at any time. Changes will be effective immediately upon posting on our website.
                 </p>
