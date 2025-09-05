@@ -157,7 +157,8 @@ export class TicketGenerationService extends EventEmitter {
 
       try {
         // Import enhanced email service for consolidated email handling
-        const { enhancedEmailService } = await import('./enhancedEmailService');
+        const { EnhancedEmailService } = await import('./enhancedEmailService');
+        const enhancedEmailService = new EnhancedEmailService();
         await enhancedEmailService.sendTicketEmails({
           ...booking,
           guests: booking.guests || [],
