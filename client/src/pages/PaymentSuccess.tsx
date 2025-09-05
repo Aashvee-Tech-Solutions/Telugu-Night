@@ -53,8 +53,18 @@ export default function PaymentSuccess() {
     if (booking && booking.paymentStatus === 'verified') {
       // Check if QR codes don't exist or tickets haven't been sent
       if (!booking.qrCodes || booking.qrCodes.length === 0) {
+        console.log('🎫 Booking verified but no QR codes found, generating tickets...');
         sendTicketsMutation.mutate();
+      } else {
+        console.log('✅ QR codes already exist for this booking');
       }
+    } else if (booking && booking.paymentStatus === 'pending') {
+      console.log('⏳ Payment still pending, waiting for verification...');
+      // Optionally poll for payment status updates
+      setTimeout(() => {
+        // Refetch booking data after a delay
+        window.location.reload();
+      }, 5000);
     }
   }, [booking]);
 

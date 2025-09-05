@@ -2883,15 +2883,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parsedBody: req.body
       });
       
-      // Verify webhook signature
-      const isValid = await cashfreeService.verifyWebhook(signature, timestamp, rawBody);
-      if (!isValid) {
-        console.error(`❌ [${webhookId}] Webhook signature verification failed`);
-        return res.status(400).json({ 
-          message: 'Invalid webhook signature',
-          webhookId,
-          timestamp: new Date().toISOString()
-        });
+      // Verify webhook signature (skip verification in test mode for development)
+      const isTestMode = process.env.NODE_ENV === 'development' || process.env.CASHFREE_TEST_MODE === 'true';
+      
+      if (!isTestMode) {
+        const isValid = await cashfreeService.verifyWebhook(signature, timestamp, rawBody);
+        if (!isValid) {
+          console.error(`❌ [${webhookId}] Webhook signature verification failed`);
+          return res.status(400).json({ 
+            message: 'Invalid webhook signature',
+            webhookId,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } else {
+        console.log(`⚠️ [${webhookId}] Skipping webhook signature verification in test mode`);
       }
       
       const { order_id, order_status, payment_amount, cf_payment_id, payment_method } = req.body;

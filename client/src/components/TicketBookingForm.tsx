@@ -852,7 +852,33 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         
                         console.log('Opening checkout with options:', checkoutOptions);
                         console.log('Payment Session ID being used:', paymentLink);
-                        cashfree.checkout(checkoutOptions);
+                        
+                        // Add payment callbacks for success/failure handling
+                        const checkoutCallbacks = {
+                          onSuccess: function(data: any) {
+                            console.log('Payment successful:', data);
+                            // Redirect to payment success page
+                            window.location.href = `/payment/success?booking=${bookingId}`;
+                          },
+                          onFailure: function(data: any) {
+                            console.log('Payment failed:', data);
+                            toast({
+                              title: "Payment Failed",
+                              description: "Your payment was unsuccessful. Please try again or contact support.",
+                              variant: "destructive"
+                            });
+                            // Stay on the same page to allow retry
+                          },
+                          onClose: function() {
+                            console.log('Payment dialog closed');
+                            // User closed the payment dialog - no action needed
+                          }
+                        };
+                        
+                        cashfree.checkout({
+                          ...checkoutOptions,
+                          callbacks: checkoutCallbacks
+                        });
                       } catch (error) {
                         console.error('Payment initialization failed:', error);
                         toast({
