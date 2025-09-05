@@ -1100,28 +1100,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Google Sheets update failed:', sheetsError);
         }
 
-        // Send booking confirmation email after screenshot upload
-        try {
-          const { EnhancedEmailService } = await import('./services/enhancedEmailService');
-          const emailService = new EnhancedEmailService();
-          
-          const updatedBooking = await storage.getBooking(bookingId);
-          if (updatedBooking) {
-            await emailService.sendPaymentConfirmationEmail({
-              ...updatedBooking,
-              guests: updatedBooking.guests || [],
-              guestCodes: updatedBooking.guestCodes || [],
-              paymentStatus: updatedBooking.paymentStatus || 'pending'
-            });
-            console.log('✅ Booking confirmation email sent after screenshot upload');
-          }
-        } catch (emailError: any) {
-          console.error('Booking confirmation email failed:', emailError);
-          // Don't fail the upload if email fails
-        }
+        // Skip payment confirmation email after screenshot upload
 
         res.json({ 
-          message: 'Payment screenshot uploaded successfully! Booking confirmation sent. Awaiting admin verification.',
+          message: 'Payment screenshot uploaded successfully! Awaiting admin verification.',
           screenshotUrl: screenshotUrl,
           ticketsSent: false,
           filename: req.file.filename
@@ -2053,23 +2035,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Google Sheets screenshot sync failed:', sheetsError);
       }
       
-      // Send payment confirmation email after screenshot upload
-      try {
-        const { EnhancedEmailService } = await import('./services/enhancedEmailService');
-        const emailService = new EnhancedEmailService();
-        await emailService.sendPaymentConfirmationEmail({
-          ...booking,
-          guests: booking.guests || [],
-          guestCodes: booking.guestCodes || [],
-          paymentStatus: 'pending'
-        });
-        console.log(`✅ Payment confirmation email sent to ${booking.email}`);
-      } catch (emailError) {
-        console.error('Payment confirmation email failed:', emailError);
-      }
+      // Skip payment confirmation email after screenshot upload
 
       res.json({ 
-        message: 'Screenshot uploaded successfully! Confirmation email sent. Your booking is now pending admin verification.',
+        message: 'Screenshot uploaded successfully! Your booking is now pending admin verification.',
         screenshot: publicPath,
         booking: {
           id: booking.id,
@@ -2975,21 +2944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`💰 [${webhookId}] Payment successful for booking ${booking.id}, updating status to verified`);
             await storage.updateBookingPaymentStatus(booking.id, 'verified');
             
-            // Send payment completion email
-            try {
-              const { EnhancedEmailService } = await import('./services/enhancedEmailService');
-              const emailService = new EnhancedEmailService();
-              await emailService.sendPaymentCompletionEmail({
-                ...booking,
-                guests: booking.guests || [],
-                guestCodes: booking.guestCodes || [],
-                paymentStatus: 'verified'
-              });
-              console.log(`📧 [${webhookId}] Payment completion email sent to ${booking.email}`);
-            } catch (emailError: any) {
-              console.error(`❌ [${webhookId}] Payment completion email failed for booking ${booking.id}:`, emailError);
-              // Don't fail the webhook if email fails
-            }
+            // Skip payment completion email - only send QR tickets directly
             
             // Update Google Sheets with payment completion
             try {
