@@ -487,7 +487,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  Early Bird - General Access
+                                  Early Bird
                                 </h4>
                                 {!pricing.config?.earlyBird.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
@@ -534,7 +534,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  Phase 1 - General Access
+                                  Phase 1
                                 </h4>
                                 {!pricing.config?.phase1.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
@@ -581,7 +581,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  Phase 2 - General Access
+                                  Phase 2
                                 </h4>
                                 {!pricing.config?.phase2.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
