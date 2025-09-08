@@ -367,27 +367,51 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async validateCoupon(code: string): Promise<{ valid: boolean; discount: number; message: string }> {
-    // Get coupon directly from database to check all conditions
-    const [coupon] = await db.select().from(coupons).where(eq(coupons.code, code.toUpperCase()));
-    
-    if (!coupon) {
-      return { valid: false, discount: 0, message: 'Invalid coupon code' };
+  async validateCoupon(code: string, email: string): Promise<{ valid: boolean; discount: number; message: string }> {
+    try {
+      // Define allowed email list for coupons
+      const allowedEmails = [
+        'admin@aashveetech.com',
+        'mis@aashveetech.com',
+        'test@aashveetech.com',
+        'hemanthvardhan.cse21@gmail.com',
+        'support@aashveetech.com'
+      ];
+
+      // Check if email is in allowed list
+      if (!allowedEmails.includes(email.toLowerCase())) {
+        return { valid: false, discount: 0, message: 'Coupon not available for this email address' };
+      }
+
+      // Check if coupon code is valid format (at least 3 characters)
+      if (!code || code.length < 3) {
+        return { valid: false, discount: 0, message: 'Invalid coupon code format' };
+      }
+
+      // For allowed emails, provide flat discounts based on coupon code
+      const couponDiscounts: { [key: string]: number } = {
+        'ADMIN20': 20,
+        'STAFF15': 15,
+        'VIP30': 30,
+        'FRIEND10': 10,
+        'SPECIAL25': 25
+      };
+
+      const discount = couponDiscounts[code.toUpperCase()];
+      if (!discount) {
+        return { valid: false, discount: 0, message: 'Invalid coupon code' };
+      }
+
+      // All checks passed - coupon is valid
+      return { 
+        valid: true, 
+        discount: discount, 
+        message: `${discount}% discount applied` 
+      };
+    } catch (error) {
+      console.error('Coupon validation error:', error);
+      return { valid: false, discount: 0, message: 'Validation failed' };
     }
-    
-    if (!coupon.isActive) {
-      return { valid: false, discount: 0, message: 'Coupon is inactive' };
-    }
-    
-    if (coupon.usageLimit && (coupon.usageCount || 0) >= coupon.usageLimit) {
-      return { valid: false, discount: 0, message: 'Coupon usage limit reached' };
-    }
-    
-    return { 
-      valid: true, 
-      discount: coupon.discount, 
-      message: `${coupon.discount}% discount applied` 
-    };
   }
 
   async getAllCoupons(): Promise<Coupon[]> {

@@ -1265,7 +1265,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const validation = await storage.validateCoupon(code.trim().toUpperCase());
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ 
+          valid: false, 
+          discount: 0, 
+          message: 'Email address is required for coupon validation' 
+        });
+      }
+      const validation = await storage.validateCoupon(code.trim().toUpperCase(), email.trim());
       res.json(validation);
     } catch (error) {
       console.error('Coupon validation error:', error);
