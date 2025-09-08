@@ -715,7 +715,7 @@ export default function TeluguNightEventManagement() {
                   id="early-bird-limit"
                   type="number"
                   min="0"
-                  value={eventData.earlyBirdLimit || ''}
+                  value={eventData.earlyBirdLimit !== undefined ? eventData.earlyBirdLimit : ''}
                   onChange={(e) => setEventData({...eventData, earlyBirdLimit: parseInt(e.target.value) || 0})}
                   data-testid="input-early-bird-limit"
                 />
@@ -727,7 +727,7 @@ export default function TeluguNightEventManagement() {
                   id="phase1-limit"
                   type="number"
                   min="0"
-                  value={eventData.phase1Limit || ''}
+                  value={eventData.phase1Limit !== undefined ? eventData.phase1Limit : ''}
                   onChange={(e) => setEventData({...eventData, phase1Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase1-limit"
                 />
@@ -739,7 +739,7 @@ export default function TeluguNightEventManagement() {
                   id="phase2-limit"
                   type="number"
                   min="0"
-                  value={eventData.phase2Limit || ''}
+                  value={eventData.phase2Limit !== undefined ? eventData.phase2Limit : ''}
                   onChange={(e) => setEventData({...eventData, phase2Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase2-limit"
                 />
@@ -753,7 +753,7 @@ export default function TeluguNightEventManagement() {
                   id="phase3-limit"
                   type="number"
                   min="0"
-                  value={eventData.phase3Limit || ''}
+                  value={eventData.phase3Limit !== undefined ? eventData.phase3Limit : ''}
                   onChange={(e) => setEventData({...eventData, phase3Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase3-limit"
                 />
@@ -765,7 +765,7 @@ export default function TeluguNightEventManagement() {
                   id="phase4-limit"
                   type="number"
                   min="0"
-                  value={eventData.phase4Limit || ''}
+                  value={eventData.phase4Limit !== undefined ? eventData.phase4Limit : ''}
                   onChange={(e) => setEventData({...eventData, phase4Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase4-limit"
                 />
