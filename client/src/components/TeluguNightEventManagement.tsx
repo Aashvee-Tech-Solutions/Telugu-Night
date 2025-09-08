@@ -714,7 +714,7 @@ export default function TeluguNightEventManagement() {
                 <Input
                   id="early-bird-limit"
                   type="number"
-                  min="1"
+                  min="0"
                   value={eventData.earlyBirdLimit || ''}
                   onChange={(e) => setEventData({...eventData, earlyBirdLimit: parseInt(e.target.value) || 0})}
                   data-testid="input-early-bird-limit"
@@ -726,7 +726,7 @@ export default function TeluguNightEventManagement() {
                 <Input
                   id="phase1-limit"
                   type="number"
-                  min="1"
+                  min="0"
                   value={eventData.phase1Limit || ''}
                   onChange={(e) => setEventData({...eventData, phase1Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase1-limit"
@@ -738,7 +738,7 @@ export default function TeluguNightEventManagement() {
                 <Input
                   id="phase2-limit"
                   type="number"
-                  min="1"
+                  min="0"
                   value={eventData.phase2Limit || ''}
                   onChange={(e) => setEventData({...eventData, phase2Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase2-limit"
@@ -752,13 +752,24 @@ export default function TeluguNightEventManagement() {
                 <Input
                   id="phase3-limit"
                   type="number"
-                  min="1"
+                  min="0"
                   value={eventData.phase3Limit || ''}
                   onChange={(e) => setEventData({...eventData, phase3Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase3-limit"
                 />
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="phase4-limit">Phase 4 Limit</Label>
+                <Input
+                  id="phase4-limit"
+                  type="number"
+                  min="0"
+                  value={eventData.phase4Limit || ''}
+                  onChange={(e) => setEventData({...eventData, phase4Limit: parseInt(e.target.value) || 0})}
+                  data-testid="input-phase4-limit"
+                />
+              </div>
             </div>
           </div>
 
