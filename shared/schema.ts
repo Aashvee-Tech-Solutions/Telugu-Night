@@ -184,6 +184,8 @@ export const teluguNightCounter = pgTable("telugu_night_counter", {
   earlyBirdCount: integer("early_bird_count").default(0),
   phase1Count: integer("phase1_count").default(0),
   phase2Count: integer("phase2_count").default(0),
+  phase3Count: integer("phase3_count").default(0),
+  phase4Count: integer("phase4_count").default(0),
   totalSold: integer("total_sold").default(0),
   lastUpdated: timestamp("updated_at").defaultNow(),
 });

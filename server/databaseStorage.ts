@@ -529,13 +529,19 @@ export class DatabaseStorage implements IStorage {
         updateField = 'phase1Count';
       } else if (ticketType === 'phase_2') {
         updateField = 'phase2Count';
+      } else if (ticketType === 'phase_3') {
+        updateField = 'phase3Count';
+      } else if (ticketType === 'phase_4') {
+        updateField = 'phase4Count';
       } else {
         throw new Error(`Invalid ticket type: ${ticketType}`);
       }
       
       const currentCounts = await this.getTicketCounts();
       const currentCount = currentCounts[updateField === 'earlyBirdCount' ? 'earlyBirdCount' : 
-                                         updateField === 'phase1Count' ? 'phase1Count' : 'phase2Count'];
+                                         updateField === 'phase1Count' ? 'phase1Count' : 
+                                         updateField === 'phase2Count' ? 'phase2Count' :
+                                         updateField === 'phase3Count' ? 'phase3Count' : 'phase4Count'];
       const newCount = currentCount + ticketCount;
       const newTotalSold = currentCounts.totalSold + ticketCount;
       
@@ -555,6 +561,8 @@ export class DatabaseStorage implements IStorage {
           earlyBirdCount: updateField === 'earlyBirdCount' ? newCount : 0,
           phase1Count: updateField === 'phase1Count' ? newCount : 0,
           phase2Count: updateField === 'phase2Count' ? newCount : 0,
+          phase3Count: updateField === 'phase3Count' ? newCount : 0,
+          phase4Count: updateField === 'phase4Count' ? newCount : 0,
           totalSold: newTotalSold
         });
       }
@@ -578,13 +586,19 @@ export class DatabaseStorage implements IStorage {
         updateField = 'phase1Count';
       } else if (ticketType === 'phase_2') {
         updateField = 'phase2Count';
+      } else if (ticketType === 'phase_3') {
+        updateField = 'phase3Count';
+      } else if (ticketType === 'phase_4') {
+        updateField = 'phase4Count';
       } else {
         throw new Error(`Invalid ticket type: ${ticketType}`);
       }
       
       const currentCounts = await this.getTicketCounts();
       const currentCount = currentCounts[updateField === 'earlyBirdCount' ? 'earlyBirdCount' : 
-                                         updateField === 'phase1Count' ? 'phase1Count' : 'phase2Count'];
+                                         updateField === 'phase1Count' ? 'phase1Count' : 
+                                         updateField === 'phase2Count' ? 'phase2Count' :
+                                         updateField === 'phase3Count' ? 'phase3Count' : 'phase4Count'];
       const newCount = Math.max(0, currentCount - ticketCount); // Ensure count doesn't go negative
       const newTotalSold = Math.max(0, currentCounts.totalSold - ticketCount);
       

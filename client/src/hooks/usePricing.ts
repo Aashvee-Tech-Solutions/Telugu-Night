@@ -194,7 +194,7 @@ export function usePricing(): PricingContextType {
   const getAvailableTiers = useCallback((): PricingTier[] => {
     if (!config) return [];
 
-    return [config.earlyBird, config.phase1, config.phase2].filter(tier => {
+    return [config.earlyBird, config.phase1, config.phase2, config.phase3, config.phase4].filter(tier => {
       // Check if tier is active and has capacity
       const hasCapacity = tier.soldCount < tier.capacity;
       return tier.isActive && hasCapacity;

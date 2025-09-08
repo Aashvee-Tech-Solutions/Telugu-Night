@@ -319,6 +319,18 @@ export default function TeluguNightEventManagement() {
               <p className="text-sm text-gray-500">Phase 2</p>
               <p className="text-xs text-gray-400">of {currentConfig?.phase2Limit} limit</p>
             </div>
+            <div className="text-center p-4 border rounded-lg">
+              <Zap className="w-8 h-8 mx-auto mb-2 text-indigo-500" />
+              <p className="font-semibold text-lg">{counts?.phase3Count || 0}</p>
+              <p className="text-sm text-gray-500">Phase 3</p>
+              <p className="text-xs text-gray-400">of {currentConfig?.phase3Limit} limit</p>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <Zap className="w-8 h-8 mx-auto mb-2 text-red-500" />
+              <p className="font-semibold text-lg">{counts?.phase4Count || 0}</p>
+              <p className="text-sm text-gray-500">Phase 4</p>
+              <p className="text-xs text-gray-400">of {currentConfig?.phase4Limit} limit</p>
+            </div>
             <div className="text-center p-4 border rounded-lg bg-primary/10">
               <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
               <p className="font-semibold text-lg">{counts?.totalSold || 0}</p>
@@ -402,6 +414,50 @@ export default function TeluguNightEventManagement() {
                 <p className="text-sm text-gray-500">{counts?.phase2Count || 0} / {currentConfig?.phase2Limit} sold</p>
                 <Badge variant={currentConfig?.isPhase2Active ? "default" : "secondary"}>
                   {currentConfig?.isPhase2Active ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Phase 3 */}
+            <div className="border rounded-lg p-4">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-indigo-500" />
+                  <h3 className="font-medium">Phase 3</h3>
+                </div>
+                <Switch
+                  checked={currentConfig?.isPhase3Active}
+                  onCheckedChange={(checked) => togglePhaseMutation.mutate({ phase: 'phase3', active: checked })}
+                  data-testid="switch-phase-3"
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-semibold">₹{currentConfig?.phase3Price}</p>
+                <p className="text-sm text-gray-500">{counts?.phase3Count || 0} / {currentConfig?.phase3Limit} sold</p>
+                <Badge variant={currentConfig?.isPhase3Active ? "default" : "secondary"}>
+                  {currentConfig?.isPhase3Active ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Phase 4 */}
+            <div className="border rounded-lg p-4">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-red-500" />
+                  <h3 className="font-medium">Phase 4</h3>
+                </div>
+                <Switch
+                  checked={currentConfig?.isPhase4Active}
+                  onCheckedChange={(checked) => togglePhaseMutation.mutate({ phase: 'phase4', active: checked })}
+                  data-testid="switch-phase-4"
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-semibold">₹{currentConfig?.phase4Price}</p>
+                <p className="text-sm text-gray-500">{counts?.phase4Count || 0} / {currentConfig?.phase4Limit} sold</p>
+                <Badge variant={currentConfig?.isPhase4Active ? "default" : "secondary"}>
+                  {currentConfig?.isPhase4Active ? "Active" : "Inactive"}
                 </Badge>
               </div>
             </div>
