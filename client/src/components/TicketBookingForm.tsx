@@ -492,13 +492,6 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       placeholder="Enter number of tickets (max 15)"
                     />
                     
-                    {/* Booking Limit Message */}
-                    <div className="text-sm text-muted-foreground mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <p className="font-medium text-blue-800 dark:text-blue-200 mb-1">📞 Need more than 15 tickets?</p>
-                      <p className="text-blue-700 dark:text-blue-300">
-                        For bulk bookings, contact us at <a href="mailto:mis@aashveetech.com" className="underline font-medium hover:text-blue-600 dark:hover:text-blue-200">mis@aashveetech.com</a>
-                      </p>
-                    </div>
                     
                     {/* Comprehensive Ticket Selection */}
                     {pricing.config && (
@@ -520,12 +513,6 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                   ) : (
                                     <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
                                   )}
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                  Limited time offer - Get your tickets at the best price! Entry to main event area with full access to all activities.
-                                </p>
-                                <div className="text-xs text-gray-500">
-                                  {pricing.config?.earlyBird.soldCount || 0} / {pricing.config?.earlyBird.capacity || 0} sold
                                 </div>
                               </div>
                               <div className="flex items-center gap-4">
@@ -572,12 +559,6 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                  Regular pricing with guaranteed entry. Access to main event area, DJ performances, and all standard amenities.
-                                </p>
-                                <div className="text-xs text-gray-500">
-                                  {pricing.config?.phase1.soldCount || 0} / {pricing.config?.phase1.capacity || 0} sold
-                                </div>
                               </div>
                               <div className="flex items-center gap-4">
                                 <div className="text-right">
@@ -622,12 +603,6 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                   ) : (
                                     <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
                                   )}
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                  Standard pricing tier. Full access to event venue, premium sound system, and all entertainment activities.
-                                </p>
-                                <div className="text-xs text-gray-500">
-                                  {pricing.config?.phase2.soldCount || 0} / {pricing.config?.phase2.capacity || 0} sold
                                 </div>
                               </div>
                               <div className="flex items-center gap-4">
@@ -674,12 +649,6 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                  Premium pricing with enhanced experience. Priority entry, exclusive areas, and premium refreshments included.
-                                </p>
-                                <div className="text-xs text-gray-500">
-                                  {pricing.config?.phase3.soldCount || 0} / {pricing.config?.phase3.capacity || 0} sold
-                                </div>
                               </div>
                               <div className="flex items-center gap-4">
                                 <div className="text-right">
@@ -724,12 +693,6 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                   ) : (
                                     <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
                                   )}
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                  Final pricing tier with VIP treatment. Premium seating, exclusive backstage access, and complimentary amenities.
-                                </p>
-                                <div className="text-xs text-gray-500">
-                                  {pricing.config?.phase4.soldCount || 0} / {pricing.config?.phase4.capacity || 0} sold
                                 </div>
                               </div>
                               <div className="flex items-center gap-4">
