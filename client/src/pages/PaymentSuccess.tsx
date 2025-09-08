@@ -60,13 +60,14 @@ export default function PaymentSuccess() {
       }
     } else if (booking && booking.paymentStatus === 'pending') {
       console.log('⏳ Payment still pending, waiting for verification...');
-      // Optionally poll for payment status updates
-      setTimeout(() => {
-        // Refetch booking data after a delay
-        window.location.reload();
-      }, 5000);
+      // Show a message to the user instead of infinitely refreshing
+      toast({
+        title: "Payment Processing",
+        description: "Your payment is still being processed. Please wait or refresh manually.",
+        variant: "default",
+      });
     }
-  }, [booking]);
+  }, [booking, sendTicketsMutation, toast]);
 
   if (!bookingId) {
     return (
