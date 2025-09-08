@@ -1147,13 +1147,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // DISABLED: Manual payment verification route - payments are now automatically processed by Cashfree webhook
-  // app.post('/api/bookings/:id/verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
-  //   // This route has been disabled as payments are now automatically verified via webhook
-  //   return res.status(410).json({ 
-  //     message: 'Manual payment verification is no longer supported. Payments are automatically processed by the payment gateway.' 
-  //   });
-  // });
+  // Manual payment verification route (backup for webhook failures)
+  app.post('/api/bookings/:id/verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { action } = req.body; // 'verify' or 'reject'
+      
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+
+      if (action === 'verify') {
+        // Verify payment and generate tickets
+        await storage.updateBookingPaymentStatus(bookingId, 'verified');
+        
+        try {
+          const { TicketGenerationService } = await import('./services/ticketGenerationService');
+          const ticketService = new TicketGenerationService();
+          const progress = await ticketService.generateTicketsForBooking(bookingId);
+          
+          console.log(`✅ Manual verification complete for booking ${bookingId}: ${progress.qrCodes.length} tickets generated`);
+          
+          res.json({ 
+            message: `Payment verified successfully! ${progress.qrCodes.length} QR tickets sent to ${booking.email}`,
+            status: 'verified',
+            ticketsSent: true
+          });
+        } catch (ticketError: any) {
+          console.error('Manual ticket generation failed:', ticketError);
+          res.status(500).json({ 
+            message: 'Payment verified but ticket generation failed. Please try resending tickets.',
+            status: 'verified',
+            ticketsSent: false
+          });
+        }
+        
+      } else if (action === 'reject') {
+        // Reject payment
+        await storage.updateBookingPaymentStatus(bookingId, 'rejected');
+        
+        try {
+          const { EnhancedEmailService } = await import('./services/enhancedEmailService');
+          const enhancedEmailService = new EnhancedEmailService();
+          await enhancedEmailService.sendPaymentRejectionEmail(booking);
+          
+          console.log(`❌ Manual rejection complete for booking ${bookingId}`);
+          
+          res.json({ 
+            message: `Payment rejected for ${booking.name}. Rejection email sent.`,
+            status: 'rejected',
+            emailSent: true
+          });
+        } catch (emailError: any) {
+          console.error('Rejection email failed:', emailError);
+          res.json({ 
+            message: `Payment rejected for ${booking.name}. Email notification failed.`,
+            status: 'rejected',
+            emailSent: false
+          });
+        }
+        
+      } else {
+        res.status(400).json({ message: 'Invalid action. Use "verify" or "reject"' });
+      }
+      
+    } catch (error: any) {
+      console.error('Payment verification error:', error);
+      res.status(500).json({ message: error.message || 'Verification failed' });
+    }
+  });
 
   // Coupon Routes
   app.post('/api/coupons', authenticate, requirePermission(PERMISSIONS.MANAGE_COUPONS), async (req, res) => {
