@@ -548,7 +548,7 @@ export default function TeluguNightEventManagement() {
 
           <div>
             <h3 className="font-medium mb-4">Pricing Configuration</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="space-y-2">
                 <Label htmlFor="early-bird-price">Early Bird Price (₹)</Label>
                 <Input
@@ -584,6 +584,32 @@ export default function TeluguNightEventManagement() {
                   data-testid="input-phase2-price"
                 />
               </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phase3-price">Phase 3 Price (₹)</Label>
+                <Input
+                  id="phase3-price"
+                  type="number"
+                  min="1"
+                  value={eventData.phase3Price || ''}
+                  onChange={(e) => setEventData({...eventData, phase3Price: parseInt(e.target.value) || 0})}
+                  data-testid="input-phase3-price"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phase4-price">Phase 4 Price (₹)</Label>
+                <Input
+                  id="phase4-price"
+                  type="number"
+                  min="1"
+                  value={eventData.phase4Price || ''}
+                  onChange={(e) => setEventData({...eventData, phase4Price: parseInt(e.target.value) || 0})}
+                  data-testid="input-phase4-price"
+                />
+              </div>
               
               <div className="space-y-2">
                 <Label htmlFor="convenient-fee">Convenience Fee (₹)</Label>
@@ -604,7 +630,7 @@ export default function TeluguNightEventManagement() {
 
           <div>
             <h3 className="font-medium mb-4">Ticket Limits</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="space-y-2">
                 <Label htmlFor="early-bird-limit">Early Bird Limit</Label>
                 <Input
@@ -638,6 +664,32 @@ export default function TeluguNightEventManagement() {
                   value={eventData.phase2Limit || ''}
                   onChange={(e) => setEventData({...eventData, phase2Limit: parseInt(e.target.value) || 0})}
                   data-testid="input-phase2-limit"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phase3-limit">Phase 3 Limit</Label>
+                <Input
+                  id="phase3-limit"
+                  type="number"
+                  min="1"
+                  value={eventData.phase3Limit || ''}
+                  onChange={(e) => setEventData({...eventData, phase3Limit: parseInt(e.target.value) || 0})}
+                  data-testid="input-phase3-limit"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phase4-limit">Phase 4 Limit</Label>
+                <Input
+                  id="phase4-limit"
+                  type="number"
+                  min="1"
+                  value={eventData.phase4Limit || ''}
+                  onChange={(e) => setEventData({...eventData, phase4Limit: parseInt(e.target.value) || 0})}
+                  data-testid="input-phase4-limit"
                 />
               </div>
             </div>
