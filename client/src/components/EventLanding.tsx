@@ -10,8 +10,8 @@ export const EventLanding = () => {
 
   const eventDetails = {
     title: "Telugu Night",
-    date: "December 15, 2024",
-    time: "8:00 PM - 2:00 AM",
+    date: "September 19, 2025",
+    time: "7:00 PM - 11:00 PM",
     venue: "DTR, Down to Road Manipal",
     price: 300,
     totalTickets: 500,

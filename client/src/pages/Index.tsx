@@ -68,11 +68,11 @@ const Index = () => {
             </div>
             <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
               <p className="font-bold text-yellow-400 text-base mb-2">📅 Date</p>
-              <p className="text-slate-200 text-sm">December 15, 2024</p>
+              <p className="text-slate-200 text-sm">September 19, 2025</p>
             </div>
             <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
               <p className="font-bold text-yellow-400 text-base mb-2">🕐 Time</p>
-              <p className="text-slate-200 text-sm">8:00 PM - 2:00 AM</p>
+              <p className="text-slate-200 text-sm">7:00 PM - 11:00 PM</p>
             </div>
             <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
               <p className="font-bold text-yellow-400 text-base mb-2">💰 Price</p>
