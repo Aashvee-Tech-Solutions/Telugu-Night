@@ -500,57 +500,280 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       </p>
                     </div>
                     
-                    {/* Minimal Pricing Display */}
+                    {/* Comprehensive Ticket Selection */}
                     {pricing.config && (
                       <div className="mb-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Pricing Phases</h3>
-                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
-                            <div>
-                              <div className="text-xs text-orange-600 dark:text-orange-400">Early Bird</div>
-                              <div className="text-sm font-bold">₹{pricing.config.earlyBird.price}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-blue-600 dark:text-blue-400">Phase 1</div>
-                              <div className="text-sm font-bold">₹{pricing.config.phase1.price}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-purple-600 dark:text-purple-400">Phase 2</div>
-                              <div className="text-sm font-bold">₹{pricing.config.phase2.price}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-indigo-600 dark:text-indigo-400">Phase 3</div>
-                              <div className="text-sm font-bold">₹{pricing.config.phase3.price}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-red-600 dark:text-red-400">Phase 4</div>
-                              <div className="text-sm font-bold">₹{pricing.config.phase4.price}</div>
-                            </div>
-                          </div>
-                          {pricing.currentTier && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                              <div className="text-center">
-                                <span className="text-xs text-gray-500">Current: </span>
-                                <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                                  {pricing.currentTier.name} - ₹{pricing.currentTier.price}
-                                </span>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Select Tickets</h3>
+                        <div className="space-y-3">
+                          {/* Early Bird Tickets */}
+                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Early Bird - General Access
+                                  </h4>
+                                  {!pricing.config?.earlyBird.isActive ? (
+                                    <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                                  ) : (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
+                                    <Badge variant="destructive" className="text-xs">Sold Out</Badge>
+                                  ) : (
+                                    <Badge variant="default" className="text-xs bg-green-600">Available</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                  Limited time offer - Get your tickets at the best price! Entry to main event area with full access to all activities.
+                                </p>
+                                <div className="text-xs text-gray-500">
+                                  {pricing.config?.earlyBird.soldCount || 0} / {pricing.config?.earlyBird.capacity || 0} sold
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                    Rs. {pricing.config?.earlyBird.price || 0}
+                                  </div>
+                                </div>
+                                <Select 
+                                  value={pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird' ? formData.ticketCount.toString() : "0"}
+                                  onValueChange={(value) => {
+                                    if (pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird') {
+                                      handleTicketCountChange(parseInt(value));
+                                    }
+                                  }}
+                                  disabled={!pricing.config?.earlyBird.isActive || (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) || pricing.currentTier?.id !== 'early_bird'}
+                                >
+                                  <SelectTrigger className="w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 16 }, (_, i) => (
+                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
                             </div>
-                          )}
+                          </div>
+
+                          {/* Phase 1 Tickets */}
+                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Phase 1 - General Access
+                                  </h4>
+                                  {!pricing.config?.phase1.isActive ? (
+                                    <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                                  ) : (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
+                                    <Badge variant="destructive" className="text-xs">Sold Out</Badge>
+                                  ) : (
+                                    <Badge variant="default" className="text-xs bg-green-600">Available</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                  Regular pricing with guaranteed entry. Access to main event area, DJ performances, and all standard amenities.
+                                </p>
+                                <div className="text-xs text-gray-500">
+                                  {pricing.config?.phase1.soldCount || 0} / {pricing.config?.phase1.capacity || 0} sold
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                    Rs. {pricing.config?.phase1.price || 0}
+                                  </div>
+                                </div>
+                                <Select 
+                                  value={pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' ? formData.ticketCount.toString() : "0"}
+                                  onValueChange={(value) => {
+                                    if (pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1') {
+                                      handleTicketCountChange(parseInt(value));
+                                    }
+                                  }}
+                                  disabled={!pricing.config?.phase1.isActive || (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) || pricing.currentTier?.id !== 'phase_1'}
+                                >
+                                  <SelectTrigger className="w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 16 }, (_, i) => (
+                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Phase 2 Tickets */}
+                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Phase 2 - General Access
+                                  </h4>
+                                  {!pricing.config?.phase2.isActive ? (
+                                    <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                                  ) : (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
+                                    <Badge variant="destructive" className="text-xs">Sold Out</Badge>
+                                  ) : (
+                                    <Badge variant="default" className="text-xs bg-green-600">Available</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                  Standard pricing tier. Full access to event venue, premium sound system, and all entertainment activities.
+                                </p>
+                                <div className="text-xs text-gray-500">
+                                  {pricing.config?.phase2.soldCount || 0} / {pricing.config?.phase2.capacity || 0} sold
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                    Rs. {pricing.config?.phase2.price || 0}
+                                  </div>
+                                </div>
+                                <Select 
+                                  value={pricing.config?.phase2.isActive && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2' ? formData.ticketCount.toString() : "0"}
+                                  onValueChange={(value) => {
+                                    if (pricing.config?.phase2.isActive && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2') {
+                                      handleTicketCountChange(parseInt(value));
+                                    }
+                                  }}
+                                  disabled={!pricing.config?.phase2.isActive || (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) || pricing.currentTier?.id !== 'phase_2'}
+                                >
+                                  <SelectTrigger className="w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 16 }, (_, i) => (
+                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Phase 3 Tickets */}
+                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Phase 3 - Premium Access
+                                  </h4>
+                                  {!pricing.config?.phase3.isActive ? (
+                                    <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                                  ) : (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
+                                    <Badge variant="destructive" className="text-xs">Sold Out</Badge>
+                                  ) : (
+                                    <Badge variant="default" className="text-xs bg-green-600">Available</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                  Premium pricing with enhanced experience. Priority entry, exclusive areas, and premium refreshments included.
+                                </p>
+                                <div className="text-xs text-gray-500">
+                                  {pricing.config?.phase3.soldCount || 0} / {pricing.config?.phase3.capacity || 0} sold
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                    Rs. {pricing.config?.phase3.price || 0}
+                                  </div>
+                                </div>
+                                <Select 
+                                  value={pricing.config?.phase3.isActive && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3' ? formData.ticketCount.toString() : "0"}
+                                  onValueChange={(value) => {
+                                    if (pricing.config?.phase3.isActive && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3') {
+                                      handleTicketCountChange(parseInt(value));
+                                    }
+                                  }}
+                                  disabled={!pricing.config?.phase3.isActive || (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) || pricing.currentTier?.id !== 'phase_3'}
+                                >
+                                  <SelectTrigger className="w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 16 }, (_, i) => (
+                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Phase 4 Tickets */}
+                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Phase 4 - VIP Access
+                                  </h4>
+                                  {!pricing.config?.phase4.isActive ? (
+                                    <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                                  ) : (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
+                                    <Badge variant="destructive" className="text-xs">Sold Out</Badge>
+                                  ) : (
+                                    <Badge variant="default" className="text-xs bg-green-600">Available</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                  Final pricing tier with VIP treatment. Premium seating, exclusive backstage access, and complimentary amenities.
+                                </p>
+                                <div className="text-xs text-gray-500">
+                                  {pricing.config?.phase4.soldCount || 0} / {pricing.config?.phase4.capacity || 0} sold
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                    Rs. {pricing.config?.phase4.price || 0}
+                                  </div>
+                                </div>
+                                <Select 
+                                  value={pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4' ? formData.ticketCount.toString() : "0"}
+                                  onValueChange={(value) => {
+                                    if (pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4') {
+                                      handleTicketCountChange(parseInt(value));
+                                    }
+                                  }}
+                                  disabled={!pricing.config?.phase4.isActive || (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) || pricing.currentTier?.id !== 'phase_4'}
+                                >
+                                  <SelectTrigger className="w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 16 }, (_, i) => (
+                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
                         </div>
+
+                        {/* Current Selection Summary */}
+                        {pricing.currentTier && formData.ticketCount > 0 && (
+                          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <div className="text-center">
+                              <span className="text-sm text-blue-700 dark:text-blue-300">
+                                Selected: {formData.ticketCount} × {pricing.currentTier.name} tickets = ₹{(formData.ticketCount * pricing.currentTier.price).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* Simple Ticket Selection */}
-                    {formData.ticketCount > 0 && (
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border">
-                        <div className="text-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {formData.ticketCount} ticket{formData.ticketCount !== 1 ? 's' : ''} × ₹{basePrice} = ₹{(formData.ticketCount * basePrice).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Dynamic Price Display */}
                     {isAnyTicketAvailable && formData.ticketCount > 0 && (
