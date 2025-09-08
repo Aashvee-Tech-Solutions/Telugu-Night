@@ -387,7 +387,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
 
           <div class="calendar-section">
             <h3>📅 Add to Your Calendar</h3>
-            <p><strong>Telugu Night - August 3, 2025, 7:00 PM</strong></p>
+            <p><strong>Telugu Night - September 19, 2025, 6:30 PM</strong></p>
             <p>DTR, Manipal, Karnataka</p>
             <a href="${calendarLink}" class="calendar-button" target="_blank">
               📅 Add to Google Calendar
@@ -436,8 +436,8 @@ Contact: mis@aashveetech.com | +91 6281614117`);
             <ul>
               <li><strong>Event:</strong> Telugu Night - DJ Experience</li>
               <li><strong>Venue:</strong> DTR, Manipal</li>
-              <li><strong>Date:</strong> August 3, 2025</li>
-              <li><strong>Time:</strong> 7:00 PM - 11:00 PM</li>
+              <li><strong>Date:</strong> September 19, 2025</li>
+              <li><strong>Time:</strong> 6:30 PM - 11:00 PM</li>
               <li><strong>Entry:</strong> Show QR code or guest code</li>
             </ul>
           </div>

@@ -216,14 +216,14 @@ export default function PaymentSuccess() {
                   <Calendar className="h-5 w-5 text-green-500" />
                   <div>
                     <p className="font-medium">Date</p>
-                    <p className="text-sm text-gray-600">December 15, 2024</p>
+                    <p className="text-sm text-gray-600">September 19, 2025</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="h-5 w-5 text-purple-500" />
                   <div>
                     <p className="font-medium">Time</p>
-                    <p className="text-sm text-gray-600">8:00 PM - 2:00 AM</p>
+                    <p className="text-sm text-gray-600">6:30 PM - 11:00 PM</p>
                   </div>
                 </div>
               </div>
