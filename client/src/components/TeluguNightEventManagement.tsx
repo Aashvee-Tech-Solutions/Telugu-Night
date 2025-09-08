@@ -376,6 +376,16 @@ export default function TeluguNightEventManagement() {
               </div>
             )}
             
+            {/* Phase 4 - Only show if limit > 0 */}
+            {(currentConfig?.phase4Limit || 0) > 0 && (
+              <div className="text-center p-4 border rounded-lg">
+                <Zap className="w-8 h-8 mx-auto mb-2 text-red-500" />
+                <p className="font-semibold text-lg">{counts?.phase4Count || 0}</p>
+                <p className="text-sm text-gray-500">Phase 4</p>
+                <p className="text-xs text-gray-400">of {currentConfig?.phase4Limit} limit</p>
+              </div>
+            )}
+            
             {/* Total Sold - Always show */}
             <div className="text-center p-4 border rounded-lg bg-primary/10">
               <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
@@ -514,6 +524,35 @@ export default function TeluguNightEventManagement() {
             </div>
             )}
 
+            {/* Phase 4 */}
+            {(currentConfig?.phase4Limit || 0) > 0 && (
+            <div className="border rounded-lg p-4">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-red-500" />
+                  <h3 className="font-medium">Phase 4</h3>
+                </div>
+                <Switch
+                  checked={currentConfig?.isPhase4Active}
+                  onCheckedChange={(checked) => togglePhaseMutation.mutate({ phase: 'phase4', active: checked })}
+                  data-testid="switch-phase-4"
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-semibold">₹{currentConfig?.phase4Price}</p>
+                <p className="text-sm text-gray-500">{counts?.phase4Count || 0} / {currentConfig?.phase4Limit} sold</p>
+                {(() => {
+                  const status = getPhaseStatus(currentConfig?.isPhase4Active, counts?.phase4Count || 0, currentConfig?.phase4Limit || 0);
+                  return (
+                    <Badge variant={status.variant} className={status.color}>
+                      {status.text}
+                    </Badge>
+                  );
+                })()}
+              </div>
+            </div>
+            )}
+
           </div>
         </CardContent>
       </Card>
@@ -625,7 +664,7 @@ export default function TeluguNightEventManagement() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phase3-price">Phase 3 Price (₹)</Label>
                 <Input
@@ -638,6 +677,17 @@ export default function TeluguNightEventManagement() {
                 />
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="phase4-price">Phase 4 Price (₹)</Label>
+                <Input
+                  id="phase4-price"
+                  type="number"
+                  min="1"
+                  value={eventData.phase4Price || ''}
+                  onChange={(e) => setEventData({...eventData, phase4Price: parseInt(e.target.value) || 0})}
+                  data-testid="input-phase4-price"
+                />
+              </div>
               
               <div className="space-y-2">
                 <Label htmlFor="convenient-fee">Convenience Fee (₹)</Label>
