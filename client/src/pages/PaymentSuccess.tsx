@@ -54,34 +54,29 @@ export default function PaymentSuccess() {
     failed: false
   });
 
-  // Automatically send tickets when booking is loaded and verified
+  // Handle payment status and redirect accordingly
   useEffect(() => {
-    if (booking && booking.paymentStatus === 'verified') {
-      // Check if QR codes don't exist or tickets haven't been sent
-      if (!booking.qrCodes || booking.qrCodes.length === 0) {
-        console.log('🎫 Booking verified but no QR codes found, generating tickets...');
-        sendTicketsMutation.mutate();
-      } else {
-        console.log('✅ QR codes already exist for this booking');
+    if (booking) {
+      if (booking.paymentStatus === 'failed') {
+        console.log('❌ Payment failed, redirecting to failure page');
+        window.location.href = `/payment/failure?booking=${booking.id}`;
+        return;
       }
-    } else if (booking && booking.paymentStatus === 'pending' && !statusShown.pending) {
-      console.log('⏳ Payment still pending, waiting for verification...');
-      toast({
-        title: "Payment Processing",
-        description: "Your payment is still being processed. Please wait or refresh manually.",
-        variant: "default",
-      });
-      setStatusShown(prev => ({ ...prev, pending: true }));
-    } else if (booking && booking.paymentStatus === 'failed' && !statusShown.failed) {
-      console.log('❌ Payment failed for booking:', booking.id);
-      toast({
-        title: "Payment Failed",
-        description: "Your payment was not successful. Please try again or contact support.",
-        variant: "destructive",
-      });
-      setStatusShown(prev => ({ ...prev, failed: true }));
+      
+      if (booking.paymentStatus === 'verified') {
+        // Check if QR codes don't exist or tickets haven't been sent
+        if (!booking.qrCodes || booking.qrCodes.length === 0) {
+          console.log('🎫 Booking verified but no QR codes found, generating tickets...');
+          sendTicketsMutation.mutate();
+        } else {
+          console.log('✅ QR codes already exist for this booking');
+        }
+      } else if (booking.paymentStatus === 'pending') {
+        console.log('⏳ Payment still pending, waiting for verification...');
+        // Only show processing message, don't generate tickets yet
+      }
     }
-  }, [booking?.id, booking?.paymentStatus, booking?.qrCodes?.length]);
+  }, [booking?.id, booking?.paymentStatus]);
 
   if (!bookingId) {
     return (
@@ -131,30 +126,25 @@ export default function PaymentSuccess() {
     );
   }
 
-  // Handle payment failure
-  if (booking && booking.paymentStatus === 'failed') {
+  // Show processing state for pending payments
+  if (booking && booking.paymentStatus === 'pending') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="text-center p-8">
-            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-red-600 mb-2">Payment Failed</h2>
-            <p className="text-gray-600 mb-4">Your payment for Telugu Night tickets was not successful.</p>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-red-700">
-                <strong>Booking ID:</strong> #{booking.id}<br/>
-                <strong>Amount:</strong> ₹{booking.totalAmount}<br/>
-                <strong>Status:</strong> Payment Failed
+      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100 flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-yellow-500 mx-auto mb-4 animate-spin" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Payment Processing</h2>
+            <p className="text-gray-600 mb-4 text-sm sm:text-base">
+              Your payment is being processed. This may take a few minutes.
+            </p>
+            <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 inline-block mb-4">
+              <p className="text-yellow-800 font-medium text-sm">
+                Booking ID: #{booking.id}
               </p>
             </div>
-            <div className="space-y-3">
-              <Button onClick={() => window.location.href = '/'} className="w-full">
-                Try Again
-              </Button>
-              <p className="text-xs text-gray-500">
-                If you continue to face issues, please contact us at mis@aashveetech.com
-              </p>
-            </div>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              Please do not refresh this page. You will be redirected automatically once payment is confirmed.
+            </p>
           </CardContent>
         </Card>
       </div>
