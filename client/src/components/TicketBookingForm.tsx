@@ -95,7 +95,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
     onError: (error: Error) => {
       toast({
         title: "Booking Failed",
-        description: error.message || "Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -114,8 +114,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
         },
         body: JSON.stringify({ 
           code: code.trim().toUpperCase(),
-          email: formData.email,
-          ticketType: formData.ticketType,
+          ticketPrice: basePrice,
           ticketCount: formData.ticketCount
         }),
       });
@@ -137,7 +136,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
     onError: () => {
       toast({
         title: "Invalid Coupon",
-        description: "Please check your coupon code and try again.",
+        description: "The coupon code you entered is invalid or expired.",
         variant: "destructive",
       });
     },
@@ -147,10 +146,13 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
   const handleTicketCountChange = (count: number) => {
     // Allow 0-15 tickets, but adjust guests accordingly  
     const validCount = Math.max(0, Math.min(15, count));
-    const newGuests = Array(Math.max(0, validCount - 1)).fill("");
-    const newGuestGenders = Array(Math.max(0, validCount - 1)).fill("");
     
-    // Auto-determine ticket type based on admin configuration
+    // Adjust guest arrays to match ticket count (guest arrays are 1 less than ticket count)
+    const guestArraySize = Math.max(0, validCount - 1);
+    const newGuests = [...formData.guests];
+    const newGuestGenders = [...formData.guestGenders];
+    
+    // Set ticket type based on available tiers
     let ticketType = formData.ticketType;
     if (isEarlyBirdAvailable) {
       ticketType = "early_bird";
@@ -161,8 +163,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
     setFormData(prev => ({
       ...prev,
       ticketCount: validCount,
-      guests: newGuests,
-      guestGenders: newGuestGenders,
+      guests: newGuests.slice(0, guestArraySize),
+      guestGenders: newGuestGenders.slice(0, guestArraySize),
       ticketType
     }));
   };
@@ -186,7 +188,6 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
   };
 
 
-
   const calculateTotal = () => {
     return totalTicketsPrice;
   };
@@ -198,77 +199,78 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
   const handleNextStep = () => {
     if (step === 1) {
       // Validate phone number (exactly 10 digits)
-      const phoneRegex = /^\d{10}$/;
-      if (!phoneRegex.test(formData.phone)) {
+      if (!formData.name.trim()) {
         toast({
-          title: "Invalid Phone Number",
-          description: "Phone number must be exactly 10 digits.",
+          title: "Name Required",
+          description: "Please enter your full name.",
           variant: "destructive",
         });
         return;
       }
       
-      // Validate email
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
+      if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
         toast({
-          title: "Invalid Email",
+          title: "Valid Email Required",
           description: "Please enter a valid email address.",
           variant: "destructive",
         });
         return;
       }
       
-      if (!formData.name || !formData.email || !formData.phone || !formData.gender) {
+      if (!formData.phone.trim() || formData.phone.length !== 10 || !/^\d{10}$/.test(formData.phone)) {
         toast({
-          title: "Missing Information",
-          description: "Please fill in all required fields including gender.",
+          title: "Valid Phone Required",
+          description: "Please enter a valid 10-digit phone number.",
           variant: "destructive",
         });
         return;
       }
-      
+
+      if (!formData.gender.trim()) {
+        toast({
+          title: "Gender Required",
+          description: "Please select your gender.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (formData.ticketCount < 1) {
         toast({
-          title: "Invalid Ticket Count",
-          description: "Please select at least 1 ticket to proceed.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    
-    if (step === 2 && formData.ticketCount > 1) {
-      const emptyGuests = formData.guests.filter(guest => !guest.trim());
-      const emptyGuestGenders = formData.guestGenders.filter(gender => !gender.trim());
-      
-      if (emptyGuests.length > 0) {
-        toast({
-          title: "Guest Names Required",
-          description: "Please enter names for all guests.",
+          title: "Select Tickets",
+          description: "Please select at least one ticket.",
           variant: "destructive",
         });
         return;
       }
       
-      if (emptyGuestGenders.length > 0) {
-        toast({
-          title: "Guest Genders Required",
-          description: "Please select gender for all guests.",
-          variant: "destructive",
-        });
-        return;
+      setStep(2);
+    } else if (step === 2) {
+      // Validate guest details if multiple tickets
+      if (formData.ticketCount > 1) {
+        const emptyGuests = formData.guests.filter(g => !g.trim());
+        const emptyGenders = formData.guestGenders.filter(g => !g.trim());
+        
+        if (emptyGuests.length > 0 || emptyGenders.length > 0) {
+          toast({
+            title: "Guest Details Required",
+            description: "Please enter all guest names and genders.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
+      setStep(3);
+    } else if (step === 3) {
+      setStep(4);
     }
-    
-    setStep(step + 1);
   };
 
   const handleBooking = () => {
     if (formData.ticketCount < 1) {
       toast({
-        title: "Cannot Create Booking",
-        description: "Please select at least 1 ticket to create a booking.",
+        title: "No Tickets Selected",
+        description: "Please select at least one ticket before booking.",
         variant: "destructive",
       });
       return;
@@ -456,291 +458,289 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                 {pricing.config && (
                   <div className="mb-4">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Select Tickets</h3>
-                        <div className="space-y-3">
-                          {/* Early Bird Tickets */}
-                          {pricing.config?.earlyBird.capacity > 0 && (
-                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Early Bird - General Access
-                                  </h4>
-                                  {!pricing.config?.earlyBird.isActive ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
-                                  ) : (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
-                                  ) : (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    Rs. {pricing.config?.earlyBird.price || 0}
-                                  </div>
-                                </div>
-                                <Select 
-                                  value={pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird' ? formData.ticketCount.toString() : "0"}
-                                  onValueChange={(value) => {
-                                    if (pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird') {
-                                      handleTicketCountChange(parseInt(value));
-                                    }
-                                  }}
-                                  disabled={!pricing.config?.earlyBird.isActive || (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) || pricing.currentTier?.id !== 'early_bird'}
-                                >
-                                  <SelectTrigger className="w-20">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Array.from({ length: 16 }, (_, i) => (
-                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                    <div className="space-y-3">
+                      {/* Early Bird Tickets */}
+                      {pricing.config?.earlyBird.capacity > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                  Early Bird - General Access
+                                </h4>
+                                {!pricing.config?.earlyBird.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                ) : (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                )}
                               </div>
                             </div>
-                          </div>
-                          )}
-
-                          {/* Phase 1 Tickets */}
-                          {pricing.config?.phase1.capacity > 0 && (
-                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Phase 1 - General Access
-                                  </h4>
-                                  {!pricing.config?.phase1.isActive ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
-                                  ) : (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
-                                  ) : (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
-                                  )}
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                  Rs. {pricing.config?.earlyBird.price || 0}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    Rs. {pricing.config?.phase1.price || 0}
-                                  </div>
-                                </div>
-                                <Select 
-                                  value={pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' ? formData.ticketCount.toString() : "0"}
-                                  onValueChange={(value) => {
-                                    if (pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1') {
-                                      handleTicketCountChange(parseInt(value));
-                                    }
-                                  }}
-                                  disabled={!pricing.config?.phase1.isActive || (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) || pricing.currentTier?.id !== 'phase_1'}
-                                >
-                                  <SelectTrigger className="w-20">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Array.from({ length: 16 }, (_, i) => (
-                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                              <Select 
+                                value={pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird' ? formData.ticketCount.toString() : "0"}
+                                onValueChange={(value) => {
+                                  if (pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird') {
+                                    handleTicketCountChange(parseInt(value));
+                                  }
+                                }}
+                                disabled={!pricing.config?.earlyBird.isActive || (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) || pricing.currentTier?.id !== 'early_bird'}
+                              >
+                                <SelectTrigger className="w-20">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 16 }, (_, i) => (
+                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
-                          )}
-
-                          {/* Phase 2 Tickets */}
-                          {pricing.config?.phase2.capacity > 0 && (
-                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Phase 2 - General Access
-                                  </h4>
-                                  {!pricing.config?.phase2.isActive ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
-                                  ) : (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
-                                  ) : (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    Rs. {pricing.config?.phase2.price || 0}
-                                  </div>
-                                </div>
-                                <Select 
-                                  value={pricing.config?.phase2.isActive && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2' ? formData.ticketCount.toString() : "0"}
-                                  onValueChange={(value) => {
-                                    if (pricing.config?.phase2.isActive && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2') {
-                                      handleTicketCountChange(parseInt(value));
-                                    }
-                                  }}
-                                  disabled={!pricing.config?.phase2.isActive || (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) || pricing.currentTier?.id !== 'phase_2'}
-                                >
-                                  <SelectTrigger className="w-20">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Array.from({ length: 16 }, (_, i) => (
-                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </div>
-                          )}
-
-                          {/* Phase 3 Tickets */}
-                          {pricing.config?.phase3.capacity > 0 && (
-                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Phase 3 - Premium Access
-                                  </h4>
-                                  {!pricing.config?.phase3.isActive ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
-                                  ) : (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
-                                  ) : (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    Rs. {pricing.config?.phase3.price || 0}
-                                  </div>
-                                </div>
-                                <Select 
-                                  value={pricing.config?.phase3.isActive && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3' ? formData.ticketCount.toString() : "0"}
-                                  onValueChange={(value) => {
-                                    if (pricing.config?.phase3.isActive && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3') {
-                                      handleTicketCountChange(parseInt(value));
-                                    }
-                                  }}
-                                  disabled={!pricing.config?.phase3.isActive || (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) || pricing.currentTier?.id !== 'phase_3'}
-                                >
-                                  <SelectTrigger className="w-20">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Array.from({ length: 16 }, (_, i) => (
-                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </div>
-                          )}
-
-                          {/* Phase 4 Tickets */}
-                          {pricing.config?.phase4.capacity > 0 && (
-                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Phase 4 - VIP Access
-                                  </h4>
-                                  {!pricing.config?.phase4.isActive ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
-                                  ) : (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
-                                  ) : (
-                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    Rs. {pricing.config?.phase4.price || 0}
-                                  </div>
-                                </div>
-                                <Select 
-                                  value={pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4' ? formData.ticketCount.toString() : "0"}
-                                  onValueChange={(value) => {
-                                    if (pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4') {
-                                      handleTicketCountChange(parseInt(value));
-                                    }
-                                  }}
-                                  disabled={!pricing.config?.phase4.isActive || (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) || pricing.currentTier?.id !== 'phase_4'}
-                                >
-                                  <SelectTrigger className="w-20">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Array.from({ length: 16 }, (_, i) => (
-                                      <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </div>
-                          )}
                         </div>
+                      )}
 
-                        {/* Current Selection Summary */}
-                        {pricing.currentTier && formData.ticketCount > 0 && (
-                          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                            <div className="text-center">
-                              <span className="text-sm text-blue-700 dark:text-blue-300">
-                                Selected: {formData.ticketCount} × {pricing.currentTier.name} tickets = ₹{(formData.ticketCount * pricing.currentTier.price).toFixed(2)}
-                              </span>
+                      {/* Phase 1 Tickets */}
+                      {pricing.config?.phase1.capacity > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                  Phase 1 - General Access
+                                </h4>
+                                {!pricing.config?.phase1.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                ) : (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                  Rs. {pricing.config?.phase1.price || 0}
+                                </div>
+                              </div>
+                              <Select 
+                                value={pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' ? formData.ticketCount.toString() : "0"}
+                                onValueChange={(value) => {
+                                  if (pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1') {
+                                    handleTicketCountChange(parseInt(value));
+                                  }
+                                }}
+                                disabled={!pricing.config?.phase1.isActive || (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) || pricing.currentTier?.id !== 'phase_1'}
+                              >
+                                <SelectTrigger className="w-20">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 16 }, (_, i) => (
+                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
-                        )}
+                        </div>
+                      )}
+
+                      {/* Phase 2 Tickets */}
+                      {pricing.config?.phase2.capacity > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                  Phase 2 - General Access
+                                </h4>
+                                {!pricing.config?.phase2.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                ) : (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                  Rs. {pricing.config?.phase2.price || 0}
+                                </div>
+                              </div>
+                              <Select 
+                                value={pricing.config?.phase2.isActive && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2' ? formData.ticketCount.toString() : "0"}
+                                onValueChange={(value) => {
+                                  if (pricing.config?.phase2.isActive && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2') {
+                                    handleTicketCountChange(parseInt(value));
+                                  }
+                                }}
+                                disabled={!pricing.config?.phase2.isActive || (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) || pricing.currentTier?.id !== 'phase_2'}
+                              >
+                                <SelectTrigger className="w-20">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 16 }, (_, i) => (
+                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Phase 3 Tickets */}
+                      {pricing.config?.phase3.capacity > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                  Phase 3 - Premium Access
+                                </h4>
+                                {!pricing.config?.phase3.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                ) : (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                  Rs. {pricing.config?.phase3.price || 0}
+                                </div>
+                              </div>
+                              <Select 
+                                value={pricing.config?.phase3.isActive && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3' ? formData.ticketCount.toString() : "0"}
+                                onValueChange={(value) => {
+                                  if (pricing.config?.phase3.isActive && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3') {
+                                    handleTicketCountChange(parseInt(value));
+                                  }
+                                }}
+                                disabled={!pricing.config?.phase3.isActive || (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) || pricing.currentTier?.id !== 'phase_3'}
+                              >
+                                <SelectTrigger className="w-20">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 16 }, (_, i) => (
+                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Phase 4 Tickets */}
+                      {pricing.config?.phase4.capacity > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                  Phase 4 - VIP Access
+                                </h4>
+                                {!pricing.config?.phase4.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                ) : (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                  Rs. {pricing.config?.phase4.price || 0}
+                                </div>
+                              </div>
+                              <Select 
+                                value={pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4' ? formData.ticketCount.toString() : "0"}
+                                onValueChange={(value) => {
+                                  if (pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4') {
+                                    handleTicketCountChange(parseInt(value));
+                                  }
+                                }}
+                                disabled={!pricing.config?.phase4.isActive || (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) || pricing.currentTier?.id !== 'phase_4'}
+                              >
+                                <SelectTrigger className="w-20">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 16 }, (_, i) => (
+                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-
-                  {/* Dynamic Price Display */}
-                    {isAnyTicketAvailable && formData.ticketCount > 0 && (
-                      <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              {pricing.currentTier?.name || "Ticket"} Price ({pricing.formatCurrency(basePrice)} × {formData.ticketCount}):
-                            </span>
-                            <span className="font-medium">{pricing.formatCurrency(totalTicketsPrice)}</span>
-                          </div>
-                          
-                          {formData.couponDiscount > 0 && (
-                            <div className="flex justify-between items-center text-green-600 dark:text-green-400">
-                              <span className="text-sm">
-                                Discount ({formData.couponDiscount}%):
-                              </span>
-                              <span className="font-medium">-{pricing.formatCurrency(discountAmount)}</span>
-                            </div>
-                          )}
-                          
-                          <div className="flex justify-between items-center text-sm text-orange-600 dark:text-orange-400">
-                            <span>Convenience Fee ({pricing.formatCurrency(pricingCalculation.convenienceFee / formData.ticketCount)} × {formData.ticketCount}):</span>
-                            <span className="font-medium">{pricing.formatCurrency(pricingCalculation.convenienceFee)}</span>
-                          </div>
-                          
-                          <div className="flex justify-between items-center text-lg font-bold text-purple-600 dark:text-purple-400 border-t pt-2 mt-2">
-                            <span>Total Amount:</span>
-                            <span>{pricing.formatCurrency(finalAmount)}</span>
-                          </div>
+                    {/* Current Selection Summary */}
+                    {pricing.currentTier && formData.ticketCount > 0 && (
+                      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="text-center">
+                          <span className="text-sm text-blue-700 dark:text-blue-300">
+                            Selected: {formData.ticketCount} × {pricing.currentTier.name} tickets = ₹{(formData.ticketCount * pricing.currentTier.price).toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
+                )}
+
+
+                {/* Dynamic Price Display */}
+                {isAnyTicketAvailable && formData.ticketCount > 0 && (
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                          {pricing.currentTier?.name || "Ticket"} Price ({pricing.formatCurrency(basePrice)} × {formData.ticketCount}):
+                        </span>
+                        <span className="font-medium">{pricing.formatCurrency(totalTicketsPrice)}</span>
+                      </div>
+                      
+                      {formData.couponDiscount > 0 && (
+                        <div className="flex justify-between items-center text-green-600 dark:text-green-400">
+                          <span className="text-sm">
+                            Discount ({formData.couponDiscount}%):
+                          </span>
+                          <span className="font-medium">-{pricing.formatCurrency(discountAmount)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center text-sm text-orange-600 dark:text-orange-400">
+                        <span>Convenience Fee ({pricing.formatCurrency(pricingCalculation.convenienceFee / formData.ticketCount)} × {formData.ticketCount}):</span>
+                        <span className="font-medium">{pricing.formatCurrency(pricingCalculation.convenienceFee)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-lg font-bold text-purple-600 dark:text-purple-400 border-t pt-2 mt-2">
+                        <span>Total Amount:</span>
+                        <span>{pricing.formatCurrency(finalAmount)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -826,54 +826,32 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                   </div>
                 )}
                 
-                {validateCouponMutation.isError && (
-                  <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <p className="text-red-800 dark:text-red-200 font-medium">
-                      ❌ {validateCouponMutation.error?.message || 'Invalid coupon code'}
-                    </p>
-                  </div>
-                )}
-                
-                
-              </div>
-            )}
-
-            {/* Step 4: Payment */}
-            {step === 4 && !bookingId && (
-              <div className="space-y-4">
-                <h3 className="text-lg md:text-xl font-semibold">Payment Summary</h3>
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 md:p-6 rounded-xl border border-blue-200 dark:border-blue-800 shadow-lg">
-                  <div className="text-lg md:text-xl font-bold text-blue-800 dark:text-blue-200 mb-4 text-center">💰 Payment Breakdown</div>
-                  
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4 space-y-3 shadow-sm text-[#000000]">
-                    <div className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ticket Price: ₹{basePrice} each</div>
-                  </div>
-
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4 mt-4 shadow-sm">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-xs md:text-sm">
-                        <span className="break-words">Subtotal ({formData.ticketCount} tickets × ₹{basePrice})</span>
-                        <span className="font-medium flex-shrink-0">₹{totalTicketsPrice.toFixed(2)}</span>
+                {/* Pricing Summary */}
+                <div className="bg-card border rounded-lg p-4 space-y-2">
+                  <h4 className="text-lg font-semibold">Booking Summary</h4>
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span>Tickets ({formData.ticketCount} × ₹{basePrice})</span>
+                      <span className="font-medium">₹{totalTicketsPrice.toFixed(2)}</span>
+                    </div>
+                    
+                    {formData.couponDiscount > 0 && (
+                      <div className="flex justify-between items-center text-green-600 dark:text-green-400">
+                        <span>🎟️ Coupon Discount ({formData.couponDiscount}%)</span>
+                        <span className="font-medium">-₹{discountAmount.toFixed(2)}</span>
                       </div>
-                      
-                      {formData.couponDiscount > 0 && (
-                        <div className="flex justify-between items-center text-green-600 dark:text-green-400 text-xs md:text-sm">
-                          <span className="break-words">🎟️ Coupon Discount ({formData.couponDiscount}%)</span>
-                          <span className="font-medium flex-shrink-0">-₹{discountAmount.toFixed(2)}</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-between items-center text-xs md:text-sm text-orange-600 dark:text-orange-400">
-                        <span className="break-words">💳 Convenience Fee ({formData.ticketCount} × ₹12.96)</span>
-                        <span className="font-medium flex-shrink-0">₹{(formData.ticketCount * 12.96).toFixed(2)}</span>
-                      </div>
-                      
-                      <hr className="border-gray-300 dark:border-gray-600" />
-                      
-                      <div className="flex justify-between items-center text-base md:text-lg font-bold text-purple-700 dark:text-purple-300">
-                        <span className="break-words">Total Amount</span>
-                        <span className="flex-shrink-0">₹{calculateTotalWithFee().toFixed(2)}</span>
-                      </div>
+                    )}
+                    
+                    <div className="flex justify-between items-center text-orange-600 dark:text-orange-400">
+                      <span>💳 Convenience Fee ({formData.ticketCount} × ₹12.96)</span>
+                      <span className="font-medium">₹{(formData.ticketCount * 12.96).toFixed(2)}</span>
+                    </div>
+                    
+                    <hr className="my-2" />
+                    
+                    <div className="flex justify-between items-center text-lg font-bold text-purple-700 dark:text-purple-300">
+                      <span>Total Amount</span>
+                      <span>₹{calculateTotalWithFee().toFixed(2)}</span>
                     </div>
                   </div>
 
