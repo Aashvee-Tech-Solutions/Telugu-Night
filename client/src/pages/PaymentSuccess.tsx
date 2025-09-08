@@ -66,6 +66,13 @@ export default function PaymentSuccess() {
         description: "Your payment is still being processed. Please wait or refresh manually.",
         variant: "default",
       });
+    } else if (booking && booking.paymentStatus === 'failed') {
+      console.log('❌ Payment failed for booking:', booking.id);
+      toast({
+        title: "Payment Failed",
+        description: "Your payment was not successful. Please try again or contact support.",
+        variant: "destructive",
+      });
     }
   }, [booking, sendTicketsMutation, toast]);
 
@@ -111,6 +118,36 @@ export default function PaymentSuccess() {
             <Button onClick={() => window.location.href = '/'}>
               Return to Home
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle payment failure
+  if (booking && booking.paymentStatus === 'failed') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="text-center p-8">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-red-600 mb-2">Payment Failed</h2>
+            <p className="text-gray-600 mb-4">Your payment for Telugu Night tickets was not successful.</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-red-700">
+                <strong>Booking ID:</strong> #{booking.id}<br/>
+                <strong>Amount:</strong> ₹{booking.totalAmount}<br/>
+                <strong>Status:</strong> Payment Failed
+              </p>
+            </div>
+            <div className="space-y-3">
+              <Button onClick={() => window.location.href = '/'} className="w-full">
+                Try Again
+              </Button>
+              <p className="text-xs text-gray-500">
+                If you continue to face issues, please contact us at mis@aashveetech.com
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
