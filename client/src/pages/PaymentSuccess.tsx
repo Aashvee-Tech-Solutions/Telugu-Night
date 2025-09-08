@@ -28,7 +28,7 @@ export default function PaymentSuccess() {
     retryDelay: 1000,
     refetchInterval: (data) => {
       // Keep polling every 2 seconds if payment is still pending
-      if (data?.paymentStatus === 'pending') {
+      if ((data as Booking)?.paymentStatus === 'pending') {
         return 2000;
       }
       return false; // Stop polling once status is determined
@@ -374,7 +374,7 @@ export default function PaymentSuccess() {
                             Download Ticket
                           </Button>
                         )}
-                        {booking.qrCodes && booking.qrCodes.length > 1 && (
+                        {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 1 && (
                           <Button 
                             onClick={downloadAllTickets}
                             variant="secondary"
