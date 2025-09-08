@@ -634,7 +634,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       Additional guest details ({formData.ticketCount - 1} guest{formData.ticketCount > 2 ? 's' : ''}):
                     </p>
                     {formData.guests.map((guest, index) => (
-                      <div key={index} className="grid grid-cols-2 gap-3">
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                           <Label htmlFor={`guest-${index}`}>Guest {index + 2} Name *</Label>
                           <Input
@@ -712,50 +712,50 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
             {/* Step 4: Payment */}
             {step === 4 && !bookingId && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Payment Summary</h3>
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800 shadow-lg">
-                  <div className="text-lg font-bold text-blue-800 dark:text-blue-200 mb-4 text-center">💰 Payment Breakdown</div>
+                <h3 className="text-lg md:text-xl font-semibold">Payment Summary</h3>
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 md:p-6 rounded-xl border border-blue-200 dark:border-blue-800 shadow-lg">
+                  <div className="text-lg md:text-xl font-bold text-blue-800 dark:text-blue-200 mb-4 text-center">💰 Payment Breakdown</div>
                   
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3 shadow-sm text-[#000000]">
-                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Per Ticket (₹{basePrice} each):</div>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        🍽️ <span>Food Coupon (Redeemable)</span>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4 space-y-3 shadow-sm text-[#000000]">
+                    <div className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Per Ticket (₹{basePrice} each):</div>
+                    <div className="flex justify-between items-center text-xs md:text-sm">
+                      <span className="flex items-center gap-1 md:gap-2">
+                        🍽️ <span className="break-words">Food Coupon (Redeemable)</span>
                       </span>
-                      <span className="font-medium">₹200</span>
+                      <span className="font-medium flex-shrink-0">₹200</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        🎫 <span>Entry & Entertainment</span>
+                    <div className="flex justify-between items-center text-xs md:text-sm">
+                      <span className="flex items-center gap-1 md:gap-2">
+                        🎫 <span className="break-words">Entry & Entertainment</span>
                       </span>
-                      <span className="font-medium">₹{finalAmount.toFixed(2)}</span>
+                      <span className="font-medium flex-shrink-0">₹{finalAmount.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4 shadow-sm">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4 mt-4 shadow-sm">
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Subtotal ({formData.ticketCount} tickets × ₹{basePrice})</span>
-                        <span className="font-medium">₹{totalTicketsPrice.toFixed(2)}</span>
+                      <div className="flex justify-between items-center text-xs md:text-sm">
+                        <span className="break-words">Subtotal ({formData.ticketCount} tickets × ₹{basePrice})</span>
+                        <span className="font-medium flex-shrink-0">₹{totalTicketsPrice.toFixed(2)}</span>
                       </div>
                       
                       {formData.couponDiscount > 0 && (
-                        <div className="flex justify-between text-green-600 dark:text-green-400 text-sm">
-                          <span>🎟️ Coupon Discount ({formData.couponDiscount}%)</span>
-                          <span className="font-medium">-₹{discountAmount.toFixed(2)}</span>
+                        <div className="flex justify-between items-center text-green-600 dark:text-green-400 text-xs md:text-sm">
+                          <span className="break-words">🎟️ Coupon Discount ({formData.couponDiscount}%)</span>
+                          <span className="font-medium flex-shrink-0">-₹{discountAmount.toFixed(2)}</span>
                         </div>
                       )}
                       
-                      <div className="flex justify-between text-sm text-orange-600 dark:text-orange-400">
-                        <span>💳 Convenience Fee ({formData.ticketCount} × ₹12.96)</span>
-                        <span className="font-medium">₹{(formData.ticketCount * 12.96).toFixed(2)}</span>
+                      <div className="flex justify-between items-center text-xs md:text-sm text-orange-600 dark:text-orange-400">
+                        <span className="break-words">💳 Convenience Fee ({formData.ticketCount} × ₹12.96)</span>
+                        <span className="font-medium flex-shrink-0">₹{(formData.ticketCount * 12.96).toFixed(2)}</span>
                       </div>
                       
                       <hr className="border-gray-300 dark:border-gray-600" />
                       
-                      <div className="flex justify-between text-lg font-bold text-purple-700 dark:text-purple-300">
-                        <span>Total Amount</span>
-                        <span>₹{calculateTotalWithFee().toFixed(2)}</span>
+                      <div className="flex justify-between items-center text-base md:text-lg font-bold text-purple-700 dark:text-purple-300">
+                        <span className="break-words">Total Amount</span>
+                        <span className="flex-shrink-0">₹{calculateTotalWithFee().toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -801,26 +801,26 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
 
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-6">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6">
               {step > 1 && step !== 5 && !bookingId && (
-                <Button variant="outline" onClick={() => setStep(step - 1)}>
+                <Button variant="outline" onClick={() => setStep(step - 1)} className="w-full sm:w-auto">
                   Previous
                 </Button>
               )}
-              <div className="ml-auto">
+              <div className="sm:ml-auto w-full sm:w-auto">
                 {step < 3 ? (
-                  <Button onClick={handleNextStep} variant="gradient">
+                  <Button onClick={handleNextStep} variant="gradient" className="w-full sm:w-auto">
                     Next Step
                   </Button>
                 ) : step === 3 ? (
-                  <Button onClick={handleNextStep} variant="gradient">
+                  <Button onClick={handleNextStep} variant="gradient" className="w-full sm:w-auto">
                     Review & Pay
                   </Button>
                 ) : step === 4 && !bookingId ? (
                   <Button 
                     onClick={handleBooking} 
                     variant="gradient" 
-                    className="px-8"
+                    className="px-8 w-full sm:w-auto"
                     disabled={createBookingMutation.isPending}
                   >
                     <CreditCard className="mr-2" />
@@ -897,7 +897,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       }
                     }}
                     variant="gradient" 
-                    className="px-8"
+                    className="px-8 w-full sm:w-auto"
                   >
                     <CreditCard className="mr-2" />
                     Pay Now
