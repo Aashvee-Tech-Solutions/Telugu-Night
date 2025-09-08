@@ -19,7 +19,6 @@ export interface PricingConfig {
   phase1: PricingTier;
   phase2: PricingTier;
   phase3: PricingTier;
-  phase4: PricingTier;
   convenienceFee: number;
   currency: string;
   lastUpdated: string;
@@ -109,15 +108,6 @@ export function usePricing(): PricingContextType {
           soldCount: countsData.phase3Count || 0,
           description: 'Premium pricing'
         },
-        phase4: {
-          id: 'phase_4',
-          name: 'Phase 4',
-          price: parseInt(configData.config?.phase4Price) || 450,
-          isActive: configData.config?.isPhase4Active || false,
-          capacity: configData.config?.phase4Limit || 100,
-          soldCount: countsData.phase4Count || 0,
-          description: 'Final pricing tier'
-        },
         convenienceFee: 12.96,
         currency: 'INR',
         lastUpdated: new Date().toISOString()
@@ -194,7 +184,7 @@ export function usePricing(): PricingContextType {
   const getAvailableTiers = useCallback((): PricingTier[] => {
     if (!config) return [];
 
-    return [config.earlyBird, config.phase1, config.phase2, config.phase3, config.phase4].filter(tier => {
+    return [config.earlyBird, config.phase1, config.phase2, config.phase3].filter(tier => {
       // Check if tier is active and has capacity
       const hasCapacity = tier.soldCount < tier.capacity;
       return tier.isActive && hasCapacity;
