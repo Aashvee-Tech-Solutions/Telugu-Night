@@ -336,36 +336,47 @@ export default function TeluguNightEventManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 border rounded-lg">
-              <Star className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
-              <p className="font-semibold text-lg">{counts?.earlyBirdCount || 0}</p>
-              <p className="text-sm text-gray-500">Early Bird</p>
-              <p className="text-xs text-gray-400">of {currentConfig?.earlyBirdLimit} limit</p>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <Clock className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-              <p className="font-semibold text-lg">{counts?.phase1Count || 0}</p>
-              <p className="text-sm text-gray-500">Phase 1</p>
-              <p className="text-xs text-gray-400">of {currentConfig?.phase1Limit} limit</p>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <Zap className="w-8 h-8 mx-auto mb-2 text-orange-500" />
-              <p className="font-semibold text-lg">{counts?.phase2Count || 0}</p>
-              <p className="text-sm text-gray-500">Phase 2</p>
-              <p className="text-xs text-gray-400">of {currentConfig?.phase2Limit} limit</p>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <Zap className="w-8 h-8 mx-auto mb-2 text-indigo-500" />
-              <p className="font-semibold text-lg">{counts?.phase3Count || 0}</p>
-              <p className="text-sm text-gray-500">Phase 3</p>
-              <p className="text-xs text-gray-400">of {currentConfig?.phase3Limit} limit</p>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <Zap className="w-8 h-8 mx-auto mb-2 text-red-500" />
-              <p className="font-semibold text-lg">{counts?.phase4Count || 0}</p>
-              <p className="text-sm text-gray-500">Phase 4</p>
-              <p className="text-xs text-gray-400">of {currentConfig?.phase4Limit} limit</p>
-            </div>
+            {/* Early Bird - Only show if limit > 0 */}
+            {(currentConfig?.earlyBirdLimit || 0) > 0 && (
+              <div className="text-center p-4 border rounded-lg">
+                <Star className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
+                <p className="font-semibold text-lg">{counts?.earlyBirdCount || 0}</p>
+                <p className="text-sm text-gray-500">Early Bird</p>
+                <p className="text-xs text-gray-400">of {currentConfig?.earlyBirdLimit} limit</p>
+              </div>
+            )}
+            
+            {/* Phase 1 - Only show if limit > 0 */}
+            {(currentConfig?.phase1Limit || 0) > 0 && (
+              <div className="text-center p-4 border rounded-lg">
+                <Clock className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                <p className="font-semibold text-lg">{counts?.phase1Count || 0}</p>
+                <p className="text-sm text-gray-500">Phase 1</p>
+                <p className="text-xs text-gray-400">of {currentConfig?.phase1Limit} limit</p>
+              </div>
+            )}
+            
+            {/* Phase 2 - Only show if limit > 0 */}
+            {(currentConfig?.phase2Limit || 0) > 0 && (
+              <div className="text-center p-4 border rounded-lg">
+                <Zap className="w-8 h-8 mx-auto mb-2 text-orange-500" />
+                <p className="font-semibold text-lg">{counts?.phase2Count || 0}</p>
+                <p className="text-sm text-gray-500">Phase 2</p>
+                <p className="text-xs text-gray-400">of {currentConfig?.phase2Limit} limit</p>
+              </div>
+            )}
+            
+            {/* Phase 3 - Only show if limit > 0 */}
+            {(currentConfig?.phase3Limit || 0) > 0 && (
+              <div className="text-center p-4 border rounded-lg">
+                <Zap className="w-8 h-8 mx-auto mb-2 text-indigo-500" />
+                <p className="font-semibold text-lg">{counts?.phase3Count || 0}</p>
+                <p className="text-sm text-gray-500">Phase 3</p>
+                <p className="text-xs text-gray-400">of {currentConfig?.phase3Limit} limit</p>
+              </div>
+            )}
+            
+            {/* Total Sold - Always show */}
             <div className="text-center p-4 border rounded-lg bg-primary/10">
               <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
               <p className="font-semibold text-lg">{counts?.totalSold || 0}</p>
