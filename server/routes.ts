@@ -3087,6 +3087,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             console.log(`💸 [${webhookId}] Payment failed for booking ${booking.id}, updating status to failed`);
             await storage.updateBookingPaymentStatus(booking.id, 'failed');
+            
+            // Send payment failure email to customer
+            try {
+              const { EnhancedEmailService } = await import('./services/enhancedEmailService');
+              const enhancedEmailService = new EnhancedEmailService();
+              await enhancedEmailService.sendPaymentFailureEmail(booking);
+              console.log(`📧 [${webhookId}] Payment failure email sent to ${booking.email} for booking ${booking.id}`);
+              actionTaken = 'payment_failed_email_sent';
+            } catch (emailError: any) {
+              console.error(`❌ [${webhookId}] Failed to send payment failure email for booking ${booking.id}:`, emailError);
+              actionTaken = 'payment_failed_email_error';
+              // Don't fail the webhook if email sending fails
+            }
+            
+            // Update Google Sheets with payment failure
+            try {
+              const { GoogleSheetsService } = await import('./services/googleSheets');
+              const googleSheetsService = new GoogleSheetsService();
+              await googleSheetsService.updateBookingPaymentStatus(booking.id, 'failed');
+              console.log(`📊 [${webhookId}] Google Sheets updated with payment failure for booking ${booking.id}`);
+            } catch (sheetsError: any) {
+              console.error(`❌ [${webhookId}] Google Sheets update failed for booking ${booking.id}:`, sheetsError);
+              // Don't fail the webhook if sheets update fails
+            }
             break;
             
           case 'PENDING':
