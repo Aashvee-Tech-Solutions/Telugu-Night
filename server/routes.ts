@@ -1130,8 +1130,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Booking not found' });
       }
 
-      // Generate guest codes and pass IDs
-      const guestCodes = generateGuestCodes(booking.ticketCount);
+      // Use existing guest codes if available, otherwise generate new ones
+      const guestCodes = booking.guestCodes && booking.guestCodes.length > 0 
+        ? booking.guestCodes 
+        : generateGuestCodes(booking.ticketCount);
       const passIds = generatePassIds(bookingId, booking.ticketCount);
 
       // Update booking with all details first
@@ -1280,8 +1282,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (action === 'verify') {
         await storage.updateBookingPaymentStatus(bookingId, 'verified');
         
-        // Generate guest codes and pass IDs
-        const guestCodes = generateGuestCodes(booking.ticketCount);
+        // Use existing guest codes if available, otherwise generate new ones
+        const guestCodes = booking.guestCodes && booking.guestCodes.length > 0 
+          ? booking.guestCodes 
+          : generateGuestCodes(booking.ticketCount);
         const passIds = generatePassIds(bookingId, booking.ticketCount);
         
         // Update booking with generated codes
