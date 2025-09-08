@@ -990,7 +990,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                   </Button>
                 ) : null}
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
       </div>
