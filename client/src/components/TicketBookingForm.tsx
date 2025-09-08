@@ -483,24 +483,24 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       {/* Early Bird Tickets */}
                       {pricing.config?.earlyBird.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                   Early Bird
                                 </h4>
                                 {!pricing.config?.earlyBird.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <div className="flex items-center justify-between sm:gap-4">
+                              <div className="">
+                                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                                   Rs. {pricing.config?.earlyBird.price || 0}
                                 </div>
                               </div>
@@ -530,24 +530,24 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       {/* Phase 1 Tickets */}
                       {pricing.config?.phase1.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                   Phase 1
                                 </h4>
                                 {!pricing.config?.phase1.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <div className="flex items-center justify-between sm:gap-4">
+                              <div className="">
+                                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                                   Rs. {pricing.config?.phase1.price || 0}
                                 </div>
                               </div>
@@ -577,24 +577,24 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       {/* Phase 2 Tickets */}
                       {pricing.config?.phase2.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                   Phase 2
                                 </h4>
                                 {!pricing.config?.phase2.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <div className="flex items-center justify-between sm:gap-4">
+                              <div className="">
+                                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                                   Rs. {pricing.config?.phase2.price || 0}
                                 </div>
                               </div>
@@ -624,24 +624,24 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       {/* Phase 3 Tickets */}
                       {pricing.config?.phase3.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                   Phase 3 - Premium Access
                                 </h4>
                                 {!pricing.config?.phase3.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <div className="flex items-center justify-between sm:gap-4">
+                              <div className="">
+                                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                                   Rs. {pricing.config?.phase3.price || 0}
                                 </div>
                               </div>
@@ -671,24 +671,24 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       {/* Phase 4 Tickets */}
                       {pricing.config?.phase4.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                   Phase 4 - VIP Access
                                 </h4>
                                 {!pricing.config?.phase4.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <div className="flex items-center justify-between sm:gap-4">
+                              <div className="">
+                                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                                   Rs. {pricing.config?.phase4.price || 0}
                                 </div>
                               </div>
