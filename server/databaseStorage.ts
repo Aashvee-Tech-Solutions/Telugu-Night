@@ -945,6 +945,18 @@ export class DatabaseStorage implements IStorage {
     return promoter;
   }
 
+  async deletePromoter(id: number): Promise<void> {
+    // Check if promoter has any bookings first
+    const bookingsWithPromoter = await db.select().from(bookings).where(eq(bookings.promoterId, id));
+    
+    if (bookingsWithPromoter.length > 0) {
+      throw new Error('Cannot delete promoter with existing bookings. Please deactivate instead.');
+    }
+    
+    await db.delete(promoters).where(eq(promoters.id, id));
+    console.log(`✅ Promoter ${id} deleted successfully`);
+  }
+
   async updatePromoterLoginTime(id: number): Promise<void> {
     await db.update(promoters).set({
       lastLoginAt: new Date(),

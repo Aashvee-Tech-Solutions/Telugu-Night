@@ -2894,6 +2894,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete promoter
+  app.delete('/api/admin/promoters/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), async (req, res) => {
+    try {
+      const promoterId = parseInt(req.params.id);
+
+      if (isNaN(promoterId)) {
+        return res.status(400).json({ message: 'Invalid promoter ID' });
+      }
+
+      await storage.deletePromoter(promoterId);
+      res.json({ message: 'Promoter deleted successfully' });
+    } catch (error: any) {
+      console.error('Error deleting promoter:', error);
+      if (error.message.includes('Cannot delete promoter with existing bookings')) {
+        res.status(409).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: 'Failed to delete promoter' });
+      }
+    }
+  });
+
   // Promoter management for admin
   app.post('/api/admin/promoters', authenticate, requirePermission(PERMISSIONS.MANAGE_USERS), async (req, res) => {
     try {
