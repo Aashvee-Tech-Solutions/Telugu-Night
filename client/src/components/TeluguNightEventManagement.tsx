@@ -388,6 +388,7 @@ export default function TeluguNightEventManagement() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Early Bird Phase */}
+            {(currentConfig?.earlyBirdLimit || 0) > 0 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
@@ -413,8 +414,10 @@ export default function TeluguNightEventManagement() {
                 })()}
               </div>
             </div>
+            )}
 
             {/* Phase 1 */}
+            {(currentConfig?.phase1Limit || 0) > 0 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
@@ -440,8 +443,10 @@ export default function TeluguNightEventManagement() {
                 })()}
               </div>
             </div>
+            )}
 
             {/* Phase 2 */}
+            {(currentConfig?.phase2Limit || 0) > 0 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
@@ -467,8 +472,10 @@ export default function TeluguNightEventManagement() {
                 })()}
               </div>
             </div>
+            )}
 
             {/* Phase 3 */}
+            {(currentConfig?.phase3Limit || 0) > 0 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
@@ -494,33 +501,8 @@ export default function TeluguNightEventManagement() {
                 })()}
               </div>
             </div>
+            )}
 
-            {/* Phase 4 */}
-            <div className="border rounded-lg p-4">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-red-500" />
-                  <h3 className="font-medium">Phase 4</h3>
-                </div>
-                <Switch
-                  checked={currentConfig?.isPhase4Active}
-                  onCheckedChange={(checked) => togglePhaseMutation.mutate({ phase: 'phase4', active: checked })}
-                  data-testid="switch-phase-4"
-                />
-              </div>
-              <div className="space-y-2">
-                <p className="text-lg font-semibold">₹{currentConfig?.phase4Price}</p>
-                <p className="text-sm text-gray-500">{counts?.phase4Count || 0} / {currentConfig?.phase4Limit} sold</p>
-                {(() => {
-                  const status = getPhaseStatus(currentConfig?.isPhase4Active, counts?.phase4Count || 0, currentConfig?.phase4Limit || 0);
-                  return (
-                    <Badge variant={status.variant} className={status.color}>
-                      {status.text}
-                    </Badge>
-                  );
-                })()}
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -645,17 +627,6 @@ export default function TeluguNightEventManagement() {
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="phase4-price">Phase 4 Price (₹)</Label>
-                <Input
-                  id="phase4-price"
-                  type="number"
-                  min="1"
-                  value={eventData.phase4Price || ''}
-                  onChange={(e) => setEventData({...eventData, phase4Price: parseInt(e.target.value) || 0})}
-                  data-testid="input-phase4-price"
-                />
-              </div>
               
               <div className="space-y-2">
                 <Label htmlFor="convenient-fee">Convenience Fee (₹)</Label>
@@ -727,17 +698,6 @@ export default function TeluguNightEventManagement() {
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="phase4-limit">Phase 4 Limit</Label>
-                <Input
-                  id="phase4-limit"
-                  type="number"
-                  min="1"
-                  value={eventData.phase4Limit || ''}
-                  onChange={(e) => setEventData({...eventData, phase4Limit: parseInt(e.target.value) || 0})}
-                  data-testid="input-phase4-limit"
-                />
-              </div>
             </div>
           </div>
 
