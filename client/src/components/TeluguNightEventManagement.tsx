@@ -177,6 +177,27 @@ export default function TeluguNightEventManagement() {
   const currentConfig = (config as any)?.config as TeluguNightConfig;
   const counts = (ticketCounts as any)?.counts;
 
+  // Function to determine phase status
+  const getPhaseStatus = (isActive: boolean, soldCount: number, limit: number) => {
+    if (!isActive) {
+      if (soldCount === 0) {
+        return { text: "Coming Soon", variant: "outline" as const, color: "text-gray-500" };
+      } else {
+        return { text: "Completed", variant: "secondary" as const, color: "text-gray-600" };
+      }
+    }
+    
+    if (soldCount >= limit) {
+      return { text: "Sold Out", variant: "destructive" as const, color: "text-red-600" };
+    }
+    
+    if (soldCount > 0) {
+      return { text: "Going On", variant: "default" as const, color: "text-green-600" };
+    }
+    
+    return { text: "Available", variant: "secondary" as const, color: "text-blue-600" };
+  };
+
   // Update eventData when configuration is loaded
   useEffect(() => {
     if (currentConfig) {
@@ -382,9 +403,14 @@ export default function TeluguNightEventManagement() {
               <div className="space-y-2">
                 <p className="text-lg font-semibold">₹{currentConfig?.earlyBirdPrice}</p>
                 <p className="text-sm text-gray-500">{counts?.earlyBirdCount || 0} / {currentConfig?.earlyBirdLimit} sold</p>
-                <Badge variant={currentConfig?.isEarlyBirdActive ? "default" : "secondary"}>
-                  {currentConfig?.isEarlyBirdActive ? "Active" : "Inactive"}
-                </Badge>
+                {(() => {
+                  const status = getPhaseStatus(currentConfig?.isEarlyBirdActive, counts?.earlyBirdCount || 0, currentConfig?.earlyBirdLimit || 0);
+                  return (
+                    <Badge variant={status.variant} className={status.color}>
+                      {status.text}
+                    </Badge>
+                  );
+                })()}
               </div>
             </div>
 
@@ -404,9 +430,14 @@ export default function TeluguNightEventManagement() {
               <div className="space-y-2">
                 <p className="text-lg font-semibold">₹{currentConfig?.phase1Price}</p>
                 <p className="text-sm text-gray-500">{counts?.phase1Count || 0} / {currentConfig?.phase1Limit} sold</p>
-                <Badge variant={currentConfig?.isPhase1Active ? "default" : "secondary"}>
-                  {currentConfig?.isPhase1Active ? "Active" : "Inactive"}
-                </Badge>
+                {(() => {
+                  const status = getPhaseStatus(currentConfig?.isPhase1Active, counts?.phase1Count || 0, currentConfig?.phase1Limit || 0);
+                  return (
+                    <Badge variant={status.variant} className={status.color}>
+                      {status.text}
+                    </Badge>
+                  );
+                })()}
               </div>
             </div>
 
@@ -426,9 +457,14 @@ export default function TeluguNightEventManagement() {
               <div className="space-y-2">
                 <p className="text-lg font-semibold">₹{currentConfig?.phase2Price}</p>
                 <p className="text-sm text-gray-500">{counts?.phase2Count || 0} / {currentConfig?.phase2Limit} sold</p>
-                <Badge variant={currentConfig?.isPhase2Active ? "default" : "secondary"}>
-                  {currentConfig?.isPhase2Active ? "Active" : "Inactive"}
-                </Badge>
+                {(() => {
+                  const status = getPhaseStatus(currentConfig?.isPhase2Active, counts?.phase2Count || 0, currentConfig?.phase2Limit || 0);
+                  return (
+                    <Badge variant={status.variant} className={status.color}>
+                      {status.text}
+                    </Badge>
+                  );
+                })()}
               </div>
             </div>
 
@@ -448,9 +484,14 @@ export default function TeluguNightEventManagement() {
               <div className="space-y-2">
                 <p className="text-lg font-semibold">₹{currentConfig?.phase3Price}</p>
                 <p className="text-sm text-gray-500">{counts?.phase3Count || 0} / {currentConfig?.phase3Limit} sold</p>
-                <Badge variant={currentConfig?.isPhase3Active ? "default" : "secondary"}>
-                  {currentConfig?.isPhase3Active ? "Active" : "Inactive"}
-                </Badge>
+                {(() => {
+                  const status = getPhaseStatus(currentConfig?.isPhase3Active, counts?.phase3Count || 0, currentConfig?.phase3Limit || 0);
+                  return (
+                    <Badge variant={status.variant} className={status.color}>
+                      {status.text}
+                    </Badge>
+                  );
+                })()}
               </div>
             </div>
 
@@ -470,9 +511,14 @@ export default function TeluguNightEventManagement() {
               <div className="space-y-2">
                 <p className="text-lg font-semibold">₹{currentConfig?.phase4Price}</p>
                 <p className="text-sm text-gray-500">{counts?.phase4Count || 0} / {currentConfig?.phase4Limit} sold</p>
-                <Badge variant={currentConfig?.isPhase4Active ? "default" : "secondary"}>
-                  {currentConfig?.isPhase4Active ? "Active" : "Inactive"}
-                </Badge>
+                {(() => {
+                  const status = getPhaseStatus(currentConfig?.isPhase4Active, counts?.phase4Count || 0, currentConfig?.phase4Limit || 0);
+                  return (
+                    <Badge variant={status.variant} className={status.color}>
+                      {status.text}
+                    </Badge>
+                  );
+                })()}
               </div>
             </div>
           </div>
