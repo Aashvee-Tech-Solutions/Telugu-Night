@@ -91,71 +91,9 @@ Contact: mis@aashveetech.com | +91 6281614117`);
 
   // Send payment confirmation email after screenshot upload
   async sendPaymentConfirmationEmail(booking: BookingData): Promise<void> {
-    try {
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">Payment Received!</h1>
-            <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">Telugu Night - DTR Manipal</p>
-          </div>
-          
-          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h2 style="color: #333; margin: 0 0 10px 0;">Hi ${booking.name}!</h2>
-              <p style="color: #666; font-size: 16px; line-height: 1.6;">
-                Thank you for uploading your payment screenshot. Your booking is now being reviewed by our admin team.
-              </p>
-            </div>
-            
-            <div style="background: #f8f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #4f46e5; margin: 0 0 15px 0; text-align: center;">Booking Details</h3>
-              <div style="display: grid; gap: 10px;">
-                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                  <span style="font-weight: bold; color: #374151;">Booking ID:</span>
-                  <span style="color: #6b7280;">#${booking.id}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                  <span style="font-weight: bold; color: #374151;">Tickets:</span>
-                  <span style="color: #6b7280;">${booking.ticketCount}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                  <span style="font-weight: bold; color: #374151;">Total Amount:</span>
-                  <span style="color: #059669; font-weight: bold;">₹${parseFloat(booking.totalAmount.toString()).toFixed(2)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                  <span style="font-weight: bold; color: #374151;">Status:</span>
-                  <span style="color: #d97706; font-weight: bold;">Under Review</span>
-                </div>
-              </div>
-            </div>
-            
-            <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; color: #92400e; font-size: 14px; text-align: center;">
-                <strong>Next Steps:</strong> Our admin team will verify your payment and send your QR tickets via email within 24 hours.
-              </p>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                Questions? Contact us at <a href="mailto:mis@aashveetech.com" style="color: #4f46e5;">mis@aashveetech.com</a>
-              </p>
-            </div>
-          </div>
-        </div>
-      `;
-
-      await this.transporter.sendMail({
-        from: 'mis@aashveetech.com',
-        to: booking.email,
-        subject: `Payment Received - Telugu Night Booking #${booking.id}`,
-        html: emailHtml
-      });
-
-      console.log(`✅ Payment confirmation email sent to ${booking.email}`);
-    } catch (error) {
-      console.error('Payment confirmation email failed:', error);
-      throw error;
-    }
+    console.log(`📧 Skipping payment confirmation email for booking ${booking.id} - no longer sending under review emails`);
+    // This method is now disabled to remove the "under review" email notification
+    // Payments are processed immediately via webhook, so tickets are sent directly after verification
   }
 
   async sendPaymentCompletionEmail(booking: BookingData): Promise<void> {
