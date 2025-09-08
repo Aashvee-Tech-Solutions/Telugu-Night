@@ -36,12 +36,18 @@ interface TeluguNightConfig {
   earlyBirdPrice: string;
   phase1Price: string;
   phase2Price: string;
+  phase3Price: string;
+  phase4Price: string;
   earlyBirdLimit: number;
   phase1Limit: number;
   phase2Limit: number;
+  phase3Limit: number;
+  phase4Limit: number;
   isEarlyBirdActive: boolean;
   isPhase1Active: boolean;
   isPhase2Active: boolean;
+  isPhase3Active: boolean;
+  isPhase4Active: boolean;
   convenientFee: string;
 }
 
@@ -71,9 +77,13 @@ export default function TeluguNightEventManagement() {
     earlyBirdPrice: 300,
     phase1Price: 350,
     phase2Price: 400,
+    phase3Price: 425,
+    phase4Price: 450,
     earlyBirdLimit: 90,
     phase1Limit: 200,
     phase2Limit: 210,
+    phase3Limit: 220,
+    phase4Limit: 230,
     convenientFee: 12.96,
   });
 
