@@ -1147,55 +1147,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.post('/api/bookings/:id/verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
-    try {
-      // Permission already checked by middleware
-
-      const bookingId = parseInt(req.params.id);
-      const booking = await storage.getBooking(bookingId);
-      
-      if (!booking) {
-        return res.status(404).json({ message: 'Booking not found' });
-      }
-
-      // Use existing guest codes if available, otherwise generate new ones
-      const guestCodes = booking.guestCodes && booking.guestCodes.length > 0 
-        ? booking.guestCodes 
-        : generateGuestCodes(booking.ticketCount);
-      const passIds = generatePassIds(bookingId, booking.ticketCount);
-
-      // Update booking with all details first
-      await storage.updateBookingVerification(bookingId, 'verified', guestCodes);
-      await storage.updateBookingQRCodes(bookingId, [], passIds, guestCodes);
-      
-      // Get updated booking and send enhanced email
-      const updatedBooking = await storage.getBooking(bookingId);
-      if (updatedBooking) {
-        await enhancedEmailService.sendTicketEmails({
-          ...updatedBooking,
-          guests: updatedBooking.guests || [],
-          guestCodes: updatedBooking.guestCodes || [],
-          paymentStatus: updatedBooking.paymentStatus || 'verified'
-        });
-      }
-
-      // Update Google Sheets (non-blocking)
-      try {
-        await googleSheetsService.updateBookingPaymentStatus(bookingId, 'verified');
-      } catch (error: any) {
-        console.log('Google Sheets update failed (non-critical):', error.message);
-      }
-
-      res.json({ 
-        message: 'Payment verified successfully! QR tickets sent to customer email.',
-        guestCodes,
-        passIds,
-        ticketsSent: true
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: 'Verification failed' });
-    }
-  });
+  // DISABLED: Manual payment verification route - payments are now automatically processed by Cashfree webhook
+  // app.post('/api/bookings/:id/verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
+  //   // This route has been disabled as payments are now automatically verified via webhook
+  //   return res.status(410).json({ 
+  //     message: 'Manual payment verification is no longer supported. Payments are automatically processed by the payment gateway.' 
+  //   });
+  // });
 
   // Coupon Routes
   app.post('/api/coupons', authenticate, requirePermission(PERMISSIONS.MANAGE_COUPONS), async (req, res) => {

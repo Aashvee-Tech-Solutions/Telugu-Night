@@ -182,31 +182,7 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
     },
   });
 
-  // Payment verification mutation
-  const verifyPaymentMutation = useMutation({
-    mutationFn: async ({ bookingId, action }: { bookingId: number; action: string }) => {
-      const token = localStorage.getItem('adminToken');
-      return fetch(`/api/admin/bookings/${bookingId}/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ action })
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
-      toast({ title: 'Success', description: 'Payment status updated successfully' });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: 'Error', 
-        description: error.message || 'Failed to update payment status',
-        variant: 'destructive' 
-      });
-    },
-  });
+  // Removed old payment verification mutation - no longer needed as payments are handled automatically
 
   // Fetch ticket configuration
   const { data: ticketConfig, isLoading: configLoading } = useQuery({
