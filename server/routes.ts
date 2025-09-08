@@ -697,7 +697,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // If Early Bird is activated, deactivate other phases
           finalConfig.isPhase1Active = false;
           finalConfig.isPhase2Active = false;
-          console.log('🎫 Early Bird activated - Phase 1 and Phase 2 automatically deactivated');
+          finalConfig.isPhase4Active = false;
+          console.log('🎫 Early Bird activated - Phase 1, Phase 2, and Phase 4 automatically deactivated');
         }
       } else if (phase === 'phase1') {
         finalConfig.isPhase1Active = active;
@@ -705,7 +706,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // If Phase 1 is activated, deactivate other phases
           finalConfig.isEarlyBirdActive = false;
           finalConfig.isPhase2Active = false;
-          console.log('🎫 Phase 1 activated - Early Bird and Phase 2 automatically deactivated');
+          finalConfig.isPhase4Active = false;
+          console.log('🎫 Phase 1 activated - Early Bird, Phase 2, and Phase 4 automatically deactivated');
         }
       } else if (phase === 'phase2') {
         finalConfig.isPhase2Active = active;
@@ -713,10 +715,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // If Phase 2 is activated, deactivate other phases
           finalConfig.isEarlyBirdActive = false;
           finalConfig.isPhase1Active = false;
-          console.log('🎫 Phase 2 activated - Early Bird and Phase 1 automatically deactivated');
+          finalConfig.isPhase4Active = false;
+          console.log('🎫 Phase 2 activated - Early Bird, Phase 1, and Phase 4 automatically deactivated');
+        }
+      } else if (phase === 'phase4') {
+        finalConfig.isPhase4Active = active;
+        if (active) {
+          // If Phase 4 is activated, deactivate other phases
+          finalConfig.isEarlyBirdActive = false;
+          finalConfig.isPhase1Active = false;
+          finalConfig.isPhase2Active = false;
+          console.log('🎫 Phase 4 activated - Early Bird, Phase 1, and Phase 2 automatically deactivated');
         }
       } else {
-        return res.status(400).json({ message: 'Invalid phase. Must be: earlybird, phase1, or phase2' });
+        return res.status(400).json({ message: 'Invalid phase. Must be: earlybird, phase1, phase2, or phase4' });
       }
 
       await storage.updateTicketConfig(finalConfig, userId);

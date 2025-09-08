@@ -158,14 +158,17 @@ export const teluguNightConfig = pgTable("telugu_night_config", {
   earlyBirdPrice: integer("early_bird_price").default(300),
   phase1Price: integer("phase1_price").default(350), 
   phase2Price: integer("phase2_price").default(400),
+  phase4Price: integer("phase4_price").default(450),
   
   earlyBirdLimit: integer("early_bird_limit").default(90),
   phase1Limit: integer("phase1_limit").default(200),
   phase2Limit: integer("phase2_limit").default(210),
+  phase4Limit: integer("phase4_limit").default(100),
   
   isEarlyBirdActive: boolean("is_early_bird_active").default(true),
   isPhase1Active: boolean("is_phase1_active").default(true),
   isPhase2Active: boolean("is_phase2_active").default(false),
+  isPhase4Active: boolean("is_phase4_active").default(false),
   
   convenientFee: numeric("convenient_fee", { precision: 10, scale: 2 }).default("12.96"),
   updatedAt: timestamp("updated_at").defaultNow(),
