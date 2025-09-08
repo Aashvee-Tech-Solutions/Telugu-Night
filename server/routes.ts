@@ -1193,6 +1193,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Toggle coupon active status (PATCH)
+  app.patch('/api/coupons/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_COUPONS), async (req, res) => {
+    try {
+      const couponId = parseInt(req.params.id);
+      const { isActive } = req.body;
+      
+      if (!couponId) {
+        return res.status(400).json({ message: 'Invalid coupon ID' });
+      }
+      
+      const updatedCoupon = await storage.updateCoupon(couponId, { isActive });
+      res.json(updatedCoupon);
+    } catch (error) {
+      console.error('Error toggling coupon status:', error);
+      res.status(500).json({ message: 'Failed to update coupon status' });
+    }
+  });
+
   // Delete coupon
   app.delete('/api/coupons/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_COUPONS), async (req, res) => {
     try {
