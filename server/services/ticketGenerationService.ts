@@ -119,26 +119,23 @@ export class TicketGenerationService extends EventEmitter {
       progress.progress = 40;
       this.emit('progress', progress);
 
+      // Generate ONLY ONE QR code per booking (not per ticket)
       const qrCodes: string[] = [];
-      for (let i = 0; i < booking.ticketCount; i++) {
-        const guestCode = booking.guestCodes?.[i] || `GUEST${booking.id}_${i + 1}`;
-        // QR code should contain only the guest code for direct scanning
-        const qrData = guestCode;
-
-        const qrCodeImage = await QRCode.toDataURL(qrData, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
-        qrCodes.push(qrCodeImage);
-        
-        progress.progress = 40 + (i + 1) * (30 / booking.ticketCount);
-        progress.currentStep = `Generated QR code ${i + 1} of ${booking.ticketCount}`;
-        this.emit('progress', progress);
-      }
+      const bookingQRData = `TELUGU-NIGHT-2.0-${booking.id}`;
+      
+      const qrCodeImage = await QRCode.toDataURL(bookingQRData, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      qrCodes.push(qrCodeImage);
+      
+      progress.progress = 70;
+      progress.currentStep = `Generated single QR code for booking`;
+      this.emit('progress', progress);
 
       progress.qrCodes = qrCodes;
       progress.guestCodes = booking.guestCodes || [];
