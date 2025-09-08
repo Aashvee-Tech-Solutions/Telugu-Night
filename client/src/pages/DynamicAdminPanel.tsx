@@ -38,6 +38,7 @@ import { TicketGenerationPanel } from "@/components/TicketGenerationPanel";
 import Scanner from "@/components/Scanner";
 import TeluguNightEventManagement from "@/components/TeluguNightEventManagement";
 import PromoterManagement from "@/components/PromoterManagement";
+import CouponManagement from "@/components/CouponManagement";
 
 interface UserData {
   id: number;
@@ -67,6 +68,7 @@ interface Booking {
   scannedGuests?: string[];
   couponCode?: string;
   couponDiscount?: number;
+  promoCode?: string;
   createdAt: string;
 }
 
@@ -108,12 +110,6 @@ interface DynamicAdminPanelProps {
 export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicAdminPanelProps) {
   const [user, setUser] = useState<UserData | null>(propUser);
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
-  const [newCoupon, setNewCoupon] = useState({
-    code: '',
-    discount: 0,
-    usageLimit: 50,
-    isActive: true
-  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -225,50 +221,7 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
     },
   });
 
-  // Fetch coupons data
-  const { data: coupons, isLoading: couponsLoading } = useQuery({
-    queryKey: ['/api/coupons'],
-    queryFn: async () => {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/coupons', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to fetch coupons');
-      return response.json();
-    },
-    enabled: user?.permissions.includes('manage_coupons') || false,
-  });
 
-  // Create coupon mutation
-  const createCouponMutation = useMutation({
-    mutationFn: async (couponData: any) => {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/coupons', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(couponData)
-      });
-      if (!response.ok) {
-        throw new Error('Failed to create coupon');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/coupons'] });
-      setNewCoupon({ code: '', discount: 0, usageLimit: 50, isActive: true });
-      toast({ title: 'Success', description: 'Coupon created successfully' });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: 'Error', 
-        description: error.message || 'Failed to create coupon',
-        variant: 'destructive' 
-      });
-    },
-  });
 
   // Update ticket configuration mutation
   const updateTicketConfigMutation = useMutation({
@@ -1334,172 +1287,7 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
           userPermissions={user.permissions}
         >
           <TabsContent value="coupons" className="space-y-4">
-            {/* Create New Coupon */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  Create New Coupon
-                </CardTitle>
-                <CardDescription>
-                  Add a new discount coupon for event tickets
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="coupon-code">Coupon Code</Label>
-                    <Input
-                      id="coupon-code"
-                      placeholder="e.g., SAVE20"
-                      value={newCoupon.code}
-                      onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="discount">Discount (%)</Label>
-                    <Input
-                      id="discount"
-                      type="number"
-                      min="1"
-                      max="100"
-                      placeholder="10"
-                      value={newCoupon.discount || ''}
-                      onChange={(e) => setNewCoupon({ ...newCoupon, discount: parseInt(e.target.value) || 0 })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="usage-limit">Usage Limit</Label>
-                    <Input
-                      id="usage-limit"
-                      type="number"
-                      min="1"
-                      placeholder="50"
-                      value={newCoupon.usageLimit || ''}
-                      onChange={(e) => setNewCoupon({ ...newCoupon, usageLimit: parseInt(e.target.value) || null })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="is-active">Status</Label>
-                    <div className="flex items-center space-x-2 h-10">
-                      <Switch
-                        id="is-active"
-                        checked={newCoupon.isActive}
-                        onCheckedChange={(checked) => setNewCoupon({ ...newCoupon, isActive: checked })}
-                      />
-                      <Label htmlFor="is-active" className="text-sm">
-                        {newCoupon.isActive ? 'Active' : 'Inactive'}
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-                
-                <Button
-                  onClick={() => {
-                    if (newCoupon.code.length >= 3 && newCoupon.discount > 0) {
-                      createCouponMutation.mutate(newCoupon);
-                    }
-                  }}
-                  disabled={createCouponMutation.isPending || !newCoupon.code || newCoupon.discount <= 0}
-                  className="w-full"
-                >
-                  {createCouponMutation.isPending ? (
-                    <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                  ) : (
-                    <Tag className="w-4 h-4 mr-2" />
-                  )}
-                  Create Coupon
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Existing Coupons */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Tag className="w-5 h-5" />
-                  Active Coupons
-                </CardTitle>
-                <CardDescription>
-                  Manage existing discount coupons
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {couponsLoading ? (
-                  <div className="flex justify-center p-8">
-                    <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-                  </div>
-                ) : !coupons || coupons.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Percent className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground mb-4">
-                      No coupons created yet
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Create your first coupon above to get started
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {coupons.map((coupon: Coupon) => (
-                      <div
-                        key={coupon.id}
-                        className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className="font-mono text-sm font-bold bg-white dark:bg-gray-800"
-                            >
-                              {coupon.code}
-                            </Badge>
-                            <Badge
-                              variant={coupon.isActive ? "default" : "secondary"}
-                              className="text-xs"
-                            >
-                              {coupon.isActive ? "Active" : "Inactive"}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {coupon.discount}% discount • Used {coupon.usageCount} 
-                            {coupon.usageLimit ? ` of ${coupon.usageLimit}` : ''} times
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Created: {new Date(coupon.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                              {coupon.discount}%
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {coupon.usageLimit && coupon.usageCount >= coupon.usageLimit ? (
-                                <span className="text-red-500">Limit Reached</span>
-                              ) : (
-                                <span>{coupon.usageLimit ? `${coupon.usageLimit - coupon.usageCount} left` : 'Unlimited'}</span>
-                              )}
-                            </p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="p-2"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <CouponManagement />
           </TabsContent>
         </PermissionGuard>
 
