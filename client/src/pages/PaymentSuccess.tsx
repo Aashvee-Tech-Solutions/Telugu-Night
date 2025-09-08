@@ -250,18 +250,56 @@ export default function PaymentSuccess() {
                       <p className="text-gray-600 text-sm mb-4">
                         Your QR tickets have been sent to <strong>{booking.email}</strong>
                       </p>
-                      <div className="flex gap-3">
+                      
+                      {/* QR Code Display */}
+                      {booking.qrCodes && booking.qrCodes.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="font-medium text-gray-700 mb-3">Your QR Ticket:</h4>
+                          <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
+                            <img 
+                              src={booking.qrCodes[0]} 
+                              alt="QR Ticket"
+                              className="w-48 h-48 mx-auto"
+                              data-testid="qr-code-image"
+                            />
+                            <p className="text-center text-sm text-gray-600 mt-2 font-mono">
+                              Booking ID: #{booking.id}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex flex-wrap gap-3">
+                        {booking.qrCodes && booking.qrCodes.length > 0 && (
+                          <Button 
+                            onClick={() => {
+                              // Download QR code as image
+                              const link = document.createElement('a');
+                              link.href = booking.qrCodes[0];
+                              link.download = `telugu-night-ticket-${booking.id}.png`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
+                            variant="default"
+                            data-testid="button-download-qr"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download QR Ticket
+                          </Button>
+                        )}
                         <Button 
                           onClick={() => sendTicketsMutation.mutate()}
                           disabled={sendTicketsMutation.isPending}
                           variant="outline"
+                          data-testid="button-resend-tickets"
                         >
                           {sendTicketsMutation.isPending ? (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           ) : (
                             <Download className="h-4 w-4 mr-2" />
                           )}
-                          Resend Tickets
+                          Resend Email
                         </Button>
                       </div>
                     </div>
