@@ -499,81 +499,50 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       </p>
                     </div>
                     
-                    {/* Current Phase Display */}
+                    {/* Minimal Pricing Display */}
                     {pricing.config && (
                       <div className="mb-4">
-                        {pricing.currentTier ? (
-                          <div className={`bg-gradient-to-r rounded-lg p-4 border-2 ${
-                            pricing.currentTier.id === 'early_bird' 
-                              ? 'from-orange-100 to-yellow-100 dark:from-orange-900 dark:to-yellow-900 border-orange-300' 
-                              : pricing.currentTier.id === 'phase_1'
-                              ? 'from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 border-blue-300'
-                              : 'from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 border-purple-300'
-                          }`}>
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                              <Clock className={`w-5 h-5 ${
-                                pricing.currentTier.id === 'early_bird' ? 'text-orange-600' 
-                                : pricing.currentTier.id === 'phase_1' ? 'text-blue-600' 
-                                : 'text-purple-600'
-                              }`} />
-                              <span className={`font-bold text-lg ${
-                                pricing.currentTier.id === 'early_bird' ? 'text-orange-800 dark:text-orange-200' 
-                                : pricing.currentTier.id === 'phase_1' ? 'text-blue-800 dark:text-blue-200' 
-                                : 'text-purple-800 dark:text-purple-200'
-                              }`}>🎫 {pricing.currentTier.name.toUpperCase()}</span>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Pricing Phases</h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="text-center">
+                              <div className="text-xs text-orange-600 dark:text-orange-400">Early Bird</div>
+                              <div className="text-sm font-bold">₹{pricing.config.earlyBird.price}</div>
                             </div>
                             <div className="text-center">
-                              <div className={`text-3xl font-bold ${
-                                pricing.currentTier.id === 'early_bird' ? 'text-orange-700 dark:text-orange-300' 
-                                : pricing.currentTier.id === 'phase_1' ? 'text-blue-700 dark:text-blue-300' 
-                                : 'text-purple-700 dark:text-purple-300'
-                              }`}>₹{getTicketPrice()} per ticket</div>
-                              <div className={`text-sm font-medium ${
-                                pricing.currentTier.id === 'early_bird' ? 'text-orange-600 dark:text-orange-400' 
-                                : pricing.currentTier.id === 'phase_1' ? 'text-blue-600 dark:text-blue-400' 
-                                : 'text-purple-600 dark:text-purple-400'
-                              }`}>{pricing.currentTier.description || 'Available now'}</div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900 dark:to-pink-900 border-2 border-red-300 rounded-lg p-4">
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                              <Clock className="w-5 h-5 text-red-600" />
-                              <span className="font-bold text-lg text-red-800 dark:text-red-200">🚫 SALES PAUSED</span>
+                              <div className="text-xs text-blue-600 dark:text-blue-400">Phase 1</div>
+                              <div className="text-sm font-bold">₹{pricing.config.phase1.price}</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-sm text-red-600 dark:text-red-400 font-medium">Ticket sales are temporarily paused</div>
-                              <div className="text-xs text-red-500 dark:text-red-500 mt-1">Please check back later or contact support</div>
+                              <div className="text-xs text-purple-600 dark:text-purple-400">Phase 2</div>
+                              <div className="text-sm font-bold">₹{pricing.config.phase2.price}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-xs text-red-600 dark:text-red-400">Phase 4</div>
+                              <div className="text-sm font-bold">₹{pricing.config.phase4.price}</div>
                             </div>
                           </div>
-                        )}
+                          {pricing.currentTier && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                              <div className="text-center">
+                                <span className="text-xs text-gray-500">Current: </span>
+                                <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                  {pricing.currentTier.name} - ₹{pricing.currentTier.price}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 
-                    {/* Ticket Count & Type Information */}
-                    {isAnyTicketAvailable && (
-                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-lg border border-purple-200">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-purple-700 dark:text-purple-300">
-                                Current Selection: {formData.ticketCount} ticket{formData.ticketCount !== 1 ? 's' : ''}
-                              </span>
-                            </div>
-                            <span className="text-lg font-bold text-purple-600">₹{basePrice} per ticket</span>
-                          </div>
-                          
-                          {formData.ticketType === "early_bird" && (
-                            <div className="text-sm text-green-600 dark:text-green-400">
-                              🎉 You're getting Early Bird pricing! Save ₹50 per ticket
-                            </div>
-                          )}
-                          
-                          {formData.ticketType === "phase_1" && (
-                            <div className="text-sm text-blue-600 dark:text-blue-400">
-                              ⏰ Phase 1 Pricing - Early Bird sold out
-                            </div>
-                          )}
+                    {/* Simple Ticket Selection */}
+                    {formData.ticketCount > 0 && (
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border">
+                        <div className="text-center">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {formData.ticketCount} ticket{formData.ticketCount !== 1 ? 's' : ''} × ₹{basePrice} = ₹{(formData.ticketCount * basePrice).toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     )}
