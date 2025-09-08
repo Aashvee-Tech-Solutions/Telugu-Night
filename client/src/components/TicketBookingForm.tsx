@@ -504,20 +504,24 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       <div className="mb-4">
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                           <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Pricing Phases</h3>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div className="text-center">
+                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                            <div>
                               <div className="text-xs text-orange-600 dark:text-orange-400">Early Bird</div>
                               <div className="text-sm font-bold">₹{pricing.config.earlyBird.price}</div>
                             </div>
-                            <div className="text-center">
+                            <div>
                               <div className="text-xs text-blue-600 dark:text-blue-400">Phase 1</div>
                               <div className="text-sm font-bold">₹{pricing.config.phase1.price}</div>
                             </div>
-                            <div className="text-center">
+                            <div>
                               <div className="text-xs text-purple-600 dark:text-purple-400">Phase 2</div>
                               <div className="text-sm font-bold">₹{pricing.config.phase2.price}</div>
                             </div>
-                            <div className="text-center">
+                            <div>
+                              <div className="text-xs text-indigo-600 dark:text-indigo-400">Phase 3</div>
+                              <div className="text-sm font-bold">₹{pricing.config.phase3.price}</div>
+                            </div>
+                            <div>
                               <div className="text-xs text-red-600 dark:text-red-400">Phase 4</div>
                               <div className="text-sm font-bold">₹{pricing.config.phase4.price}</div>
                             </div>

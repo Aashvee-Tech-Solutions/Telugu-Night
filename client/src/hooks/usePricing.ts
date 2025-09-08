@@ -18,6 +18,7 @@ export interface PricingConfig {
   earlyBird: PricingTier;
   phase1: PricingTier;
   phase2: PricingTier;
+  phase3: PricingTier;
   phase4: PricingTier;
   convenienceFee: number;
   currency: string;
@@ -98,6 +99,15 @@ export function usePricing(): PricingContextType {
           capacity: configData.config?.phase2Limit || 100,
           soldCount: countsData.phase2Count || 0,
           description: 'Standard pricing'
+        },
+        phase3: {
+          id: 'phase_3',
+          name: 'Phase 3',
+          price: parseInt(configData.config?.phase3Price) || 425,
+          isActive: configData.config?.isPhase3Active || false,
+          capacity: configData.config?.phase3Limit || 100,
+          soldCount: countsData.phase3Count || 0,
+          description: 'Premium pricing'
         },
         phase4: {
           id: 'phase_4',
