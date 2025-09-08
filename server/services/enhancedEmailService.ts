@@ -82,9 +82,9 @@ Important: Show your QR code at the venue for entry!
 Contact: mis@aashveetech.com | +91 6281614117`);
     const eventLocation = encodeURIComponent('DTR, Manipal, Karnataka');
     
-    // Event date: September 19, 2025, 7:00 PM - 11:00 PM IST
-    const startTime = '20250919T133000Z';
-    const endTime = '20250919T173000Z';
+    // Event date: September 19, 2025, 6:30 PM - 11:00 PM IST (UTC+5:30)
+    const startTime = '20250919T130000Z'; // 6:30 PM IST = 1:00 PM UTC
+    const endTime = '20250919T173000Z';   // 11:00 PM IST = 5:30 PM UTC
     
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&details=${eventDescription}&location=${eventLocation}&sf=true&output=xml`;
   }
