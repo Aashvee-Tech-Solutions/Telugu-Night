@@ -30,7 +30,7 @@ interface TeluguNightConfig {
   eventTitle: string;
   eventDescription: string | null;
   venue: string;
-  eventDate: string | null;
+  eventDate?: string | null;
   maxCapacity: number;
   bookingOpen: boolean;
   earlyBirdPrice: string;
@@ -157,13 +157,13 @@ export default function TeluguNightEventManagement() {
 
   const handleSaveConfig = () => {
     // Clean the data before sending - remove empty strings and zero values
-    const cleanedData = { ...eventData };
+    const cleanedData: any = { ...eventData };
     if (cleanedData.eventDate === '' || !cleanedData.eventDate) {
       delete cleanedData.eventDate;
     }
     
     // Ensure all numeric values are valid
-    const numericFields = ['earlyBirdPrice', 'phase1Price', 'phase2Price', 'earlyBirdLimit', 'phase1Limit', 'phase2Limit', 'maxCapacity', 'convenientFee'];
+    const numericFields = ['earlyBirdPrice', 'phase1Price', 'phase2Price', 'phase3Price', 'phase4Price', 'earlyBirdLimit', 'phase1Limit', 'phase2Limit', 'phase3Limit', 'phase4Limit', 'maxCapacity', 'convenientFee'];
     numericFields.forEach(field => {
       if (cleanedData[field] === 0 || cleanedData[field] === '' || isNaN(cleanedData[field])) {
         delete cleanedData[field]; // Let the backend use defaults or current values
@@ -189,9 +189,13 @@ export default function TeluguNightEventManagement() {
         earlyBirdPrice: parseInt(currentConfig.earlyBirdPrice) || 300,
         phase1Price: parseInt(currentConfig.phase1Price) || 350,
         phase2Price: parseInt(currentConfig.phase2Price) || 400,
+        phase3Price: parseInt(currentConfig.phase3Price) || 425,
+        phase4Price: parseInt(currentConfig.phase4Price) || 450,
         earlyBirdLimit: currentConfig.earlyBirdLimit || 90,
         phase1Limit: currentConfig.phase1Limit || 200,
         phase2Limit: currentConfig.phase2Limit || 210,
+        phase3Limit: currentConfig.phase3Limit || 220,
+        phase4Limit: currentConfig.phase4Limit || 230,
         convenientFee: parseFloat(currentConfig.convenientFee) || 12.96,
       });
     }
