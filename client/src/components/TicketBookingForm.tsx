@@ -114,6 +114,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
         },
         body: JSON.stringify({ 
           code: code.trim().toUpperCase(),
+          email: formData.email,
           ticketPrice: basePrice,
           ticketCount: formData.ticketCount
         }),
@@ -460,7 +461,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Select Tickets</h3>
                     <div className="space-y-3">
                       {/* Early Bird Tickets */}
-                      {pricing.config?.earlyBird.capacity > 0 && (
+                      {pricing.config?.earlyBird.capacity > 0 && pricing.config?.earlyBird.isActive && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -507,7 +508,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       )}
 
                       {/* Phase 1 Tickets */}
-                      {pricing.config?.phase1.capacity > 0 && (
+                      {pricing.config?.phase1.capacity > 0 && pricing.config?.phase1.isActive && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -554,7 +555,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       )}
 
                       {/* Phase 2 Tickets */}
-                      {pricing.config?.phase2.capacity > 0 && (
+                      {pricing.config?.phase2.capacity > 0 && pricing.config?.phase2.isActive && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -601,7 +602,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       )}
 
                       {/* Phase 3 Tickets */}
-                      {pricing.config?.phase3.capacity > 0 && (
+                      {pricing.config?.phase3.capacity > 0 && pricing.config?.phase3.isActive && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -648,7 +649,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       )}
 
                       {/* Phase 4 Tickets */}
-                      {pricing.config?.phase4.capacity > 0 && (
+                      {pricing.config?.phase4.capacity > 0 && pricing.config?.phase4.isActive && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
