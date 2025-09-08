@@ -98,7 +98,7 @@ const Index = () => {
               </a>
             </div>
             <p className="text-sm text-slate-300 text-center leading-relaxed">
-              © 2024 <strong className="text-white">events.qlora.in</strong> - Designed and Developed by <strong className="text-yellow-400">Aashvee Tech Solutions Pvt Ltd</strong>
+              © 2024 <strong className="text-white">telugunight.manipal.app</strong> - Designed and Developed by <strong className="text-yellow-400">Aashvee Tech Solutions Pvt Ltd</strong>
             </p>
           </div>
         </div>

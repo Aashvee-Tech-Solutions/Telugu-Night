@@ -214,7 +214,7 @@ const TermsAndConditions = () => {
                   </a>
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
-                  © 2024 events.qlora.in - Designed and Developed by <strong>Aashvee Tech Solutions Pvt Ltd</strong>
+                  © 2024 telugunight.manipal.app - Designed and Developed by <strong>Aashvee Tech Solutions Pvt Ltd</strong>
                 </p>
               </div>
 

@@ -211,7 +211,7 @@ const PrivacyPolicy = () => {
                 <p className="mb-4">If you have any questions about this Privacy Policy or our data practices, please contact us:</p>
                 <div className="p-4 bg-green-100 dark:bg-green-900/50 border-2 border-green-300 dark:border-green-600 rounded-lg shadow-md">
                   <p><strong>Aashvee Tech Solutions Pvt Ltd</strong></p>
-                  <p>Platform: events.qlora.in</p>
+                  <p>Platform: telugunight.manipal.app</p>
                   <p>Email: mis@aashveetech.com</p>
                   <p>Subject: Privacy Policy Inquiry</p>
                 </div>
@@ -236,7 +236,7 @@ const PrivacyPolicy = () => {
                   </a>
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
-                  © 2024 events.qlora.in - Designed and Developed by <strong>Aashvee Tech Solutions Pvt Ltd</strong>
+                  © 2024 telugunight.manipal.app - Designed and Developed by <strong>Aashvee Tech Solutions Pvt Ltd</strong>
                 </p>
               </div>
 

@@ -339,7 +339,7 @@ export class EmailService {
               <p><strong>Email:</strong> ${email}</p>
               <p><strong>Password:</strong> ${password}</p>
               <p><strong>Promo Code:</strong> ${promoCode}</p>
-              <p><strong>Login URL:</strong> <a href="https://events.qlora.in/promoter/login">Promoter Dashboard</a></p>
+              <p><strong>Login URL:</strong> <a href="https://telugunight.manipal.app/promoter/login">Promoter Dashboard</a></p>
             </div>
 
             <div class="referral-box">
@@ -362,7 +362,7 @@ export class EmailService {
             </ul>
 
             <div style="text-align: center; margin: 20px 0;">
-              <a href="https://events.qlora.in/promoter/login" class="login-btn">
+              <a href="https://telugunight.manipal.app/promoter/login" class="login-btn">
                 🚀 Access Your Dashboard
               </a>
             </div>

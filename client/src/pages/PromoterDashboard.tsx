@@ -66,7 +66,7 @@ export default function PromoterDashboard() {
   };
 
   const copyReferralUrl = async () => {
-    const url = stats?.stats?.referralUrl || `https://events.qlora.in/book?ref=${promoterSession?.promoCode}`;
+    const url = stats?.stats?.referralUrl || `https://telugunight.manipal.app/book?ref=${promoterSession?.promoCode}`;
     try {
       await navigator.clipboard.writeText(url);
       toast({
@@ -83,7 +83,7 @@ export default function PromoterDashboard() {
   };
 
   const shareOnSocial = (platform: string) => {
-    const url = stats?.stats?.referralUrl || `https://events.qlora.in/book?ref=${promoterSession?.promoCode}`;
+    const url = stats?.stats?.referralUrl || `https://telugunight.manipal.app/book?ref=${promoterSession?.promoCode}`;
     const text = 'Join me at Telugu Night! Book your tickets now!';
     
     let shareUrl = '';
@@ -201,7 +201,7 @@ export default function PromoterDashboard() {
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <code className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded text-sm block">
-                    {statsData?.referralUrl || `https://events.qlora.in/book?ref=${promoterSession?.promoCode}`}
+                    {statsData?.referralUrl || `https://telugunight.manipal.app/book?ref=${promoterSession?.promoCode}`}
                   </code>
                 </div>
                 <Button

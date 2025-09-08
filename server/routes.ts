@@ -2731,7 +2731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Promoter not found' });
       }
       
-      const baseUrl = 'https://events.qlora.in';
+      const baseUrl = 'https://telugunight.manipal.app';
       const referralUrl = `${baseUrl}/book?ref=${promoter.promoCode}`;
       
       const shareData = {
