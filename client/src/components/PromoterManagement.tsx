@@ -74,6 +74,26 @@ export default function PromoterManagement() {
     },
   });
 
+  const deletePromoterMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('DELETE', `/api/admin/promoters/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Promoter deleted successfully",
+        description: "The promoter has been removed from the system",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/promoters'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete promoter",
+        description: error.message || "An error occurred while deleting the promoter",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreatePromoter = () => {
     if (!newPromoter.name || !newPromoter.email) {
       toast({
@@ -223,7 +243,7 @@ export default function PromoterManagement() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-blue-500" />
-                        <span>{promoter.totalBookings} bookings</span>
+                        <span>{promoter.totalBookings} tickets</span>
                       </div>
                       <p className="text-xs text-gray-500">
                         ₹{Number(promoter.totalRevenue || 0).toFixed(2)} total revenue
@@ -237,18 +257,34 @@ export default function PromoterManagement() {
                     </TableCell>
                     
                     <TableCell>
-                      <Button
-                        size="sm"
-                        variant={promoter.isActive ? "destructive" : "default"}
-                        onClick={() => togglePromoterMutation.mutate({ 
-                          id: promoter.id, 
-                          isActive: !promoter.isActive 
-                        })}
-                        disabled={togglePromoterMutation.isPending}
-                        data-testid={`button-toggle-${index}`}
-                      >
-                        {promoter.isActive ? "Deactivate" : "Activate"}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant={promoter.isActive ? "destructive" : "default"}
+                          onClick={() => togglePromoterMutation.mutate({ 
+                            id: promoter.id, 
+                            isActive: !promoter.isActive 
+                          })}
+                          disabled={togglePromoterMutation.isPending}
+                          data-testid={`button-toggle-${index}`}
+                        >
+                          {promoter.isActive ? "Deactivate" : "Activate"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this promoter? This action cannot be undone.')) {
+                              deletePromoterMutation.mutate(promoter.id);
+                            }
+                          }}
+                          disabled={deletePromoterMutation.isPending}
+                          data-testid={`button-delete-${index}`}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
