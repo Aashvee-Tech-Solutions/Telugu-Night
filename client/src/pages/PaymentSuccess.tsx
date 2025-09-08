@@ -118,7 +118,7 @@ export default function PaymentSuccess() {
   }
 
   const isPaymentVerified = booking.paymentStatus === 'verified';
-  const hasTickets = booking.qrCodes && booking.qrCodes.length > 0;
+  const hasTickets = booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
@@ -252,7 +252,7 @@ export default function PaymentSuccess() {
                       </p>
                       
                       {/* QR Code Display */}
-                      {booking.qrCodes && booking.qrCodes.length > 0 && (
+                      {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0 && (
                         <div className="mb-4">
                           <h4 className="font-medium text-gray-700 mb-3">Your QR Ticket:</h4>
                           <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
@@ -270,7 +270,7 @@ export default function PaymentSuccess() {
                       )}
                       
                       <div className="flex flex-wrap gap-3">
-                        {booking.qrCodes && booking.qrCodes.length > 0 && (
+                        {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0 && (
                           <Button 
                             onClick={() => {
                               // Download QR code as image

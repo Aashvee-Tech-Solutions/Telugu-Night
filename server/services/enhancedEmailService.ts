@@ -17,7 +17,7 @@ interface BookingData {
 }
 
 export class EnhancedEmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter!: nodemailer.Transporter;
   private calendar: any;
 
   constructor() {
@@ -48,7 +48,7 @@ export class EnhancedEmailService {
       logger: false
     };
 
-    this.transporter = nodemailer.createTransport(smtpConfig);
+    this.transporter = nodemailer.createTransport(smtpConfig as any);
   }
 
   private async initializeGoogleCalendar() {
