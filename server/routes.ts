@@ -2836,7 +2836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { EmailService } = await import('./services/emailService');
         const emailService = new EmailService();
-        const referralUrl = `https://events.qlora.in/book?ref=${promoter.promoCode}`;
+        const referralUrl = `https://telugunight.manipal.app/book?ref=${promoter.promoCode}`;
         await emailService.sendPromoterCredentials(promoter.email, plainPassword, promoter.promoCode, referralUrl);
         console.log('✅ Promoter credentials sent to:', promoter.email);
       } catch (emailError) {

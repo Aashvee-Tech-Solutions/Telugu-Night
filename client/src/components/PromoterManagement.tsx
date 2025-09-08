@@ -29,7 +29,7 @@ export default function PromoterManagement() {
   const [newPromoter, setNewPromoter] = useState({
     name: '',
     email: '',
-    commissionRate: 0
+    commission: 5
   });
 
   const { data: promoters, isLoading } = useQuery({
@@ -46,7 +46,7 @@ export default function PromoterManagement() {
         title: "Promoter created successfully",
         description: "Credentials have been sent to their email",
       });
-      setNewPromoter({ name: '', email: '', commissionRate: 0 });
+      setNewPromoter({ name: '', email: '', commission: 5 });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/promoters'] });
     },
     onError: (error: Error) => {
@@ -134,6 +134,18 @@ export default function PromoterManagement() {
             </div>
             
             <div className="space-y-2">
+              <Label htmlFor="promoter-commission">Commission Rate (%)</Label>
+              <Input
+                id="promoter-commission"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                placeholder="5.0"
+                value={newPromoter.commission}
+                onChange={(e) => setNewPromoter({ ...newPromoter, commission: parseFloat(e.target.value) || 0 })}
+                data-testid="input-promoter-commission"
+              />
             </div>
           </div>
           
