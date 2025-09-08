@@ -153,6 +153,14 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
     const newGuests = [...formData.guests];
     const newGuestGenders = [...formData.guestGenders];
     
+    // Ensure arrays are properly sized - pad with empty strings if needed
+    while (newGuests.length < guestArraySize) {
+      newGuests.push('');
+    }
+    while (newGuestGenders.length < guestArraySize) {
+      newGuestGenders.push('');
+    }
+    
     // Set ticket type based on available tiers
     let ticketType = formData.ticketType;
     if (isEarlyBirdAvailable) {
@@ -249,13 +257,25 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
     } else if (step === 2) {
       // Validate guest details if multiple tickets
       if (formData.ticketCount > 1) {
+        const expectedGuestCount = formData.ticketCount - 1;
+        
+        // Check if we have the correct number of guest entries
+        if (formData.guests.length !== expectedGuestCount || formData.guestGenders.length !== expectedGuestCount) {
+          toast({
+            title: "Guest Details Incomplete",
+            description: "Please refresh the form and try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         const emptyGuests = formData.guests.filter(g => !g.trim());
         const emptyGenders = formData.guestGenders.filter(g => !g.trim());
         
         if (emptyGuests.length > 0 || emptyGenders.length > 0) {
           toast({
             title: "Guest Details Required",
-            description: "Please enter all guest names and genders.",
+            description: `Please enter all guest names and genders for ${expectedGuestCount} guest${expectedGuestCount > 1 ? 's' : ''}.`,
             variant: "destructive",
           });
           return;
