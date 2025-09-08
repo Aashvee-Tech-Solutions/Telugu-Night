@@ -229,7 +229,7 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   email: z.string().email("Please enter a valid email address"),
   gender: z.enum(["male", "female", "other"], { required_error: "Gender is required" }),
-  ticketCount: z.number().min(1, "Must select at least 1 ticket").max(10, "Cannot book more than 10 tickets"),
+  ticketCount: z.number().min(1, "Must select at least 1 ticket").max(15, "For bookings above 15 tickets, please contact mis@aashveetech.com"),
   couponCode: z.union([z.string(), z.null()]).optional(),
   guests: z.array(z.string().min(1, "Guest name cannot be empty")).optional(),
   guestGenders: z.array(z.enum(["male", "female", "other"])).optional(),

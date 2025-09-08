@@ -144,8 +144,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
 
 
   const handleTicketCountChange = (count: number) => {
-    // Allow 0-50 tickets, but adjust guests accordingly
-    const validCount = Math.max(0, Math.min(50, count));
+    // Allow 0-15 tickets, but adjust guests accordingly  
+    const validCount = Math.max(0, Math.min(15, count));
     const newGuests = Array(Math.max(0, validCount - 1)).fill("");
     const newGuestGenders = Array(Math.max(0, validCount - 1)).fill("");
     
@@ -462,7 +462,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         // Allow only digits and empty string
                         if (value === '' || /^\d+$/.test(value)) {
                           const numValue = value === '' ? 0 : parseInt(value);
-                          if (numValue >= 0 && numValue <= 50) { // Allow 0-50 tickets
+                          if (numValue >= 0 && numValue <= 15) { // Allow 0-15 tickets
                             handleTicketCountChange(numValue);
                           }
                         }
@@ -488,8 +488,16 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         }
                       }}
                       className="mb-3"
-                      placeholder="Enter number of tickets (max 50)"
+                      placeholder="Enter number of tickets (max 15)"
                     />
+                    
+                    {/* Booking Limit Message */}
+                    <div className="text-sm text-muted-foreground mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="font-medium text-blue-800 dark:text-blue-200 mb-1">📞 Need more than 15 tickets?</p>
+                      <p className="text-blue-700 dark:text-blue-300">
+                        For bulk bookings, contact us at <a href="mailto:mis@aashveetech.com" className="underline font-medium hover:text-blue-600 dark:hover:text-blue-200">mis@aashveetech.com</a>
+                      </p>
+                    </div>
                     
                     {/* Current Phase Display */}
                     {pricing.config && (
