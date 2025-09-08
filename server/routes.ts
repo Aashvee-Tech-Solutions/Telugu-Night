@@ -2730,11 +2730,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate real-time stats from actual bookings
       const totalRevenue = promoterBookings.reduce((sum, b) => sum + parseFloat(b.totalAmount || '0'), 0);
+      const totalTickets = promoterBookings.reduce((sum, b) => sum + (b.ticketCount || 0), 0);
       const commissionRate = parseFloat(promoter.commission || '5'); // Commission is stored as percentage
       const commissionEarned = (totalRevenue * commissionRate) / 100;
       
       const stats = {
         totalBookings: promoterBookings.length,
+        totalTickets: totalTickets,
         totalRevenue: totalRevenue,
         commission: commissionEarned,
         commissionRate: commissionRate,
