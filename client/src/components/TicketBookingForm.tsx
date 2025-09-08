@@ -303,9 +303,9 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-2xl mx-auto">
-        <Button variant="ghost" onClick={onBack} className="mb-6">
+        <Button variant="ghost" onClick={() => window.location.href = '/'} className="mb-6">
           <ArrowLeft className="mr-2" />
-          Back to Event
+          Back to Home
         </Button>
 
         <Card className="shadow-card">
