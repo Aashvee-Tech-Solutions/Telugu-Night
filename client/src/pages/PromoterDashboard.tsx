@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface PromoterStats {
   totalBookings: number;
+  totalTickets: number;
   promoterInfo: {
     name: string;
     email: string;
