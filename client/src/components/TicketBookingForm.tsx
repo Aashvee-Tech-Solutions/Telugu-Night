@@ -450,55 +450,15 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="tickets">Number of Tickets</Label>
-                    <Input
-                      id="tickets"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={formData.ticketCount.toString()}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        // Allow only digits and empty string
-                        if (value === '' || /^\d+$/.test(value)) {
-                          const numValue = value === '' ? 0 : parseInt(value);
-                          if (numValue >= 0 && numValue <= 15) { // Allow 0-15 tickets
-                            handleTicketCountChange(numValue);
-                          }
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        // Allow backspace, delete, tab, escape, enter
-                        if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
-                            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-                            (e.keyCode === 65 && e.ctrlKey) ||
-                            (e.keyCode === 67 && e.ctrlKey) ||
-                            (e.keyCode === 86 && e.ctrlKey) ||
-                            (e.keyCode === 88 && e.ctrlKey)) {
-                          return;
-                        }
-                        // Ensure that it is a number and stop if not
-                        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-                          e.preventDefault();
-                        }
-                      }}
-                      onBlur={(e) => {
-                        if (e.target.value === '') {
-                          handleTicketCountChange(0);
-                        }
-                      }}
-                      className="mb-3"
-                      placeholder="Enter number of tickets (max 15)"
-                    />
+                </div>
                     
-                    
-                    {/* Comprehensive Ticket Selection */}
-                    {pricing.config && (
-                      <div className="mb-4">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Select Tickets</h3>
+                {/* Comprehensive Ticket Selection */}
+                {pricing.config && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Select Tickets</h3>
                         <div className="space-y-3">
                           {/* Early Bird Tickets */}
+                          {pricing.config?.earlyBird.capacity > 0 && (
                           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -542,8 +502,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                               </div>
                             </div>
                           </div>
+                          )}
 
                           {/* Phase 1 Tickets */}
+                          {pricing.config?.phase1.capacity > 0 && (
                           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -587,8 +549,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                               </div>
                             </div>
                           </div>
+                          )}
 
                           {/* Phase 2 Tickets */}
+                          {pricing.config?.phase2.capacity > 0 && (
                           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -632,8 +596,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                               </div>
                             </div>
                           </div>
+                          )}
 
                           {/* Phase 3 Tickets */}
+                          {pricing.config?.phase3.capacity > 0 && (
                           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -677,8 +643,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                               </div>
                             </div>
                           </div>
+                          )}
 
                           {/* Phase 4 Tickets */}
+                          {pricing.config?.phase4.capacity > 0 && (
                           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -722,6 +690,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                               </div>
                             </div>
                           </div>
+                          )}
                         </div>
 
                         {/* Current Selection Summary */}
@@ -734,11 +703,11 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                             </div>
                           </div>
                         )}
-                      </div>
-                    )}
+                    </div>
+                  )}
 
 
-                    {/* Dynamic Price Display */}
+                  {/* Dynamic Price Display */}
                     {isAnyTicketAvailable && formData.ticketCount > 0 && (
                       <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border">
                         <div className="space-y-2">
@@ -1041,9 +1010,9 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                     <CreditCard className="mr-2" />
                     Pay Now
                   </Button>
-) : null}
+                ) : null}
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
