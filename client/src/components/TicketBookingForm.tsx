@@ -481,7 +481,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Select Tickets</h3>
                     <div className="space-y-3">
                       {/* Early Bird Tickets */}
-                      {pricing.config?.earlyBird.capacity > 0 && (
+                      {pricing.config?.earlyBird.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -528,7 +528,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       )}
 
                       {/* Phase 1 Tickets */}
-                      {pricing.config?.phase1.capacity > 0 && (
+                      {pricing.config?.phase1.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -575,7 +575,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       )}
 
                       {/* Phase 2 Tickets */}
-                      {pricing.config?.phase2.capacity > 0 && (
+                      {pricing.config?.phase2.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -622,7 +622,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       )}
 
                       {/* Phase 3 Tickets */}
-                      {pricing.config?.phase3.capacity > 0 && (
+                      {pricing.config?.phase3.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
@@ -653,6 +653,53 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                   }
                                 }}
                                 disabled={!pricing.config?.phase3.isActive || (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) || pricing.currentTier?.id !== 'phase_3'}
+                              >
+                                <SelectTrigger className="w-20">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 16 }, (_, i) => (
+                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Phase 4 Tickets */}
+                      {pricing.config?.phase4.capacity > 1 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                  Phase 4 - VIP Access
+                                </h4>
+                                {!pricing.config?.phase4.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">Coming Soon</span>
+                                ) : (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground">Sold Out</span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white">Available</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                  Rs. {pricing.config?.phase4.price || 0}
+                                </div>
+                              </div>
+                              <Select 
+                                value={pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4' ? formData.ticketCount.toString() : "0"}
+                                onValueChange={(value) => {
+                                  if (pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4') {
+                                    handleTicketCountChange(parseInt(value));
+                                  }
+                                }}
+                                disabled={!pricing.config?.phase4.isActive || (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) || pricing.currentTier?.id !== 'phase_4'}
                               >
                                 <SelectTrigger className="w-20">
                                   <SelectValue />

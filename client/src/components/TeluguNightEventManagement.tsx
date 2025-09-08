@@ -346,8 +346,8 @@ export default function TeluguNightEventManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Early Bird - Only show if limit > 0 */}
-            {(currentConfig?.earlyBirdLimit || 0) > 0 && (
+            {/* Early Bird - Only show if limit > 1 */}
+            {(currentConfig?.earlyBirdLimit || 0) > 1 && (
               <div className="text-center p-4 border rounded-lg">
                 <Star className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
                 <p className="font-semibold text-lg">{counts?.earlyBirdCount || 0}</p>
@@ -356,8 +356,8 @@ export default function TeluguNightEventManagement() {
               </div>
             )}
             
-            {/* Phase 1 - Only show if limit > 0 */}
-            {(currentConfig?.phase1Limit || 0) > 0 && (
+            {/* Phase 1 - Only show if limit > 1 */}
+            {(currentConfig?.phase1Limit || 0) > 1 && (
               <div className="text-center p-4 border rounded-lg">
                 <Clock className="w-8 h-8 mx-auto mb-2 text-blue-500" />
                 <p className="font-semibold text-lg">{counts?.phase1Count || 0}</p>
@@ -366,8 +366,8 @@ export default function TeluguNightEventManagement() {
               </div>
             )}
             
-            {/* Phase 2 - Only show if limit > 0 */}
-            {(currentConfig?.phase2Limit || 0) > 0 && (
+            {/* Phase 2 - Only show if limit > 1 */}
+            {(currentConfig?.phase2Limit || 0) > 1 && (
               <div className="text-center p-4 border rounded-lg">
                 <Zap className="w-8 h-8 mx-auto mb-2 text-orange-500" />
                 <p className="font-semibold text-lg">{counts?.phase2Count || 0}</p>
@@ -376,8 +376,8 @@ export default function TeluguNightEventManagement() {
               </div>
             )}
             
-            {/* Phase 3 - Only show if limit > 0 */}
-            {(currentConfig?.phase3Limit || 0) > 0 && (
+            {/* Phase 3 - Only show if limit > 1 */}
+            {(currentConfig?.phase3Limit || 0) > 1 && (
               <div className="text-center p-4 border rounded-lg">
                 <Zap className="w-8 h-8 mx-auto mb-2 text-indigo-500" />
                 <p className="font-semibold text-lg">{counts?.phase3Count || 0}</p>
@@ -386,8 +386,8 @@ export default function TeluguNightEventManagement() {
               </div>
             )}
             
-            {/* Phase 4 - Only show if limit > 0 */}
-            {(currentConfig?.phase4Limit || 0) > 0 && (
+            {/* Phase 4 - Only show if limit > 1 */}
+            {(currentConfig?.phase4Limit || 0) > 1 && (
               <div className="text-center p-4 border rounded-lg">
                 <Zap className="w-8 h-8 mx-auto mb-2 text-red-500" />
                 <p className="font-semibold text-lg">{counts?.phase4Count || 0}</p>
@@ -419,7 +419,7 @@ export default function TeluguNightEventManagement() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Early Bird Phase */}
-            {(currentConfig?.earlyBirdLimit || 0) > 0 && (
+            {(currentConfig?.earlyBirdLimit || 0) > 1 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
@@ -448,7 +448,7 @@ export default function TeluguNightEventManagement() {
             )}
 
             {/* Phase 1 */}
-            {(currentConfig?.phase1Limit || 0) > 0 && (
+            {(currentConfig?.phase1Limit || 0) > 1 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
@@ -477,7 +477,7 @@ export default function TeluguNightEventManagement() {
             )}
 
             {/* Phase 2 */}
-            {(currentConfig?.phase2Limit || 0) > 0 && (
+            {(currentConfig?.phase2Limit || 0) > 1 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
@@ -506,7 +506,7 @@ export default function TeluguNightEventManagement() {
             )}
 
             {/* Phase 3 */}
-            {(currentConfig?.phase3Limit || 0) > 0 && (
+            {(currentConfig?.phase3Limit || 0) > 1 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
@@ -535,7 +535,7 @@ export default function TeluguNightEventManagement() {
             )}
 
             {/* Phase 4 */}
-            {(currentConfig?.phase4Limit || 0) > 0 && (
+            {(currentConfig?.phase4Limit || 0) > 1 && (
             <div className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
