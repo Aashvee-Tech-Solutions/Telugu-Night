@@ -92,7 +92,7 @@ export const bookings = pgTable("bookings", {
   paymentStatus: text("payment_status", { enum: ["pending", "paid", "verified", "failed", "refunded"] }).default("pending"),
   paymentId: text("payment_id"), // Cashfree payment ID
   paymentMethod: text("payment_method"), // card, upi, netbanking
-  ticketType: text("ticket_type", { enum: ["early_bird", "phase_1", "phase_2"] }), // Telugu Night ticket type
+  ticketType: text("ticket_type", { enum: ["early_bird", "phase_1", "phase_2", "phase_3", "phase_4"] }), // Telugu Night ticket type
   qrCodes: jsonb("qr_codes").$type<string[]>().default([]),
   passIds: jsonb("pass_ids").$type<string[]>().default([]), // Unique pass IDs for dashboard
   isScanned: boolean("is_scanned").default(false),
@@ -243,7 +243,7 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   guestGenders: z.array(z.enum(["male", "female", "other"])).optional(),
   promoCode: z.union([z.string(), z.null()]).optional(),
   referrer: z.union([z.string(), z.null()]).optional(),
-  ticketType: z.enum(["early_bird", "phase_1", "phase_2"]).optional(),
+  ticketType: z.enum(["early_bird", "phase_1", "phase_2", "phase_3", "phase_4"]).optional(),
 }).refine((data) => {
   // If multiple tickets, ensure guest info is provided
   if (data.ticketCount > 1) {
@@ -287,12 +287,18 @@ export const insertTeluguNightConfigSchema = createInsertSchema(teluguNightConfi
   earlyBirdPrice: true,
   phase1Price: true,
   phase2Price: true,
+  phase3Price: true,
+  phase4Price: true,
   earlyBirdLimit: true,
   phase1Limit: true,
   phase2Limit: true,
+  phase3Limit: true,
+  phase4Limit: true,
   isEarlyBirdActive: true,
   isPhase1Active: true,
   isPhase2Active: true,
+  isPhase3Active: true,
+  isPhase4Active: true,
   convenientFee: true,
 });
 
