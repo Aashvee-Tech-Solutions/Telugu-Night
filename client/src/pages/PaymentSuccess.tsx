@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Download, Calendar, MapPin, Clock, Users, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Download, Calendar, MapPin, Clock, Users, AlertCircle, Loader2, FileDown, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Booking } from '../../../shared/schema';
 
@@ -48,6 +48,12 @@ export default function PaymentSuccess() {
     },
   });
 
+  // Track if we've already shown status messages to prevent repeated toasts
+  const [statusShown, setStatusShown] = useState({
+    pending: false,
+    failed: false
+  });
+
   // Automatically send tickets when booking is loaded and verified
   useEffect(() => {
     if (booking && booking.paymentStatus === 'verified') {
@@ -58,23 +64,24 @@ export default function PaymentSuccess() {
       } else {
         console.log('✅ QR codes already exist for this booking');
       }
-    } else if (booking && booking.paymentStatus === 'pending') {
+    } else if (booking && booking.paymentStatus === 'pending' && !statusShown.pending) {
       console.log('⏳ Payment still pending, waiting for verification...');
-      // Show a message to the user instead of infinitely refreshing
       toast({
         title: "Payment Processing",
         description: "Your payment is still being processed. Please wait or refresh manually.",
         variant: "default",
       });
-    } else if (booking && booking.paymentStatus === 'failed') {
+      setStatusShown(prev => ({ ...prev, pending: true }));
+    } else if (booking && booking.paymentStatus === 'failed' && !statusShown.failed) {
       console.log('❌ Payment failed for booking:', booking.id);
       toast({
         title: "Payment Failed",
         description: "Your payment was not successful. Please try again or contact support.",
         variant: "destructive",
       });
+      setStatusShown(prev => ({ ...prev, failed: true }));
     }
-  }, [booking, sendTicketsMutation, toast]);
+  }, [booking?.id, booking?.paymentStatus, booking?.qrCodes?.length]);
 
   if (!bookingId) {
     return (
