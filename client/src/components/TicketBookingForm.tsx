@@ -114,6 +114,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
         },
         body: JSON.stringify({ 
           code: code.trim().toUpperCase(),
+          email: formData.email,
           ticketType: formData.ticketType,
           ticketCount: formData.ticketCount
         }),
@@ -826,12 +827,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                           },
                           onFailure: function(data: any) {
                             console.log('Payment failed:', data);
-                            toast({
-                              title: "Payment Failed",
-                              description: "Your payment was unsuccessful. Please try again or contact support.",
-                              variant: "destructive"
-                            });
-                            // Stay on the same page to allow retry
+                            // Redirect to payment failure page
+                            window.location.href = `/payment/failure?booking=${bookingId}`;
                           },
                           onClose: function() {
                             console.log('Payment dialog closed');

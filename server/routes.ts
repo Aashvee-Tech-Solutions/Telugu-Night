@@ -2369,6 +2369,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public route to delete failed booking
+  app.delete('/api/public/bookings/:id/delete-failed', async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+      
+      // Only allow deletion if payment failed or is pending
+      if (booking.paymentStatus === 'verified') {
+        return res.status(400).json({ message: 'Cannot delete verified booking' });
+      }
+      
+      // Delete from database
+      await storage.deleteBooking(bookingId);
+      
+      // Send failure email notification
+      try {
+        const { EnhancedEmailService } = await import('./services/enhancedEmailService');
+        const enhancedEmailService = new EnhancedEmailService();
+        await enhancedEmailService.sendPaymentFailureEmail(booking);
+      } catch (emailError) {
+        console.error('Failed to send payment failure email:', emailError);
+      }
+      
+      console.log(`📋 Failed booking ${bookingId} deleted for ${booking.name}`);
+      
+      res.json({
+        message: `Failed booking has been cancelled and deleted.`,
+        deletedBooking: { id: booking.id, name: booking.name }
+      });
+    } catch (error: any) {
+      console.error('Failed booking deletion error:', error);
+      res.status(500).json({ message: error.message || 'Failed to delete booking' });
+    }
+  });
+
   // Delete booking with Google Sheets sync
   app.delete('/api/admin/bookings/:id', authenticate, requirePermission(PERMISSIONS.MANAGE_BOOKINGS), async (req, res) => {
     try {

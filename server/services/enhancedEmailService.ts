@@ -251,6 +251,96 @@ Contact: mis@aashveetech.com | +91 6281614117`);
     }
   }
 
+  // Send payment failure notification email
+  async sendPaymentFailureEmail(booking: BookingData): Promise<void> {
+    try {
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">❌ Payment Failed</h1>
+            <p style="color: #fecaca; margin: 10px 0 0 0; font-size: 16px;">Telugu Night - DTR Manipal</p>
+          </div>
+          
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h2 style="color: #333; margin: 0 0 10px 0;">Sorry ${booking.name}!</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                Unfortunately, your payment could not be processed. Your booking has been cancelled.
+              </p>
+              <div style="background: #dc2626; color: white; padding: 10px 20px; border-radius: 25px; display: inline-block; margin: 15px 0;">
+                ❌ Payment Rejected
+              </div>
+            </div>
+            
+            <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+              <h3 style="color: #991b1b; margin: 0 0 15px 0; text-align: center;">Cancelled Booking Details</h3>
+              <div style="display: grid; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #fecaca;">
+                  <span style="font-weight: bold; color: #374151;">Booking ID:</span>
+                  <span style="color: #dc2626; font-weight: bold;">#${booking.id}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #fecaca;">
+                  <span style="font-weight: bold; color: #374151;">Tickets:</span>
+                  <span style="color: #6b7280;">${booking.ticketCount}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #fecaca;">
+                  <span style="font-weight: bold; color: #374151;">Amount:</span>
+                  <span style="color: #dc2626; font-weight: bold;">₹${parseFloat(booking.totalAmount.toString()).toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                  <span style="font-weight: bold; color: #374151;">Status:</span>
+                  <span style="color: #dc2626; font-weight: bold;">❌ CANCELLED</span>
+                </div>
+              </div>
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #374151; margin: 0 0 15px 0; text-align: center;">💡 What happened?</h3>
+              <ul style="color: #6b7280; margin: 0; padding-left: 20px;">
+                <li>Payment gateway declined the transaction</li>
+                <li>Insufficient funds or bank restrictions</li>
+                <li>Network connectivity issues</li>
+                <li>Transaction timeout or cancellation</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <h3 style="color: #1e40af; margin: 0 0 10px 0;">🔄 Want to try again?</h3>
+                <p style="color: #1e40af; margin: 0 0 15px 0; font-size: 14px;">
+                  Visit our website to make a new booking with the same details.
+                </p>
+                <a href="https://telugunight.manipal.app" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                  Book Again
+                </a>
+              </div>
+            </div>
+            
+            <div style="text-align: center; color: #666; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 5px 0;">📧 Support: mis@aashveetech.com</p>
+              <p style="margin: 5px 0;">📞 Phone: +91 6281614117</p>
+              <p style="margin: 15px 0 0 0; font-style: italic;">
+                We're here to help if you need assistance with your booking.
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      await this.transporter.sendMail({
+        from: 'mis@aashveetech.com',
+        to: booking.email,
+        subject: `❌ Payment Failed - Telugu Night Booking Cancelled #${booking.id}`,
+        html: emailHtml
+      });
+
+      console.log(`✅ Payment failure email sent to ${booking.email}`);
+    } catch (error) {
+      console.error('Payment failure email failed:', error);
+      throw error;
+    }
+  }
+
   // Test SMTP connection
   async testEmailConnection(testEmail: string = 'test@example.com'): Promise<void> {
     try {
