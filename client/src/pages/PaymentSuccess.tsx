@@ -164,6 +164,56 @@ export default function PaymentSuccess() {
   const isPaymentVerified = booking.paymentStatus === 'verified';
   const hasTickets = booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0;
 
+  // Download functions
+  const downloadQRCode = (qrCodeDataUrl: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = qrCodeDataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadAllTickets = () => {
+    if (booking && booking.qrCodes) {
+      booking.qrCodes.forEach((qrCode, index) => {
+        setTimeout(() => {
+          downloadQRCode(qrCode, `telugu-night-ticket-${index + 1}.png`);
+        }, index * 100); // Small delay to prevent browser blocking multiple downloads
+      });
+      toast({
+        title: "📥 Downloading Tickets",
+        description: `Downloading ${booking.qrCodes.length} QR ticket(s)...`,
+      });
+    }
+  };
+
+  const shareTicket = async () => {
+    if (navigator.share && booking) {
+      try {
+        await navigator.share({
+          title: 'Telugu Night Tickets',
+          text: `My Telugu Night tickets are ready! Booking ID: #${booking.id}`,
+          url: window.location.href
+        });
+      } catch (error) {
+        // Fallback to copying URL
+        navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "📋 Link Copied",
+          description: "Payment link copied to clipboard",
+        });
+      }
+    } else {
+      // Fallback for browsers that don't support native sharing
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "📋 Link Copied",
+        description: "Payment link copied to clipboard",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
       <div className="container mx-auto px-4 py-8">
@@ -299,43 +349,58 @@ export default function PaymentSuccess() {
                       {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0 && (
                         <div className="mb-4">
                           <h4 className="font-medium text-gray-700 mb-3">Your QR Ticket:</h4>
-                          <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
+                          <div className="bg-white p-3 sm:p-4 rounded-lg border-2 border-gray-200 inline-block w-full max-w-xs mx-auto">
                             <img 
                               src={booking.qrCodes[0]} 
                               alt="QR Ticket"
-                              className="w-48 h-48 mx-auto"
+                              className="w-40 h-40 sm:w-48 sm:h-48 mx-auto"
                               data-testid="qr-code-image"
                             />
-                            <p className="text-center text-sm text-gray-600 mt-2 font-mono">
+                            <p className="text-center text-xs sm:text-sm text-gray-600 mt-2 font-mono">
                               Booking ID: #{booking.id}
                             </p>
                           </div>
                         </div>
                       )}
                       
-                      <div className="flex flex-wrap gap-3">
+                      {/* Action Buttons */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0 && (
                           <Button 
-                            onClick={() => {
-                              // Download QR code as image
-                              const link = document.createElement('a');
-                              link.href = booking.qrCodes[0];
-                              link.download = `telugu-night-ticket-${booking.id}.png`;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }}
+                            onClick={() => downloadQRCode(booking.qrCodes[0], `telugu-night-ticket-${booking.id}.png`)}
                             variant="default"
+                            className="w-full"
                             data-testid="button-download-qr"
                           >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download QR Ticket
+                            <FileDown className="h-4 w-4 mr-2" />
+                            Download Ticket
                           </Button>
                         )}
+                        {booking.qrCodes && booking.qrCodes.length > 1 && (
+                          <Button 
+                            onClick={downloadAllTickets}
+                            variant="secondary"
+                            className="w-full"
+                            data-testid="button-download-all"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download All ({booking.qrCodes.length})
+                          </Button>
+                        )}
+                        <Button 
+                          onClick={shareTicket}
+                          variant="outline"
+                          className="w-full"
+                          data-testid="button-share"
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Share
+                        </Button>
                         <Button 
                           onClick={() => sendTicketsMutation.mutate()}
                           disabled={sendTicketsMutation.isPending}
                           variant="outline"
+                          className="w-full"
                           data-testid="button-resend-tickets"
                         >
                           {sendTicketsMutation.isPending ? (
