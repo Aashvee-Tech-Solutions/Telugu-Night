@@ -717,19 +717,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                   <div className="text-lg md:text-xl font-bold text-blue-800 dark:text-blue-200 mb-4 text-center">💰 Payment Breakdown</div>
                   
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4 space-y-3 shadow-sm text-[#000000]">
-                    <div className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Per Ticket (₹{basePrice} each):</div>
-                    <div className="flex justify-between items-center text-xs md:text-sm">
-                      <span className="flex items-center gap-1 md:gap-2">
-                        🍽️ <span className="break-words">Food Coupon (Redeemable)</span>
-                      </span>
-                      <span className="font-medium flex-shrink-0">₹200</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs md:text-sm">
-                      <span className="flex items-center gap-1 md:gap-2">
-                        🎫 <span className="break-words">Entry & Entertainment</span>
-                      </span>
-                      <span className="font-medium flex-shrink-0">₹{finalAmount.toFixed(2)}</span>
-                    </div>
+                    <div className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ticket Price: ₹{basePrice} each</div>
                   </div>
 
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4 mt-4 shadow-sm">
@@ -760,11 +748,6 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                     </div>
                   </div>
 
-                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-700">
-                    <p className="text-xs text-green-800 dark:text-green-200 text-center">
-                      ✨ Food coupon worth ₹200 can be redeemed for delicious food at the venue!
-                    </p>
-                  </div>
                 </div>
               </div>
             )}
