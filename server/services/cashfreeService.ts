@@ -365,12 +365,17 @@ export class CashfreeService {
   }
 
   calculateAmount(ticketCount: number, ticketPrice: number, couponDiscount: number = 0): number {
-    let totalAmount = ticketCount * ticketPrice;
+    let subtotal = ticketCount * ticketPrice;
 
-    // Apply coupon discount
-    if (couponDiscount > 0) {
-      totalAmount = totalAmount * (1 - couponDiscount / 100);
-    }
+    // Apply coupon discount to subtotal only (not to convenience fee)
+    const discountAmount = (subtotal * couponDiscount) / 100;
+    const subtotalAfterDiscount = subtotal - discountAmount;
+    
+    // Add convenience fee (not subject to discount)
+    const convenienceFeePerTicket = 12.96;
+    const convenienceFeeTotal = ticketCount * convenienceFeePerTicket;
+    
+    const totalAmount = subtotalAfterDiscount + convenienceFeeTotal;
 
     return Math.round(totalAmount * 100) / 100; // Round to 2 decimal places
   }
