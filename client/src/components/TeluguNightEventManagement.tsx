@@ -163,9 +163,19 @@ export default function TeluguNightEventManagement() {
     }
     
     // Ensure all numeric values are valid
-    const numericFields = ['earlyBirdPrice', 'phase1Price', 'phase2Price', 'phase3Price', 'phase4Price', 'earlyBirdLimit', 'phase1Limit', 'phase2Limit', 'phase3Limit', 'phase4Limit', 'maxCapacity', 'convenientFee'];
-    numericFields.forEach(field => {
+    const priceFields = ['earlyBirdPrice', 'phase1Price', 'phase2Price', 'phase3Price', 'phase4Price', 'maxCapacity', 'convenientFee'];
+    const limitFields = ['earlyBirdLimit', 'phase1Limit', 'phase2Limit', 'phase3Limit', 'phase4Limit'];
+    
+    // For price fields, remove if 0, empty, or invalid
+    priceFields.forEach(field => {
       if (cleanedData[field] === 0 || cleanedData[field] === '' || isNaN(cleanedData[field])) {
+        delete cleanedData[field]; // Let the backend use defaults or current values
+      }
+    });
+    
+    // For limit fields, only remove if empty or invalid, but allow 0 values
+    limitFields.forEach(field => {
+      if (cleanedData[field] === '' || isNaN(cleanedData[field])) {
         delete cleanedData[field]; // Let the backend use defaults or current values
       }
     });
