@@ -836,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recentBooking = existingBookings.find(b => 
         b.email === bookingData.email && 
         b.phone === bookingData.phone && 
-        (Date.now() - new Date(b.createdAt).getTime()) < 5 * 60 * 1000 // 5 minutes
+        (Date.now() - new Date(b.createdAt || new Date()).getTime()) < 5 * 60 * 1000 // 5 minutes
       );
       
       if (recentBooking) {
@@ -1295,8 +1295,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateBookingPaymentStatus(bookingId, 'verified');
         
         // Use existing guest codes if available, otherwise generate new ones
-        const guestCodes = booking.guestCodes && booking.guestCodes.length > 0 
-          ? booking.guestCodes 
+        const guestCodes = booking.guestCodes && (booking.guestCodes as string[]).length > 0 
+          ? (booking.guestCodes as string[])
           : generateGuestCodes(booking.ticketCount);
         const passIds = generatePassIds(bookingId, booking.ticketCount);
         
@@ -1309,9 +1309,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             await enhancedEmailService.sendTicketEmails({
               ...updatedBooking,
-              guests: updatedBooking.guests || [],
-              guestCodes: updatedBooking.guestCodes || [],
-              qrCodes: updatedBooking.qrCodes || [],
+              guests: (updatedBooking.guests as string[]) || [],
+              guestCodes: (updatedBooking.guestCodes as string[]) || [],
+              qrCodes: (updatedBooking.qrCodes as string[]) || [],
+              passIds: (updatedBooking.passIds as string[]) || [],
               paymentStatus: updatedBooking.paymentStatus || 'verified'
             });
             console.log(`✅ QR tickets sent successfully to ${updatedBooking.email}`);
@@ -1355,9 +1356,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await enhancedEmailService.sendTicketEmails({
             ...booking,
-            qrCodes: booking.qrCodes || [],
-            passIds: booking.passIds || [],
-            guestCodes: booking.guestCodes || []
+            guests: (booking.guests as string[]) || [],
+            qrCodes: (booking.qrCodes as string[]) || [],
+            passIds: (booking.passIds as string[]) || [],
+            guestCodes: (booking.guestCodes as string[]) || []
           });
           
           return res.json({ 
@@ -3307,9 +3309,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await enhancedEmailService.sendTicketEmails({
             ...booking,
-            qrCodes: booking.qrCodes || [],
-            passIds: booking.passIds || [],
-            guestCodes: booking.guestCodes || []
+            guests: (booking.guests as string[]) || [],
+            qrCodes: (booking.qrCodes as string[]) || [],
+            passIds: (booking.passIds as string[]) || [],
+            guestCodes: (booking.guestCodes as string[]) || []
           });
           
           return res.json({ 
