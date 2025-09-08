@@ -57,13 +57,13 @@ export default function PaymentFailure() {
 
   if (!bookingId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="text-center p-8">
-            <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-red-600 mb-2">Invalid Payment Link</h2>
-            <p className="text-gray-600 mb-6">The payment link is missing booking information.</p>
-            <Button onClick={() => window.location.href = '/'}>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <AlertTriangle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2">Invalid Payment Link</h2>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base">The payment link is missing booking information.</p>
+            <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto">
               Return to Home
             </Button>
           </CardContent>

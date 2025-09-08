@@ -20,12 +20,20 @@ export default function PaymentSuccess() {
     }
   }, []);
 
-  // Fetch booking details
+  // Fetch booking details with polling for status updates
   const { data: booking, isLoading, error } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
     enabled: !!bookingId,
     retry: 3,
     retryDelay: 1000,
+    refetchInterval: (data) => {
+      // Keep polling every 2 seconds if payment is still pending
+      if (data?.paymentStatus === 'pending') {
+        return 2000;
+      }
+      return false; // Stop polling once status is determined
+    },
+    refetchOnWindowFocus: true,
   });
 
   // Send QR tickets mutation
@@ -97,12 +105,12 @@ export default function PaymentSuccess() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="text-center p-8">
-            <Loader2 className="h-16 w-16 text-blue-500 mx-auto mb-4 animate-spin" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Processing Payment...</h2>
-            <p className="text-gray-600">Please wait while we confirm your payment and generate your tickets.</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-blue-500 mx-auto mb-4 animate-spin" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Processing Payment...</h2>
+            <p className="text-gray-600 text-sm sm:text-base">Please wait while we confirm your payment and generate your tickets.</p>
           </CardContent>
         </Card>
       </div>
@@ -111,13 +119,13 @@ export default function PaymentSuccess() {
 
   if (error || !booking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="text-center p-8">
-            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-red-600 mb-2">Booking Not Found</h2>
-            <p className="text-gray-600 mb-6">We couldn't find your booking. Please contact support.</p>
-            <Button onClick={() => window.location.href = '/'}>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2">Booking Not Found</h2>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base">We couldn't find your booking. Please contact support.</p>
+            <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto">
               Return to Home
             </Button>
           </CardContent>
