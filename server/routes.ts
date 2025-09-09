@@ -58,11 +58,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PRIORITY: Cashfree webhook endpoints (must be FIRST to avoid middleware interference)
   app.get('/api/webhooks/cashfree', async (req, res) => {
     console.log('🎯 GET webhook validation hit!');
+    // Force JSON response headers
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache');
     return res.status(200).json({ 
-      message: 'Cashfree webhook endpoint is active',
+      message: 'Cashfree webhook endpoint is active and responding correctly',
       timestamp: new Date().toISOString(),
       status: 'ready',
-      method: 'GET'
+      method: 'GET',
+      version: '2.0',
+      environment: process.env.NODE_ENV || 'development'
     });
   });
 
@@ -2948,6 +2953,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cashfree webhook endpoint with enhanced error handling and logging
 
   app.post('/api/webhooks/cashfree', async (req, res) => {
+    // Force JSON response headers immediately
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache');
+    
     const webhookId = `webhook_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const startTime = Date.now();
     
