@@ -819,6 +819,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public: Fix stuck booking for users
+  app.post('/api/bookings/:id/check-status', async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+      
+      // If booking has been pending for more than 5 minutes, mark as failed
+      const createdTime = new Date(booking.createdAt || '').getTime();
+      const currentTime = Date.now();
+      const timeDiff = currentTime - createdTime;
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (booking.paymentStatus === 'pending' && timeDiff > fiveMinutes) {
+        console.log(`🕒 Booking ${bookingId} stuck for ${Math.round(timeDiff / 1000 / 60)} minutes, marking as failed`);
+        await storage.updateBookingPaymentStatus(bookingId, 'failed');
+        
+        // Send failure email
+        try {
+          const { EnhancedEmailService } = await import('./services/enhancedEmailService');
+          const enhancedEmailService = new EnhancedEmailService();
+          await enhancedEmailService.sendPaymentFailureEmail(booking);
+          console.log(`📧 Payment timeout email sent to ${booking.email}`);
+        } catch (emailError) {
+          console.error('Failed to send timeout email:', emailError);
+        }
+        
+        return res.json({ 
+          message: 'Payment timed out and marked as failed',
+          status: 'failed',
+          reason: 'timeout',
+          bookingId: bookingId
+        });
+      }
+      
+      res.json({ 
+        message: 'Booking status checked',
+        status: booking.paymentStatus,
+        timePending: Math.round(timeDiff / 1000 / 60) + ' minutes',
+        bookingId: bookingId
+      });
+    } catch (error) {
+      console.error('Failed to check booking status:', error);
+      res.status(500).json({ message: 'Failed to check status' });
+    }
+  });
+
   // Booking Routes
   app.post('/api/bookings', async (req, res) => {
     try {

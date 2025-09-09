@@ -20,6 +20,10 @@ export default function PaymentSuccess() {
     }
   }, []);
 
+  // Track how long we've been polling
+  const [startTime] = useState(Date.now());
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+
   // Fetch booking details with polling for status updates
   const { data: booking, isLoading, error } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
@@ -27,6 +31,13 @@ export default function PaymentSuccess() {
     retry: 3,
     retryDelay: 1000,
     refetchInterval: (data) => {
+      // Check if we've been polling for more than 5 minutes
+      const elapsed = Date.now() - startTime;
+      if (elapsed > 5 * 60 * 1000) { // 5 minutes
+        setHasTimedOut(true);
+        return false;
+      }
+      
       // Keep polling every 2 seconds if payment is still pending
       if ((data as Booking)?.paymentStatus === 'pending') {
         return 2000;
@@ -84,7 +95,14 @@ export default function PaymentSuccess() {
         // Only show processing message, don't generate tickets yet
       }
     }
-  }, [booking?.id, booking?.paymentStatus]);
+    
+    // Handle timeout case - if stuck for more than 5 minutes
+    if (hasTimedOut && booking && booking.paymentStatus === 'pending') {
+      console.log('⏰ Payment processing timed out, redirecting to failure page');
+      window.location.href = `/payment/failure?booking=${booking.id}&reason=timeout`;
+      return;
+    }
+  }, [booking?.id, booking?.paymentStatus, hasTimedOut]);
 
   if (!bookingId) {
     return (
@@ -134,6 +152,39 @@ export default function PaymentSuccess() {
     );
   }
 
+  // Mutation to manually check payment status for stuck payments
+  const checkStatusMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/bookings/${bookingId}/check-status`);
+    },
+    onSuccess: (data: any) => {
+      if (data.status === 'failed') {
+        toast({
+          title: "Payment Timeout",
+          description: "Your payment has timed out and will be marked as failed.",
+          variant: "destructive",
+        });
+        // Force a refetch to get updated status
+        window.location.reload();
+      } else {
+        toast({
+          title: "Status Checked",
+          description: `Payment is still ${data.status}. Time pending: ${data.timePending}`,
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Check Failed",
+        description: error.message || "Failed to check payment status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Calculate how long we've been waiting
+  const waitingTime = booking ? Math.round((Date.now() - new Date(booking.createdAt || '').getTime()) / 1000 / 60) : 0;
+
   // Show processing state for pending payments
   if (booking && booking.paymentStatus === 'pending') {
     return (
@@ -149,7 +200,25 @@ export default function PaymentSuccess() {
               <p className="text-yellow-800 font-medium text-sm">
                 Booking ID: #{booking.id}
               </p>
+              <p className="text-yellow-700 text-xs mt-1">
+                Waiting: {waitingTime} minute{waitingTime !== 1 ? 's' : ''}
+              </p>
             </div>
+            
+            {/* Show manual check button if waiting too long */}
+            {waitingTime >= 3 && (
+              <div className="mb-4">
+                <Button 
+                  onClick={() => checkStatusMutation.mutate()}
+                  disabled={checkStatusMutation.isPending}
+                  variant="outline"
+                  size="sm"
+                >
+                  {checkStatusMutation.isPending ? 'Checking...' : 'Check Payment Status'}
+                </Button>
+              </div>
+            )}
+            
             <p className="text-gray-500 text-xs sm:text-sm">
               Please do not refresh this page. You will be redirected automatically once payment is confirmed.
             </p>
