@@ -79,8 +79,8 @@ export class CashfreeService {
       throw new Error('Cashfree credentials not found in environment variables');
     }
 
-    // Use test/sandbox environment
-    this.baseUrl = 'https://sandbox.cashfree.com/pg';
+    // Use production environment
+    this.baseUrl = 'https://api.cashfree.com/pg';
   }
 
   private generateSignature(data: string): string {
