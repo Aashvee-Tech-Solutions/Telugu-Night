@@ -1116,9 +1116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           <div id="qrcode" class="qr-code"></div>
           
-          <a href="${upi}" class="btn" onclick="startTimer()">Pay with UPI Apps</a>
+          <a href="${upi}" class="btn">Pay with UPI Apps</a>
           <br>
-          <small>After payment, take a screenshot and upload it for verification</small>
+          <small>Payment will be automatically verified - no screenshot needed!</small>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -1127,11 +1127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (error) console.error(error);
           });
 
-          function startTimer() {
-            setTimeout(() => {
-              alert('After completing payment, please take a screenshot and upload it for verification.');
-            }, 3000);
-          }
+          // Automatic verification - no manual steps required
         </script>
       </body>
       </html>
@@ -1140,68 +1136,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send(html);
   });
 
+  // DISABLED: Screenshot upload route - all payments now processed automatically via Cashfree webhooks
   app.post('/api/bookings/:id/payment-proof', (req, res) => {
-    // Custom multer error handling
-    upload.single('screenshot')(req, res, async (err) => {
-      try {
-        if (err) {
-          console.error('Multer upload error:', err);
-          if (err instanceof multer.MulterError) {
-            if (err.code === 'LIMIT_FILE_SIZE') {
-              return res.status(400).json({ message: 'File too large. Maximum size is 10MB.' });
-            }
-            return res.status(400).json({ message: `Upload error: ${err.message}` });
-          }
-          return res.status(400).json({ message: err.message || 'File upload failed' });
-        }
-
-        const bookingId = parseInt(req.params.id);
-        const booking = await storage.getBooking(bookingId);
-        
-        if (!booking) {
-          return res.status(404).json({ message: 'Booking not found' });
-        }
-
-        if (!req.file) {
-          return res.status(400).json({ 
-            message: 'Screenshot is required. Please select an image file and try again.' 
-          });
-        }
-
-        console.log(`📸 Screenshot uploaded: ${req.file.filename}, size: ${req.file.size} bytes`);
-        
-        const screenshotUrl = `/uploads/${req.file.filename}`;
-        
-        // Update booking with screenshot URL
-        await storage.updateBookingPaymentStatus(bookingId, 'pending', screenshotUrl);
-        console.log(`✅ Booking ${bookingId} updated with screenshot: ${screenshotUrl}`);
-        
-        // Update Google Sheets with screenshot URL
-        try {
-          const { GoogleSheetsService } = await import('./services/googleSheets');
-          const googleSheetsService = new GoogleSheetsService();
-          await googleSheetsService.addPaymentScreenshotToSheet(bookingId, `https://events.qlora.in${screenshotUrl}`);
-          console.log(`✅ Screenshot added to Google Sheets for booking ${bookingId}`);
-        } catch (sheetsError: any) {
-          console.error('Google Sheets update failed:', sheetsError);
-        }
-
-        // Skip payment confirmation email after screenshot upload
-
-        res.json({ 
-          message: 'Payment screenshot uploaded successfully! Awaiting admin verification.',
-          screenshotUrl: screenshotUrl,
-          ticketsSent: false,
-          filename: req.file.filename
-        });
-        
-      } catch (error: any) {
-        console.error('Screenshot upload error:', error);
-        res.status(500).json({ 
-          message: 'Failed to process screenshot upload. Please try again.',
-          error: error.message 
-        });
-      }
+    return res.status(410).json({ 
+      message: 'Screenshot upload is no longer supported. All payments are automatically processed via Cashfree webhooks.' 
     });
   });
 
