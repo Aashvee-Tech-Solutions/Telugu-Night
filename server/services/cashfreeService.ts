@@ -181,12 +181,6 @@ export class CashfreeService {
 
   async createOrder(paymentData: CashfreePaymentRequest): Promise<CashfreeOrderResponse> {
     return this.retryRequest(async () => {
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      
-      // Create signature string
-      const signatureData = `POST\n/pg/orders\n${timestamp}`;
-      const signature = this.generateSignature(signatureData);
-
       const headers = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -217,10 +211,6 @@ export class CashfreeService {
 
   async getOrderStatus(orderId: string): Promise<any> {
     return this.retryRequest(async () => {
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const signatureData = `GET\n/pg/orders/${orderId}\n${timestamp}`;
-      const signature = this.generateSignature(signatureData);
-
       const headers = {
         'Accept': 'application/json',
         'x-api-version': '2023-08-01',
