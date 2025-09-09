@@ -3320,6 +3320,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Redirect home page to Vercel frontend
+  app.get('/', (req, res) => {
+    res.redirect('https://v0-telugunightlanding3.vercel.app/');
+  });
+
   // Serve frontend iframe
   app.get('/iframe', (req, res) => {
     const iframeHTML = `
