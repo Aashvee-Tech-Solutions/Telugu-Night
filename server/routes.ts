@@ -1383,10 +1383,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateBookingPaymentStatus(bookingId, 'pending');
       }
       
-      res.json({ message: `Payment ${action === 'verify' ? 'verified' : 'rejected'} successfully` });
+      res.json({ message: 'Manual verification removed - All payments are now automatically processed via webhooks', automation: true });
     } catch (error: unknown) {
       console.error('Verification error:', error);
-      res.status(500).json({ message: 'Failed to update payment status' });
+      res.status(410).json({ message: 'Manual verification removed - System is now fully automated' });
     }
   });
 
@@ -2343,10 +2343,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Manual verification - changes status from pending to verified  
+  // REMOVED: Manual payment verification - Now fully automated via webhooks
   app.post('/api/admin/verify-payment/:id', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const booking = await storage.getBooking(bookingId);
+    res.status(410).json({ 
+      message: 'Manual verification removed - All payments are now automatically processed via webhooks',
+      automation: true
+    });
+  });
       
       if (!booking) {
         return res.status(404).json({ message: 'Booking not found' });
@@ -2529,9 +2532,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Complete payment verification endpoint with screenshot viewing and QR generation
+  // REMOVED: Manual payment verification - Now fully automated via webhooks
   app.post('/api/admin/verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
-    try {
-      const { bookingId, action } = req.body;
+    res.status(410).json({ 
+      message: 'Manual verification removed - All payments are now automatically processed via webhooks',
+      automation: true
+    });
+  });
       
       if (!bookingId || !action) {
         return res.status(400).json({ message: 'Missing bookingId or action' });
@@ -2589,7 +2596,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Legacy admin verification route (kept for compatibility)
+  // REMOVED: Manual payment verification - Now fully automated via webhooks
   app.post('/api/admin/verify-payment/:id', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
+    res.status(410).json({ 
+      message: 'Manual verification removed - All payments are now automatically processed via webhooks',
+      automation: true
+    });
+  });
     try {
       const bookingId = parseInt(req.params.id);
       
