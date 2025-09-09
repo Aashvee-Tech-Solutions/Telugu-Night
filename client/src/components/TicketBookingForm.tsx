@@ -959,7 +959,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         
                         // Initialize Cashfree SDK
                         const cashfree = (window as any).Cashfree({
-                          mode: "sandbox" // Use "sandbox" for testing
+                          mode: "production" // Production mode for live payments
                         });
                         
                         console.log('Cashfree SDK initialized:', cashfree);
