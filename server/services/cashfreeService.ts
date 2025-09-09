@@ -73,7 +73,12 @@ export class CashfreeService {
   constructor() {
     this.appId = process.env.CASHFREE_APP_ID!;
     this.secretKey = process.env.CASHFREE_SECRET_KEY!;
-    this.webhookSecret = process.env.CASHFREE_WEBHOOK_SECRET || 'ng8v08g8a5ebwi9cuv8c';
+    this.webhookSecret = process.env.CASHFREE_WEBHOOK_SECRET!;
+    
+    if (!this.webhookSecret) {
+      console.warn('⚠️ CASHFREE_WEBHOOK_SECRET not found, using default (NOT SECURE for production)');
+      this.webhookSecret = 'ng8v08g8a5ebwi9cuv8c';
+    }
     
     if (!this.appId || !this.secretKey) {
       throw new Error('Cashfree credentials not found in environment variables');

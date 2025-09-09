@@ -74,7 +74,8 @@ export class WebhookSafetyService {
 
     console.log(`🔍 Checking ${this.pendingPayments.size} pending payments for webhook failures`);
 
-    for (const [orderId, entry] of this.pendingPayments.entries()) {
+    const entries = Array.from(this.pendingPayments.entries());
+    for (const [orderId, entry] of entries) {
       try {
         await this.checkSinglePayment(orderId, entry);
       } catch (error: any) {
