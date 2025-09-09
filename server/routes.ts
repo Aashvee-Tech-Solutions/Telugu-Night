@@ -3087,6 +3087,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`💸 [${webhookId}] Payment failed for booking ${booking.id}, updating status to failed`);
             await storage.updateBookingPaymentStatus(booking.id, 'failed');
             
+            // Clear any QR codes/tickets that may have been mistakenly generated
+            await storage.clearBookingTickets(booking.id);
+            
             // Send payment failure email to customer
             try {
               const { EnhancedEmailService } = await import('./services/enhancedEmailService');
@@ -3151,7 +3154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         console.log(`✅ [${webhookId}] Webhook processing completed successfully in ${Date.now() - startTime}ms`);
-        res.json(response);
+        
+        // Cashfree only cares about HTTP 200 status code - response body is ignored
+        res.status(200).send();
         
       } catch (processingError: any) {
         console.error(`❌ [${webhookId}] Error processing webhook for booking ${booking.id}:`, processingError);
@@ -3179,13 +3184,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      res.status(500).json({ 
-        message: 'Webhook processing failed',
-        webhookId,
-        error: error.message,
-        timestamp: new Date().toISOString(),
-        processingTime: `${processingTime}ms`
-      });
+      // Even on processing errors, return 200 to prevent Cashfree retries for valid webhooks
+      // Only return non-200 for truly invalid webhook requests
+      res.status(200).send();
     }
   });
   
