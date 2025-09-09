@@ -55,6 +55,17 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // PRIORITY: Cashfree webhook endpoints (must be FIRST to avoid middleware interference)
+  app.get('/api/webhooks/cashfree', async (req, res) => {
+    console.log('🎯 GET webhook validation hit!');
+    return res.status(200).json({ 
+      message: 'Cashfree webhook endpoint is active',
+      timestamp: new Date().toISOString(),
+      status: 'ready',
+      method: 'GET'
+    });
+  });
+
   // Enable compression for faster response times, but exclude uploads
   app.use((req, res, next) => {
     // Skip compression for file upload routes
@@ -2935,14 +2946,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cashfree webhook endpoint with enhanced error handling and logging
-  // GET endpoint for Cashfree webhook validation
-  app.get('/api/webhooks/cashfree', async (req, res) => {
-    res.status(200).json({ 
-      message: 'Cashfree webhook endpoint is active',
-      timestamp: new Date().toISOString(),
-      status: 'ready'
-    });
-  });
 
   app.post('/api/webhooks/cashfree', async (req, res) => {
     const webhookId = `webhook_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
