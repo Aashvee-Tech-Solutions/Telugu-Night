@@ -20,31 +20,13 @@ export default function PaymentSuccess() {
     }
   }, []);
 
-  // Track how long we've been polling
-  const [startTime] = useState(Date.now());
-  const [hasTimedOut, setHasTimedOut] = useState(false);
-
-  // Fetch booking details with polling for status updates
+  // Fetch booking details (no polling - webhook handles automation)
   const { data: booking, isLoading, error } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
     enabled: !!bookingId,
-    retry: 3,
+    retry: 2,
     retryDelay: 1000,
-    refetchInterval: (data) => {
-      // Check if we've been polling for more than 45 seconds
-      const elapsed = Date.now() - startTime;
-      if (elapsed > 45 * 1000) { // 45 seconds maximum
-        setHasTimedOut(true);
-        return false;
-      }
-      
-      // Keep polling every 2 seconds if payment is still pending
-      if ((data as any)?.paymentStatus === 'pending') {
-        return 2000;
-      }
-      return false; // Stop polling once status is determined
-    },
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // No automatic refreshing
   });
 
   // Send QR tickets mutation
@@ -73,7 +55,7 @@ export default function PaymentSuccess() {
     failed: false
   });
 
-  // Handle payment status and redirect accordingly
+  // Show immediate success - webhook handles all automation
   useEffect(() => {
     if (booking) {
       if (booking.paymentStatus === 'failed') {
@@ -82,27 +64,10 @@ export default function PaymentSuccess() {
         return;
       }
       
-      if (booking.paymentStatus === 'verified') {
-        // Check if QR codes don't exist or tickets haven't been sent
-        if (!booking.qrCodes || booking.qrCodes.length === 0) {
-          console.log('🎫 Booking verified but no QR codes found, generating tickets...');
-          sendTicketsMutation.mutate();
-        } else {
-          console.log('✅ QR codes already exist for this booking');
-        }
-      } else if (booking.paymentStatus === 'pending') {
-        console.log('⏳ Payment still pending, waiting for verification...');
-        // Only show processing message, don't generate tickets yet
-      }
+      // Show success message immediately - webhook will handle ticket generation
+      console.log('🎊 Payment successful! Webhook will process tickets automatically.');
     }
-    
-    // Handle timeout case - if stuck for more than 45 seconds
-    if (hasTimedOut && booking && booking.paymentStatus === 'pending') {
-      console.log('⏰ Payment processing timed out after 45 seconds, redirecting to failure page');
-      window.location.href = `/payment/failure?booking=${booking.id}&reason=timeout`;
-      return;
-    }
-  }, [booking?.id, booking?.paymentStatus, hasTimedOut]);
+  }, [booking?.id, booking?.paymentStatus]);
 
   if (!bookingId) {
     return (
