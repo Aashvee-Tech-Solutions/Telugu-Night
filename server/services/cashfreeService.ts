@@ -380,6 +380,36 @@ export class CashfreeService {
     return Math.round(totalAmount * 100) / 100; // Round to 2 decimal places
   }
 
+  // Enhanced payment status monitoring for webhook failures
+  async monitorPaymentStatus(orderId: string, maxAttempts: number = 10): Promise<any> {
+    console.log(`🔍 Starting payment monitoring for order ${orderId}`);
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const status = await this.getOrderStatus(orderId);
+        
+        if (status.order_status === 'PAID' || status.order_status === 'FAILED') {
+          console.log(`✅ Payment monitoring complete for ${orderId}: ${status.order_status}`);
+          return status;
+        }
+        
+        console.log(`🔄 Payment monitoring attempt ${attempt}/${maxAttempts} for ${orderId}: ${status.order_status}`);
+        
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds
+        }
+      } catch (error: any) {
+        console.error(`❌ Payment monitoring error for ${orderId} (attempt ${attempt}):`, error.message);
+        
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds on error
+        }
+      }
+    }
+    
+    throw new Error(`Payment monitoring timeout for order ${orderId} after ${maxAttempts} attempts`);
+  }
+
   // Health check method to verify service connectivity
   async healthCheck(): Promise<boolean> {
     try {
