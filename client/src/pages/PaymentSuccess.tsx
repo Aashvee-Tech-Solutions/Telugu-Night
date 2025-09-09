@@ -39,7 +39,7 @@ export default function PaymentSuccess() {
       }
       
       // Keep polling every 2 seconds if payment is still pending
-      if (data?.paymentStatus === 'pending') {
+      if ((data as any)?.paymentStatus === 'pending') {
         return 2000;
       }
       return false; // Stop polling once status is determined
