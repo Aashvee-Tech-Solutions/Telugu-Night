@@ -865,8 +865,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                     )}
                     
                     <div className="flex justify-between items-center text-orange-600 dark:text-orange-400">
-                      <span>💳 Convenience Fee ({formData.ticketCount} × ₹12.96)</span>
-                      <span className="font-medium">₹{(formData.ticketCount * 12.96).toFixed(2)}</span>
+                      <span>💳 Convenience Fee ({formData.ticketCount} × {pricing.formatCurrency(pricingCalculation.convenienceFee / formData.ticketCount)})</span>
+                      <span className="font-medium">{pricing.formatCurrency(pricingCalculation.convenienceFee)}</span>
                     </div>
                     
                     <hr className="my-2" />

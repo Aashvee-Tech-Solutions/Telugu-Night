@@ -677,7 +677,7 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
                           )}
                         </p>
                         <div className="mt-2 text-xs text-muted-foreground">
-                          Each ticket includes ₹200 food coupon + ₹100 entertainment + ₹12.96 convenience fee
+                          Each ticket includes ₹200 food coupon + ₹100 entertainment + convenience fee
                         </div>
                       </div>
                     </div>

@@ -84,7 +84,7 @@ export default function TeluguNightEventManagement() {
     phase2Limit: 210,
     phase3Limit: 220,
     phase4Limit: 230,
-    convenientFee: 12.96,
+    convenientFee: 1.00,
   });
 
   // Update event configuration

@@ -187,8 +187,8 @@ export class PaymentService {
     }
   }
 
-  calculateAmount(ticketCount: number, ticketPrice: number, couponDiscount: number = 0): number {
-    return this.cashfree.calculateAmount(ticketCount, ticketPrice, couponDiscount);
+  async calculateAmount(ticketCount: number, ticketPrice: number, couponDiscount: number = 0): Promise<number> {
+    return await this.cashfree.calculateAmount(ticketCount, ticketPrice, couponDiscount);
   }
 
   async healthCheck(): Promise<boolean> {

@@ -2093,7 +2093,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `);
       }
 
-      const totalWithFee = parseFloat(booking.totalAmount) + (booking.ticketCount * 12.96);
+      const config = await storage.getTeluguNightConfig();
+      const convenienceFeePerTicket = parseFloat(config.convenientFee || '0');
+      const totalWithFee = parseFloat(booking.totalAmount) + (booking.ticketCount * convenienceFeePerTicket);
       
       const html = `
         <!DOCTYPE html>
