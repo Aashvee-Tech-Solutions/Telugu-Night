@@ -248,7 +248,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
                 <p style="color: #1e40af; margin: 0 0 15px 0; font-size: 14px;">
                   Visit our website to make a new booking with the same details.
                 </p>
-                <a href="https://v0-telugunightlanding3.vercel.app" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                <a href="https://v0-telugunightlanding3k.vercel.app" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
                   Book Again
                 </a>
               </div>

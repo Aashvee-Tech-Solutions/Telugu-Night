@@ -2689,7 +2689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: promoter.createdAt,
           lastLoginAt: promoter.lastLoginAt
         },
-        referralUrl: `https://v0-telugunightlanding3.vercel.app/book?ref=${promoter.promoCode}`,
+        referralUrl: `https://v0-telugunightlanding3k.vercel.app/book?ref=${promoter.promoCode}`,
         bookings: promoterBookings.map(b => ({
           id: b.id,
           name: b.name,
@@ -2753,7 +2753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Promoter not found' });
       }
       
-      const baseUrl = 'https://v0-telugunightlanding3.vercel.app';
+      const baseUrl = 'https://v0-telugunightlanding3k.vercel.app';
       const referralUrl = `${baseUrl}/book?ref=${promoter.promoCode}`;
       
       const shareData = {
@@ -2873,7 +2873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { EmailService } = await import('./services/emailService');
         const emailService = new EmailService();
-        const referralUrl = `https://v0-telugunightlanding3.vercel.app/book?ref=${promoter.promoCode}`;
+        const referralUrl = `https://v0-telugunightlanding3k.vercel.app/book?ref=${promoter.promoCode}`;
         await emailService.sendPromoterCredentials(promoter.email, plainPassword, promoter.promoCode, referralUrl);
         console.log('✅ Promoter credentials sent to:', promoter.email);
       } catch (emailError) {
@@ -3394,7 +3394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     <div class="iframe-container">
         <iframe 
-            src="https://v0-telugunightlanding3.vercel.app/" 
+            src="https://v0-telugunightlanding3k.vercel.app/" 
             title="Telugu Night Frontend"
             onload="document.getElementById('loading').classList.add('hidden')"
             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-top-navigation"
@@ -3409,7 +3409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Handle iframe errors
         window.addEventListener('message', function(event) {
-            if (event.origin !== 'https://v0-telugunightlanding3.vercel.app') return;
+            if (event.origin !== 'https://v0-telugunightlanding3k.vercel.app') return;
             console.log('Message from frontend:', event.data);
         });
     </script>
@@ -3539,7 +3539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     <div class="iframe-container">
         <iframe 
-            src="https://v0-telugunightlanding3.vercel.app/" 
+            src="https://v0-telugunightlanding3k.vercel.app/" 
             title="Telugu Night Frontend"
             onload="document.getElementById('loading').classList.add('hidden')"
             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-top-navigation"
@@ -3554,7 +3554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Handle iframe errors
         window.addEventListener('message', function(event) {
-            if (event.origin !== 'https://v0-telugunightlanding3.vercel.app') return;
+            if (event.origin !== 'https://v0-telugunightlanding3k.vercel.app') return;
             console.log('Message from frontend:', event.data);
         });
     </script>

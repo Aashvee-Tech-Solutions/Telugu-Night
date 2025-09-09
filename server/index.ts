@@ -8,7 +8,7 @@ const app = express();
 // CORS configuration for frontend
 app.use((req, res, next) => {
   const allowedOrigins = [
-    'https://v0-telugunightlanding3.vercel.app',
+    'https://v0-telugunightlanding3k.vercel.app',
     'https://events.qlora.in',
     'http://localhost:3000',
     'http://localhost:5000'
