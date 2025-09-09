@@ -829,14 +829,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Booking not found' });
       }
       
-      // If booking has been pending for more than 5 minutes, mark as failed
+      // If booking has been pending for more than 45 seconds, mark as failed
       const createdTime = new Date(booking.createdAt || '').getTime();
       const currentTime = Date.now();
       const timeDiff = currentTime - createdTime;
-      const fiveMinutes = 5 * 60 * 1000;
+      const fortyFiveSeconds = 45 * 1000;
       
-      if (booking.paymentStatus === 'pending' && timeDiff > fiveMinutes) {
-        console.log(`🕒 Booking ${bookingId} stuck for ${Math.round(timeDiff / 1000 / 60)} minutes, marking as failed`);
+      if (booking.paymentStatus === 'pending' && timeDiff > fortyFiveSeconds) {
+        console.log(`🕒 Booking ${bookingId} stuck for ${Math.round(timeDiff / 1000)} seconds, marking as failed`);
         await storage.updateBookingPaymentStatus(bookingId, 'failed');
         
         // Send failure email
@@ -860,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         message: 'Booking status checked',
         status: booking.paymentStatus,
-        timePending: Math.round(timeDiff / 1000 / 60) + ' minutes',
+        timePending: Math.round(timeDiff / 1000) + ' seconds',
         bookingId: bookingId
       });
     } catch (error) {

@@ -31,9 +31,9 @@ export default function PaymentSuccess() {
     retry: 3,
     retryDelay: 1000,
     refetchInterval: (data) => {
-      // Check if we've been polling for more than 5 minutes
+      // Check if we've been polling for more than 45 seconds
       const elapsed = Date.now() - startTime;
-      if (elapsed > 5 * 60 * 1000) { // 5 minutes
+      if (elapsed > 45 * 1000) { // 45 seconds maximum
         setHasTimedOut(true);
         return false;
       }
@@ -96,9 +96,9 @@ export default function PaymentSuccess() {
       }
     }
     
-    // Handle timeout case - if stuck for more than 5 minutes
+    // Handle timeout case - if stuck for more than 45 seconds
     if (hasTimedOut && booking && booking.paymentStatus === 'pending') {
-      console.log('⏰ Payment processing timed out, redirecting to failure page');
+      console.log('⏰ Payment processing timed out after 45 seconds, redirecting to failure page');
       window.location.href = `/payment/failure?booking=${booking.id}&reason=timeout`;
       return;
     }
@@ -182,8 +182,8 @@ export default function PaymentSuccess() {
     },
   });
 
-  // Calculate how long we've been waiting
-  const waitingTime = booking ? Math.round((Date.now() - new Date(booking.createdAt || '').getTime()) / 1000 / 60) : 0;
+  // Calculate how long we've been waiting in seconds
+  const waitingTime = booking ? Math.round((Date.now() - new Date(booking.createdAt || '').getTime()) / 1000) : 0;
 
   // Show processing state for pending payments
   if (booking && booking.paymentStatus === 'pending') {
@@ -201,12 +201,12 @@ export default function PaymentSuccess() {
                 Booking ID: #{booking.id}
               </p>
               <p className="text-yellow-700 text-xs mt-1">
-                Waiting: {waitingTime} minute{waitingTime !== 1 ? 's' : ''}
+                Waiting: {waitingTime} second{waitingTime !== 1 ? 's' : ''}
               </p>
             </div>
             
             {/* Show manual check button if waiting too long */}
-            {waitingTime >= 3 && (
+            {waitingTime >= 30 && (
               <div className="mb-4">
                 <Button 
                   onClick={() => checkStatusMutation.mutate()}
