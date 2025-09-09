@@ -2350,36 +2350,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       automation: true
     });
   });
-      
-      if (!booking) {
-        return res.status(404).json({ message: 'Booking not found' });
-      }
-      
-      if (booking.paymentStatus !== 'pending') {
-        return res.status(400).json({ message: 'Booking is not in pending status' });
-      }
-      
-      // Update payment status to verified
-      await storage.updateBookingPaymentStatus(bookingId, 'verified');
-      
-      // Update Google Sheets
-      try {
-        const { GoogleSheetsService } = await import('./services/googleSheets');
-        const googleSheetsService = new GoogleSheetsService();
-        await googleSheetsService.updateBookingPaymentStatus(bookingId, 'verified');
-      } catch (sheetsError) {
-        console.error('Google Sheets update failed:', sheetsError);
-      }
-      
-      res.json({
-        message: 'Payment verified successfully. Booking is now ready for ticket generation.',
-        booking: { ...booking, paymentStatus: 'verified' }
-      });
-    } catch (error: any) {
-      console.error('Payment verification error:', error);
-      res.status(500).json({ message: error.message || 'Failed to verify payment' });
-    }
-  });
 
   // Smart ticket generation for single booking with error handling
   app.post('/api/admin/generate-tickets/:id', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
@@ -2538,86 +2508,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       message: 'Manual verification removed - All payments are now automatically processed via webhooks',
       automation: true
     });
-  });
-      
-      if (!bookingId || !action) {
-        return res.status(400).json({ message: 'Missing bookingId or action' });
-      }
-
-      const booking = await storage.getBooking(bookingId);
-      if (!booking) {
-        return res.status(404).json({ message: 'Booking not found' });
-      }
-
-      if (action === 'verify') {
-        console.log(`🔍 Manual verification for booking ${bookingId}: ${booking.name}`);
-        console.log(`📸 Screenshot: ${booking.paymentScreenshot || 'No screenshot'}`);
-        
-        // Use the smart ticket generation system for verified payments
-        const progress = await ticketGenerationService.generateTicketsForBooking(bookingId);
-        
-        console.log(`✅ Verification complete for booking ${bookingId}:`, {
-          qrCodes: progress.qrCodes.length,
-          passIds: progress.passIds.length,
-          guestCodes: progress.guestCodes
-        });
-
-        res.json({ 
-          message: `Payment verified and ${progress.qrCodes.length} QR tickets sent to ${booking.email}`,
-          qrCodes: progress.qrCodes.length,
-          passIds: progress.passIds,
-          guestCodes: progress.guestCodes,
-          booking: {
-            id: booking.id,
-            name: booking.name,
-            email: booking.email,
-            paymentStatus: 'verified'
-          }
-        });
-
-      } else if (action === 'reject') {
-        await storage.updateBookingVerification(bookingId, 'rejected', []);
-        console.log(`❌ Payment rejected for booking ${bookingId}: ${booking.name}`);
-        res.json({ 
-          message: `Payment rejected for ${booking.name}`,
-          booking: {
-            id: booking.id,
-            name: booking.name,
-            paymentStatus: 'rejected'
-          }
-        });
-      } else {
-        res.status(400).json({ message: 'Invalid action. Use "verify" or "reject"' });
-      }
-    } catch (error: any) {
-      console.error('Payment verification error:', error);
-      res.status(500).json({ message: error.message || 'Failed to verify payment' });
-    }
-  });
-
-  // Legacy admin verification route (kept for compatibility)
-  // REMOVED: Manual payment verification - Now fully automated via webhooks
-  app.post('/api/admin/verify-payment/:id', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
-    res.status(410).json({ 
-      message: 'Manual verification removed - All payments are now automatically processed via webhooks',
-      automation: true
-    });
-  });
-    try {
-      const bookingId = parseInt(req.params.id);
-      
-      // Use the new smart ticket generation system
-      const progress = await ticketGenerationService.generateTicketsForBooking(bookingId);
-      
-      res.json({ 
-        message: 'Payment verified and tickets sent',
-        qrCodes: progress.qrCodes.length,
-        passIds: progress.passIds
-      });
-    } catch (error: any) {
-      console.error('Payment verification error:', error);
-      res.status(500).json({ message: error.message || 'Failed to verify payment' });
-    }
   });
 
   // Route to serve uploaded screenshots with proper error handling
