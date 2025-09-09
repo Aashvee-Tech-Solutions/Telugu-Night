@@ -1557,7 +1557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check for individual guest code scanning
-      const isGuestCode = booking.guestCodes && Array.isArray(booking.guestCodes) && booking.guestCodes.includes(code.toUpperCase());
+      const isGuestCode = booking.guestCodes && Array.isArray(booking.guestCodes) && (booking.guestCodes as string[]).includes(code.toUpperCase());
       
       if (isGuestCode) {
         // Individual guest check-in logic
