@@ -142,7 +142,7 @@ export class EmailService {
       // Generate QR codes for each guest code if not provided
       const generatedQRCodes = [];
       for (let i = 0; i < booking.ticketCount; i++) {
-        const guestCode = booking.guestCodes[i] || `GUEST${booking.id}${i + 1}`;
+        const guestCode = booking.guestCodes?.[i] || `GUEST${booking.id}${i + 1}`;
         const qrCodeData = `TELUGU-NIGHT-${booking.id}-${guestCode}`;
         const qrCodeImage = await QRCode.toDataURL(qrCodeData, {
           width: 300,
@@ -223,10 +223,10 @@ export class EmailService {
 
           <h2 style="text-align: center; color: #667eea;">🎫 Your Digital Tickets</h2>
           
-          ${booking.guestCodes.map((guestCode, index) => `
+          ${booking.guestCodes?.map((guestCode, index) => `
             <div class="ticket">
               <h3>🎫 Ticket ${index + 1}</h3>
-              <p><strong>Guest:</strong> ${booking.guests[index] || `Guest ${index + 1}`}</p>
+              <p><strong>Guest:</strong> ${booking.guests?.[index] || `Guest ${index + 1}`}</p>
               <div class="guest-code">${guestCode}</div>
               <div class="pass-id">Pass ID: ${booking.passIds ? booking.passIds[index] : 'N/A'}</div>
               <div class="qr-code">
@@ -272,7 +272,7 @@ export class EmailService {
     const qrCodes = [];
 
     for (let i = 0; i < booking.ticketCount; i++) {
-      const guestCode = booking.guestCodes[i];
+      const guestCode = booking.guestCodes?.[i];
       const passId = passIds[i];
       const qrData = `TELUGU-NIGHT-${booking.id}-${guestCode}`;
       

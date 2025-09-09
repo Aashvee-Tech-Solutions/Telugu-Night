@@ -39,7 +39,7 @@ export default function PaymentSuccess() {
       }
       
       // Keep polling every 2 seconds if payment is still pending
-      if ((data as Booking)?.paymentStatus === 'pending') {
+      if (data?.paymentStatus === 'pending') {
         return 2000;
       }
       return false; // Stop polling once status is determined
@@ -434,7 +434,7 @@ export default function PaymentSuccess() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0 && (
                           <Button 
-                            onClick={() => downloadQRCode(booking.qrCodes[0], `telugu-night-ticket-${booking.id}.png`)}
+                            onClick={() => downloadQRCode(booking.qrCodes?.[0] || '', `telugu-night-ticket-${booking.id}.png`)}
                             variant="default"
                             className="w-full"
                             data-testid="button-download-qr"
