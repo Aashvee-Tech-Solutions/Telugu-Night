@@ -84,7 +84,10 @@ export class CashfreeService {
       throw new Error('Cashfree credentials not found in environment variables');
     }
 
-    console.log(`🔑 Cashfree initialized with App ID: ${this.appId.substring(0, 10)}...`);
+    console.log(`🔑 Cashfree Service Details:`);
+    console.log(`   App ID: ${this.appId.substring(0, 10)}...`);
+    console.log(`   Secret: ${this.secretKey.substring(0, 15)}...`);
+    console.log(`   Base URL: https://api.cashfree.com/pg`);
     
     // Use production environment
     this.baseUrl = 'https://api.cashfree.com/pg';
