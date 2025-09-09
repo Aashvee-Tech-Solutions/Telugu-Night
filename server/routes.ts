@@ -2935,6 +2935,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cashfree webhook endpoint with enhanced error handling and logging
+  // GET endpoint for Cashfree webhook validation
+  app.get('/api/webhooks/cashfree', async (req, res) => {
+    res.status(200).json({ 
+      message: 'Cashfree webhook endpoint is active',
+      timestamp: new Date().toISOString(),
+      status: 'ready'
+    });
+  });
+
   app.post('/api/webhooks/cashfree', async (req, res) => {
     const webhookId = `webhook_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const startTime = Date.now();
