@@ -2689,7 +2689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: promoter.createdAt,
           lastLoginAt: promoter.lastLoginAt
         },
-        referralUrl: `https://events.qlora.in/book?ref=${promoter.promoCode}`,
+        referralUrl: `https://v0-telugunightlanding3.vercel.app/book?ref=${promoter.promoCode}`,
         bookings: promoterBookings.map(b => ({
           id: b.id,
           name: b.name,
@@ -2753,7 +2753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Promoter not found' });
       }
       
-      const baseUrl = 'https://telugunight.manipal.app';
+      const baseUrl = 'https://v0-telugunightlanding3.vercel.app';
       const referralUrl = `${baseUrl}/book?ref=${promoter.promoCode}`;
       
       const shareData = {
@@ -2873,7 +2873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { EmailService } = await import('./services/emailService');
         const emailService = new EmailService();
-        const referralUrl = `https://telugunight.manipal.app/book?ref=${promoter.promoCode}`;
+        const referralUrl = `https://v0-telugunightlanding3.vercel.app/book?ref=${promoter.promoCode}`;
         await emailService.sendPromoterCredentials(promoter.email, plainPassword, promoter.promoCode, referralUrl);
         console.log('✅ Promoter credentials sent to:', promoter.email);
       } catch (emailError) {
