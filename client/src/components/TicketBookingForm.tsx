@@ -486,9 +486,14 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  Early Bird
-                                </h4>
+                                <div className="flex flex-col">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Early Bird
+                                  </h4>
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                                    {(pricing.config?.earlyBird.capacity ?? 0) - (pricing.config?.earlyBird.soldCount ?? 0)} left
+                                  </span>
+                                </div>
                                 {!pricing.config?.earlyBird.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
@@ -533,9 +538,14 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  Phase 1
-                                </h4>
+                                <div className="flex flex-col">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Phase 1
+                                  </h4>
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                                    {(pricing.config?.phase1.capacity ?? 0) - (pricing.config?.phase1.soldCount ?? 0)} left
+                                  </span>
+                                </div>
                                 {!pricing.config?.phase1.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
@@ -580,9 +590,14 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  Phase 2
-                                </h4>
+                                <div className="flex flex-col">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Phase 2
+                                  </h4>
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                                    {(pricing.config?.phase2.capacity ?? 0) - (pricing.config?.phase2.soldCount ?? 0)} left
+                                  </span>
+                                </div>
                                 {!pricing.config?.phase2.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
@@ -627,9 +642,14 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  Phase 3 - Premium Access
-                                </h4>
+                                <div className="flex flex-col">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Phase 3 - Premium Access
+                                  </h4>
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                                    {(pricing.config?.phase3.capacity ?? 0) - (pricing.config?.phase3.soldCount ?? 0)} left
+                                  </span>
+                                </div>
                                 {!pricing.config?.phase3.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
@@ -674,9 +694,14 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  Phase 4 - VIP Access
-                                </h4>
+                                <div className="flex flex-col">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Phase 4 - VIP Access
+                                  </h4>
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                                    {(pricing.config?.phase4.capacity ?? 0) - (pricing.config?.phase4.soldCount ?? 0)} left
+                                  </span>
+                                </div>
                                 {!pricing.config?.phase4.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
