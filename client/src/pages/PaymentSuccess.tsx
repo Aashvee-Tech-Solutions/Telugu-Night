@@ -150,43 +150,40 @@ export default function PaymentSuccess() {
   // Calculate how long we've been waiting in seconds
   const waitingTime = booking ? Math.round((Date.now() - new Date(booking.createdAt || '').getTime()) / 1000) : 0;
 
-  // Show processing state for pending payments
-  if (booking && booking.paymentStatus === 'pending') {
+  // Show immediate success for all payment redirects (webhook handles automation)
+  if (booking && (booking.paymentStatus === 'pending' || booking.paymentStatus === 'verified')) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100 flex items-center justify-center px-4">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center px-4">
+        <Card className="max-w-lg w-full">
           <CardContent className="text-center p-6 sm:p-8">
-            <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-yellow-500 mx-auto mb-4 animate-spin" />
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Payment Processing</h2>
+            <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">🎉 Payment Successful!</h2>
             <p className="text-gray-600 mb-4 text-sm sm:text-base">
-              Your payment is being processed. This may take a few minutes.
+              Thank you for booking Telugu Night! Your order is being processed.
             </p>
-            <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 inline-block mb-4">
-              <p className="text-yellow-800 font-medium text-sm">
-                Booking ID: #{booking.id}
+            <div className="bg-green-100 border border-green-300 rounded-lg p-4 mb-6">
+              <p className="text-green-800 font-medium text-sm mb-2">
+                📱 Booking ID: #{booking.id}
               </p>
-              <p className="text-yellow-700 text-xs mt-1">
-                Waiting: {waitingTime} second{waitingTime !== 1 ? 's' : ''}
+              <p className="text-green-700 text-sm mb-2">
+                👤 {booking.name} | 🎫 {booking.ticketCount} ticket{booking.ticketCount !== 1 ? 's' : ''}
+              </p>
+              <p className="text-green-700 text-sm">
+                💰 ₹{booking.totalAmount}
               </p>
             </div>
             
-            {/* Show manual check button if waiting too long */}
-            {waitingTime >= 30 && (
-              <div className="mb-4">
-                <Button 
-                  onClick={() => checkStatusMutation.mutate()}
-                  disabled={checkStatusMutation.isPending}
-                  variant="outline"
-                  size="sm"
-                >
-                  {checkStatusMutation.isPending ? 'Checking...' : 'Check Payment Status'}
-                </Button>
-              </div>
-            )}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h3 className="text-blue-800 font-medium text-sm mb-2">📧 Your QR Tickets</h3>
+              <p className="text-blue-700 text-xs sm:text-sm">
+                QR tickets with entry codes will be automatically sent to <span className="font-medium">{booking.email}</span> within 2-3 minutes.
+              </p>
+            </div>
             
-            <p className="text-gray-500 text-xs sm:text-sm">
-              Please do not refresh this page. You will be redirected automatically once payment is confirmed.
-            </p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>🎯 Event: Telugu Night 2.0 - DTR Manipal</p>
+              <p>📍 Check your email for complete event details</p>
+            </div>
           </CardContent>
         </Card>
       </div>
