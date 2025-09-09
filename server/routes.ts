@@ -916,7 +916,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate total amount with dynamic pricing (including convenience fee)
       const subtotal = bookingData.ticketCount * ticketPrice;
       const discountAmount = Math.round((subtotal * couponDiscount) / 100);
-      const convenienceFeePerTicket = 12.96;
+      const convenienceFeePerTicket = parseFloat(config.convenientFee || '0');
       const convenienceFeeTotal = bookingData.ticketCount * convenienceFeePerTicket;
       const totalAmount = subtotal - discountAmount + convenienceFeeTotal;
       

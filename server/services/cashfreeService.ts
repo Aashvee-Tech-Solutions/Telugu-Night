@@ -372,15 +372,18 @@ export class CashfreeService {
     return 'An unexpected error occurred during payment processing. Please contact support.';
   }
 
-  calculateAmount(ticketCount: number, ticketPrice: number, couponDiscount: number = 0): number {
+  async calculateAmount(ticketCount: number, ticketPrice: number, couponDiscount: number = 0): Promise<number> {
     let subtotal = ticketCount * ticketPrice;
 
     // Apply coupon discount to subtotal only (not to convenience fee)
     const discountAmount = (subtotal * couponDiscount) / 100;
     const subtotalAfterDiscount = subtotal - discountAmount;
     
-    // Add convenience fee (not subject to discount)
-    const convenienceFeePerTicket = 12.96;
+    // Get convenience fee from configuration
+    const { DatabaseStorage } = await import('../databaseStorage');
+    const storage = new DatabaseStorage();
+    const config = await storage.getTeluguNightConfig();
+    const convenienceFeePerTicket = parseFloat(config.convenientFee || '0');
     const convenienceFeeTotal = ticketCount * convenienceFeePerTicket;
     
     const totalAmount = subtotalAfterDiscount + convenienceFeeTotal;

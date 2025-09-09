@@ -118,7 +118,7 @@ export function usePricing(): PricingContextType {
           soldCount: countsData.phase4Count || 0,
           description: 'Final pricing tier'
         },
-        convenienceFee: 12.96,
+        convenienceFee: parseFloat(configData.config?.convenientFee || '0'),
         currency: 'INR',
         lastUpdated: new Date().toISOString()
       };
