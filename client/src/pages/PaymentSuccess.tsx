@@ -346,78 +346,14 @@ export default function PaymentSuccess() {
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                       <div className="flex items-center gap-2 text-green-600 mb-2">
                         <CheckCircle className="h-5 w-5" />
-                        <p className="font-medium">🎫 QR Tickets Ready!</p>
+                        <p className="font-medium">✅ Payment Successful!</p>
                       </div>
-                      <p className="text-gray-600 text-sm mb-4">
-                        ✅ QR tickets have been automatically sent to <strong>{booking.email}</strong>
+                      <p className="text-gray-600 text-sm mb-2">
+                        🎫 Your QR tickets have been sent to <strong>{booking.email}</strong>
                       </p>
-                      
-                      {/* QR Code Display */}
-                      {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="font-medium text-gray-700 mb-3">Your QR Ticket:</h4>
-                          <div className="bg-white p-3 sm:p-4 rounded-lg border-2 border-gray-200 inline-block w-full max-w-xs mx-auto">
-                            <img 
-                              src={booking.qrCodes[0]} 
-                              alt="QR Ticket"
-                              className="w-40 h-40 sm:w-48 sm:h-48 mx-auto"
-                              data-testid="qr-code-image"
-                            />
-                            <p className="text-center text-xs sm:text-sm text-gray-600 mt-2 font-mono">
-                              Booking ID: #{booking.id}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Action Buttons */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0 && (
-                          <Button 
-                            onClick={() => downloadQRCode(booking.qrCodes?.[0] || '', `telugu-night-ticket-${booking.id}.png`)}
-                            variant="default"
-                            className="w-full"
-                            data-testid="button-download-qr"
-                          >
-                            <FileDown className="h-4 w-4 mr-2" />
-                            Download Ticket
-                          </Button>
-                        )}
-                        {booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 1 && (
-                          <Button 
-                            onClick={downloadAllTickets}
-                            variant="secondary"
-                            className="w-full"
-                            data-testid="button-download-all"
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download All ({booking.qrCodes.length})
-                          </Button>
-                        )}
-                        <Button 
-                          onClick={shareTicket}
-                          variant="outline"
-                          className="w-full"
-                          data-testid="button-share"
-                        >
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Share
-                        </Button>
-                        <Button 
-                          onClick={() => sendTicketsMutation.mutate()}
-                          disabled={sendTicketsMutation.isPending}
-                          variant="outline"
-                          className="w-full"
-                          data-testid="button-resend-tickets"
-                        >
-                          {sendTicketsMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4 mr-2" />
-                          )}
-                          Resend Email
-                        </Button>
-                      </div>
+                      <p className="text-green-600 text-xs">
+                        📧 Please check your email (including spam folder) for your QR tickets.
+                      </p>
                     </div>
                   ) : (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -462,8 +398,7 @@ export default function PaymentSuccess() {
               <CardTitle>Important Notes</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-gray-600">
-              <p>📧 <strong>Check your email:</strong> Your QR tickets will be sent to {booking.email}</p>
-              <p>📱 <strong>Save your tickets:</strong> Download and save the QR tickets to your phone</p>
+              <p>📧 <strong>Check your email:</strong> QR tickets have been sent to {booking.email}</p>
               <p>🚪 <strong>Entry requirement:</strong> Show your QR code at the venue for entry</p>
               <p>🎫 <strong>Guest codes:</strong> Each ticket has a unique guest code for individual entry</p>
               <p>📞 <strong>Support:</strong> Contact mis@aashveetech.com or +91 6281614117 for assistance</p>
