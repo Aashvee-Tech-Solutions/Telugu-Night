@@ -166,44 +166,7 @@ export default function PaymentSuccess() {
   const waitingTime = booking ? Math.round((Date.now() - new Date(booking.createdAt || '').getTime()) / 1000) : 0;
 
   // Show immediate success only for verified payments or very recent pending payments  
-  if (booking && booking.paymentStatus === 'verified') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center px-4">
-        <Card className="max-w-lg w-full">
-          <CardContent className="text-center p-6 sm:p-8">
-            <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">🎉 Payment Successful!</h2>
-            <p className="text-gray-600 mb-4 text-sm sm:text-base">
-              Thank you for booking Telugu Night! Your order is being processed.
-            </p>
-            <div className="bg-green-100 border border-green-300 rounded-lg p-4 mb-6">
-              <p className="text-green-800 font-medium text-sm mb-2">
-                📱 Booking ID: #{booking.id}
-              </p>
-              <p className="text-green-700 text-sm mb-2">
-                👤 {booking.name} | 🎫 {booking.ticketCount} ticket{booking.ticketCount !== 1 ? 's' : ''}
-              </p>
-              <p className="text-green-700 text-sm">
-                💰 ₹{booking.totalAmount}
-              </p>
-            </div>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <h3 className="text-blue-800 font-medium text-sm mb-2">📧 Your QR Tickets</h3>
-              <p className="text-blue-700 text-xs sm:text-sm">
-                QR tickets with entry codes will be automatically sent to <span className="font-medium">{booking.email}</span> within 2-3 minutes.
-              </p>
-            </div>
-            
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>🎯 Event: Telugu Night 2.0 - DTR Manipal</p>
-              <p>📍 Check your email for complete event details</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // REMOVED: Early return that was causing blank page - use full success page below instead
 
   const isPaymentVerified = booking.paymentStatus === 'verified';
   const hasTickets = booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0;
