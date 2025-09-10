@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
+// http server creation is handled in server/index.ts
 import bcrypt from 'bcryptjs';
 import compression from 'compression';
 import path from "path";
@@ -32,7 +32,7 @@ function toBookingData(booking: any): any {
   };
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<Express> {
   // PRIORITY: Cashfree webhook endpoints (must be FIRST to avoid middleware interference)
   app.get('/api/webhooks/cashfree', async (req, res) => {
     console.log('🎯 GET webhook validation hit!');
