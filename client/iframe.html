@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telugu Night Frontend - Vercel</title>
+    <title>Telugu Night Frontend</title>
     <style>
         * {
             margin: 0;
@@ -103,7 +103,7 @@
         <h1>🎊 Telugu Night 2.0 - Frontend Preview</h1>
         <div class="status">
             <div class="status-dot"></div>
-            <span>Live on Vercel</span>
+            <span>Live on events.qlora.in</span>
         </div>
     </div>
     
@@ -114,7 +114,7 @@
     
     <div class="iframe-container">
         <iframe 
-            src="https://v0-telugunightlanding3k.vercel.app/" 
+            src="https://events.qlora.in/" 
             title="Telugu Night Frontend"
             onload="document.getElementById('loading').classList.add('hidden')"
             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"
@@ -129,7 +129,7 @@
         
         // Handle iframe errors
         window.addEventListener('message', function(event) {
-            if (event.origin !== 'https://v0-telugunightlanding3k.vercel.app') return;
+            if (event.origin !== 'https://events.qlora.in') return;
             console.log('Message from frontend:', event.data);
         });
     </script>
