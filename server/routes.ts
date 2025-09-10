@@ -1,8 +1,5 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import bcrypt from 'bcryptjs';
 import compression from 'compression';
 import { storage } from "./databaseStorage";
@@ -18,41 +15,7 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
-// Configure multer for file uploads with better error handling
-const storage_multer = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = 'uploads/';
-    // Ensure uploads directory exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
-  }
-});
-
-const upload = multer({
-  storage: storage_multer,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-    files: 1
-  },
-  fileFilter: (req: any, file: any, cb: any) => {
-    console.log(`📤 File upload attempt: ${file.originalname}, type: ${file.mimetype}`);
-    
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`Invalid file type. Only images (JPG, PNG, GIF, WebP) are allowed. Got: ${file.mimetype}`));
-    }
-  }
-});
+// All payments are fully automated via Cashfree webhooks - no manual uploads or verification needed
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // PRIORITY: Cashfree webhook endpoints (must be FIRST to avoid middleware interference)
@@ -63,19 +26,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).send('OK');
   });
 
-  // Enable compression for faster response times, but exclude uploads
-  app.use((req, res, next) => {
-    // Skip compression for file upload routes
-    if (req.path.includes('/payment-proof') || req.path.includes('/uploads/')) {
-      return next();
-    }
-    // Apply compression for other routes
-    compression({
-      threshold: 1024, // Only compress if response is > 1KB
-      level: 6, // Compression level (1-9, 6 is default)
-      chunkSize: 16 * 1024 // 16KB chunks
-    })(req, res, next);
-  });
+  // Enable compression for faster response times
+  app.use(compression({
+    threshold: 1024, // Only compress if response is > 1KB
+    level: 6, // Compression level (1-9, 6 is default)
+    chunkSize: 16 * 1024 // 16KB chunks
+  }));
 
   // PUBLIC Scanner Routes (must be before any auth middleware)
   app.post('/api/scanner/scan', async (req, res) => {
@@ -122,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check payment status
       if (booking.paymentStatus === 'pending') {
         return res.status(400).json({ 
-          message: 'Payment not verified yet. Please wait for admin verification.',
+          message: 'Payment is being processed automatically. Please wait a few minutes for verification.',
           booking: {
             ...booking,
             scannedAt: booking.scannedAt?.toISOString ? booking.scannedAt.toISOString() : booking.scannedAt
@@ -229,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(400).json({
           success: false,
-          message: 'Payment not verified yet. Please wait for admin verification.'
+          message: 'Payment is being processed automatically. Please wait a few minutes for verification.'
         });
       }
     } catch (error) {
@@ -249,45 +205,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { generateGuestCodes, generatePassIds } = await import('./services/emailService');
   
 
-  // Screenshot viewing route  
-  app.get('/api/screenshots/:filename', authenticate, requirePermission(PERMISSIONS.VIEW_BOOKINGS), (req, res) => {
-    try {
-      const filename = req.params.filename;
-      const filepath = path.join(process.cwd(), 'uploads', filename);
-      
-      console.log(`📸 Screenshot request for: ${filename}`);
-      console.log(`📂 Looking in path: ${filepath}`);
-      
-      // Check if file exists
-      if (!fs.existsSync(filepath)) {
-        console.log(`❌ Screenshot not found: ${filepath}`);
-        return res.status(404).json({ message: 'Screenshot not found' });
-      }
-      
-      console.log(`✅ Screenshot found, serving: ${filename}`);
-      res.sendFile(filepath);
-    } catch (error: any) {
-      console.error('Screenshot viewing error:', error);
-      res.status(500).json({ message: 'Failed to load screenshot' });
-    }
-  });
-
-  // Alternative screenshot route without authentication for development
-  app.get('/uploads/:filename', (req, res) => {
-    try {
-      const filename = req.params.filename;
-      const filepath = path.join(process.cwd(), 'uploads', filename);
-      
-      if (!fs.existsSync(filepath)) {
-        return res.status(404).json({ message: 'File not found' });
-      }
-      
-      res.sendFile(filepath);
-    } catch (error: any) {
-      console.error('File serving error:', error);
-      res.status(500).json({ message: 'Failed to serve file' });
-    }
-  });
 
   // Initialize admin user route (for fixing login issues)
   app.post('/api/admin/init-user', async (req, res) => {
@@ -1664,220 +1581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Screenshot diagnostic endpoint for admin
-  app.get('/api/admin/screenshot-diagnostic', authenticate, requirePermission(PERMISSIONS.VIEW_BOOKINGS), async (req, res) => {
-    try {
-      // Get all bookings with screenshot URLs
-      const bookings = await storage.getAllBookings();
-      const bookingsWithScreenshots = bookings.filter(b => b.paymentScreenshot);
-      
-      // Get actual files in uploads directory
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      const actualFiles = fs.readdirSync(uploadsDir).filter(f => f.startsWith('screenshot-'));
-      
-      // Check file sizes and validity
-      const fileDetails = actualFiles.map(filename => {
-        const filepath = path.join(uploadsDir, filename);
-        const stats = fs.statSync(filepath);
-        return {
-          filename,
-          size: stats.size,
-          isLikelyValid: stats.size > 1000, // Files over 1KB are likely real images
-          modified: stats.mtime
-        };
-      });
-      
-      // Check mismatches
-      const mismatches = [];
-      const working = [];
-      const corrupted = [];
-      
-      for (const booking of bookingsWithScreenshots) {
-        const filename = booking.paymentScreenshot.replace('/uploads/', '');
-        const fileDetail = fileDetails.find(f => f.filename === filename);
-        
-        if (fileDetail) {
-          if (fileDetail.isLikelyValid) {
-            working.push({
-              bookingId: booking.id,
-              name: booking.name,
-              email: booking.email,
-              phone: booking.phone,
-              filename,
-              size: fileDetail.size,
-              status: 'VALID',
-              paymentStatus: booking.paymentStatus
-            });
-          } else {
-            corrupted.push({
-              bookingId: booking.id,
-              name: booking.name,
-              email: booking.email,
-              phone: booking.phone,
-              filename,
-              size: fileDetail.size,
-              status: 'CORRUPTED',
-              paymentStatus: booking.paymentStatus,
-              reuploadUrl: `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/api/bookings/${booking.id}/reupload`
-            });
-          }
-        } else {
-          mismatches.push({
-            bookingId: booking.id,
-            name: booking.name,
-            email: booking.email,
-            phone: booking.phone,
-            expectedFile: filename,
-            status: 'MISSING',
-            paymentStatus: booking.paymentStatus
-          });
-        }
-      }
-      
-      res.json({
-        totalBookingsWithScreenshots: bookingsWithScreenshots.length,
-        actualFilesCount: actualFiles.length,
-        validScreenshots: working.length,
-        corruptedScreenshots: corrupted.length,
-        missingScreenshots: mismatches.length,
-        mismatches,
-        working,
-        corrupted,
-        summary: {
-          message: corrupted.length > 0 ? 
-            `⚠️ ${corrupted.length} customers need to re-upload payment screenshots` :
-            '✅ All screenshots are valid',
-          corruptedCustomers: corrupted.map(c => `${c.name} (${c.phone}) - Booking #${c.bookingId}`)
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ message: 'Diagnostic failed', error: error.message });
-    }
-  });
 
-  // Customer re-upload route for corrupted screenshots
-  app.get('/api/bookings/:id/reupload', async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const booking = await storage.getBooking(bookingId);
-      
-      if (!booking) {
-        return res.status(404).send(`
-          <html>
-            <head><title>Booking Not Found</title></head>
-            <body style="font-family: Arial; text-align: center; padding: 50px;">
-              <h1>Booking Not Found</h1>
-              <p>The booking ID ${bookingId} could not be found.</p>
-            </body>
-          </html>
-        `);
-      }
-
-      const html = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Re-upload Payment Screenshot - Telugu Night</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <style>
-              body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 20px; }
-              .container { background: #f9f9f9; padding: 30px; border-radius: 10px; }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-              .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
-              .upload-area { border: 2px dashed #ccc; padding: 40px; text-align: center; border-radius: 10px; margin: 20px 0; }
-              .upload-area.dragover { border-color: #007bff; background: #f0f8ff; }
-              .btn { background: #007bff; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-              .btn:hover { background: #0056b3; }
-              .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0; }
-              .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; margin: 20px 0; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>🎭 Telugu Night - Re-upload Payment Screenshot</h1>
-                <p>Booking ID: #${booking.id} | ${booking.name}</p>
-              </div>
-              
-              <div class="warning">
-                <strong>⚠️ Screenshot Re-upload Required</strong><br>
-                Your previous payment screenshot appears to be corrupted and needs to be uploaded again.
-                This is due to a technical issue that has now been resolved.
-              </div>
-
-              <form id="reuploadForm" enctype="multipart/form-data">
-                <div class="upload-area" id="uploadArea">
-                  <input type="file" id="screenshot" name="screenshot" accept="image/*" style="display: none;" required>
-                  <p><strong>📸 Click to Select Payment Screenshot</strong></p>
-                  <p>JPG, PNG, GIF, WebP files up to 10MB</p>
-                  <button type="button" class="btn" onclick="document.getElementById('screenshot').click()">Choose File</button>
-                  <div id="fileName" style="margin-top: 15px; font-weight: bold;"></div>
-                </div>
-                
-                <button type="submit" class="btn" id="submitBtn" disabled>Re-upload Screenshot</button>
-              </form>
-
-              <div id="message"></div>
-            </div>
-
-            <script>
-              const form = document.getElementById('reuploadForm');
-              const fileInput = document.getElementById('screenshot');
-              const fileName = document.getElementById('fileName');
-              const submitBtn = document.getElementById('submitBtn');
-              const message = document.getElementById('message');
-
-              fileInput.addEventListener('change', function() {
-                if (this.files[0]) {
-                  fileName.textContent = '✅ ' + this.files[0].name + ' (' + (this.files[0].size / 1024 / 1024).toFixed(2) + ' MB)';
-                  fileName.style.color = 'green';
-                  submitBtn.disabled = false;
-                  submitBtn.style.background = '#28a745';
-                }
-              });
-
-              form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData();
-                formData.append('screenshot', fileInput.files[0]);
-                
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Uploading...';
-                
-                try {
-                  const response = await fetch('/api/bookings/${booking.id}/payment-proof', {
-                    method: 'POST',
-                    body: formData
-                  });
-                  
-                  const result = await response.json();
-                  
-                  if (response.ok) {
-                    message.innerHTML = '<div class="success">✅ Screenshot uploaded successfully! Your payment is now pending admin verification. You will receive QR tickets via email once verified.</div>';
-                    form.style.display = 'none';
-                  } else {
-                    message.innerHTML = '<div class="error">❌ ' + result.message + '</div>';
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Re-upload Screenshot';
-                  }
-                } catch (error) {
-                  message.innerHTML = '<div class="error">❌ Upload failed. Please try again.</div>';
-                  submitBtn.disabled = false;
-                  submitBtn.textContent = 'Re-upload Screenshot';
-                }
-              });
-            </script>
-          </body>
-        </html>
-      `;
-      
-      res.send(html);
-    } catch (error) {
-      console.error('Re-upload page error:', error);
-      res.status(500).send('Internal server error');
-    }
-  });
 
   // Sync all bookings to Google Sheets route (for admin)
   app.post('/api/admin/sync-sheets', authenticate, requirePermission(PERMISSIONS.VIEW_BOOKINGS), async (req, res) => {
@@ -2007,278 +1711,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // MANDATORY payment screenshot upload route with Google Drive  
-  app.post('/api/bookings/:id/payment-proof', upload.single('screenshot'), async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const booking = await storage.getBooking(bookingId);
-      
-      if (!booking) {
-        return res.status(404).json({ message: 'Booking not found' });
-      }
-      
-      if (!req.file) {
-        return res.status(400).json({ 
-          message: 'Screenshot upload is mandatory to complete your booking. Please upload payment proof.' 
-        });
-      }
-      
-      console.log(`📸 Uploading screenshot to public uploads folder for booking ${bookingId}...`);
-      
-      // Create unique filename with timestamp
-      const timestamp = Date.now();
-      const fileExtension = path.extname(req.file.originalname);
-      const uniqueFilename = `payment-${bookingId}-${timestamp}${fileExtension}`;
-      const publicPath = `/uploads/${uniqueFilename}`;
-      
-      // Move file to permanent location with unique name
-      const oldPath = req.file.path;
-      const newPath = path.join(process.cwd(), 'uploads', uniqueFilename);
-      fs.renameSync(oldPath, newPath);
-      
-      console.log(`✅ Screenshot uploaded to public folder: ${publicPath}`);
-      await storage.updateBookingPaymentStatus(bookingId, 'pending', publicPath);
-      
-      // Add screenshot to Google Sheets immediately
-      try {
-        const { GoogleSheetsService } = await import('./services/googleSheets');
-        const googleSheetsService = new GoogleSheetsService();
-        await googleSheetsService.addPaymentScreenshotToSheet(bookingId, `https://events.qlora.in${publicPath}`);
-        console.log(`✅ Public screenshot URL synced to Google Sheets for booking ${bookingId}`);
-      } catch (sheetsError) {
-        console.error('Google Sheets screenshot sync failed:', sheetsError);
-      }
-      
-      // Skip payment confirmation email after screenshot upload
+  // REMOVED: Screenshot upload route - payments now fully automated via Cashfree webhooks
 
-      res.json({ 
-        message: 'Screenshot uploaded successfully! Your booking is now pending admin verification.',
-        screenshot: publicPath,
-        booking: {
-          id: booking.id,
-          name: booking.name,
-          paymentStatus: 'pending'
-        }
-      });
-    } catch (error) {
-      console.error('Screenshot upload error:', error);
-      res.status(500).json({ message: 'Failed to upload screenshot' });
-    }
-  });
-
-  // Customer re-upload page for corrupted screenshots
-  app.get('/api/bookings/:id/reupload', async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const booking = await storage.getBooking(bookingId);
-      
-      if (!booking) {
-        return res.status(404).send(`
-          <html><body style="font-family: Arial; text-align: center; margin-top: 50px;">
-            <h2>❌ Booking Not Found</h2>
-            <p>The booking ID ${bookingId} was not found in our system.</p>
-          </body></html>
-        `);
-      }
-
-      const config = await storage.getTeluguNightConfig();
-      const convenienceFeePerTicket = parseFloat(config.convenientFee || '0');
-      const totalWithFee = parseFloat(booking.totalAmount) + (booking.ticketCount * convenienceFeePerTicket);
-      
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Re-upload Payment Screenshot - Telugu Night</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-            .header { text-align: center; margin-bottom: 30px; }
-            .header h1 { color: #333; margin: 0; font-size: 24px; }
-            .booking-info { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-            .upload-area { border: 3px dashed #007bff; border-radius: 10px; padding: 40px; text-align: center; margin: 20px 0; transition: all 0.3s ease; cursor: pointer; }
-            .upload-area:hover { border-color: #0056b3; background: #f8f9ff; }
-            .upload-area.dragover { border-color: #28a745; background: #f0fff4; }
-            .btn { background: linear-gradient(45deg, #007bff, #0056b3); color: white; padding: 12px 30px; border: none; border-radius: 25px; cursor: pointer; font-size: 16px; margin: 10px; transition: all 0.3s ease; }
-            .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,123,255,0.3); }
-            .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-            .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 10px 0; border: 1px solid #c3e6cb; }
-            .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin: 10px 0; border: 1px solid #f5c6cb; }
-            .file-info { margin: 15px 0; padding: 10px; background: #e9ecef; border-radius: 5px; display: none; }
-            .progress { background: #e9ecef; border-radius: 10px; height: 20px; margin: 10px 0; overflow: hidden; display: none; }
-            .progress-bar { background: linear-gradient(45deg, #28a745, #20c997); height: 100%; width: 0%; transition: width 0.3s ease; }
-            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🎫 Re-upload Payment Screenshot</h1>
-              <p>Telugu Night Event - DTR, Manipal</p>
-            </div>
-            
-            <div class="booking-info">
-              <h3>Booking Details</h3>
-              <p><strong>Booking ID:</strong> #${booking.id}</p>
-              <p><strong>Name:</strong> ${booking.name}</p>
-              <p><strong>Email:</strong> ${booking.email}</p>
-              <p><strong>Tickets:</strong> ${booking.ticketCount}</p>
-              <p><strong>Amount Paid:</strong> ₹${totalWithFee.toFixed(2)}</p>
-            </div>
-
-            <div style="background: #fff3cd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffeaa7;">
-              <h4 style="margin: 0; color: #856404;">📸 Screenshot Upload Required</h4>
-              <p style="margin: 10px 0 0 0; color: #856404;">Your previous screenshot was corrupted or missing. Please upload a clear image of your payment confirmation.</p>
-            </div>
-
-            <form id="uploadForm" enctype="multipart/form-data">
-              <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                <p><strong>📱 Drag & drop your screenshot here</strong></p>
-                <p>or click to select file</p>
-                <p style="font-size: 14px; color: #666; margin-top: 15px;">Supported: JPG, PNG, GIF, WebP (Max 10MB)</p>
-              </div>
-              
-              <input type="file" id="fileInput" name="screenshot" accept="image/*" style="display: none;" required>
-              
-              <div class="file-info" id="fileInfo"></div>
-              <div class="progress" id="progress">
-                <div class="progress-bar" id="progressBar"></div>
-              </div>
-              
-              <div style="text-align: center; margin-top: 20px;">
-                <button type="submit" class="btn" id="submitBtn" disabled>
-                  📤 Upload Screenshot
-                </button>
-              </div>
-            </form>
-
-            <div id="message"></div>
-
-            <div class="footer">
-              <p>Need help? Contact us at support@telugunight.com</p>
-              <p>Event Date: August 3, 2025 | Venue: DTR, Manipal</p>
-            </div>
-          </div>
-
-          <script>
-            const fileInput = document.getElementById('fileInput');
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInfo = document.getElementById('fileInfo');
-            const submitBtn = document.getElementById('submitBtn');
-            const progress = document.getElementById('progress');
-            const progressBar = document.getElementById('progressBar');
-            const message = document.getElementById('message');
-            const form = document.getElementById('uploadForm');
-
-            // Drag and drop functionality
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-              uploadArea.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-              uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-              uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
-            });
-
-            uploadArea.addEventListener('drop', (e) => {
-              const dt = e.dataTransfer;
-              const files = dt.files;
-              fileInput.files = files;
-              handleFiles(files);
-            });
-
-            fileInput.addEventListener('change', (e) => {
-              handleFiles(e.target.files);
-            });
-
-            function handleFiles(files) {
-              if (files.length > 0) {
-                const file = files[0];
-                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
-                
-                fileInfo.innerHTML = \`
-                  <strong>Selected File:</strong> \${file.name}<br>
-                  <strong>Size:</strong> \${fileSize} MB<br>
-                  <strong>Type:</strong> \${file.type}
-                \`;
-                fileInfo.style.display = 'block';
-                submitBtn.disabled = false;
-              }
-            }
-
-            form.addEventListener('submit', async (e) => {
-              e.preventDefault();
-              
-              if (!fileInput.files[0]) {
-                message.innerHTML = '<div class="error">Please select a screenshot to upload.</div>';
-                return;
-              }
-
-              const formData = new FormData();
-              formData.append('screenshot', fileInput.files[0]);
-
-              submitBtn.disabled = true;
-              submitBtn.textContent = '📤 Uploading...';
-              progress.style.display = 'block';
-              
-              // Simulate progress
-              let progressValue = 0;
-              const progressInterval = setInterval(() => {
-                progressValue += Math.random() * 30;
-                if (progressValue > 90) progressValue = 90;
-                progressBar.style.width = progressValue + '%';
-              }, 200);
-
-              try {
-                const response = await fetch('/api/bookings/${booking.id}/payment-proof', {
-                  method: 'POST',
-                  body: formData
-                });
-                
-                clearInterval(progressInterval);
-                progressBar.style.width = '100%';
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                  message.innerHTML = '<div class="success">✅ Screenshot uploaded successfully! Your payment is now pending admin verification. You will receive QR tickets via email once verified.</div>';
-                  form.style.display = 'none';
-                } else {
-                  throw new Error(result.message || 'Upload failed');
-                }
-              } catch (error) {
-                clearInterval(progressInterval);
-                message.innerHTML = \`<div class="error">❌ Upload failed: \${error.message}</div>\`;
-                submitBtn.disabled = false;
-                submitBtn.textContent = '📤 Upload Screenshot';
-                progress.style.display = 'none';
-              }
-            });
-          </script>
-        </body>
-        </html>
-      `;
-      
-      res.send(html);
-    } catch (error) {
-      console.error('Re-upload page error:', error);
-      res.status(500).send(`
-        <html><body style="font-family: Arial; text-align: center; margin-top: 50px;">
-          <h2>❌ Error</h2>
-          <p>Unable to load re-upload page. Please try again later.</p>
-        </body></html>
-      `);
-    }
-  });
 
   // Manual verification - changes status from pending to verified  
   // REMOVED: Manual payment verification - Now fully automated via webhooks
