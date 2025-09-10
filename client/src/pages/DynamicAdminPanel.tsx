@@ -264,21 +264,19 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
   // Send ticket mutation
   const sendTicketMutation = useMutation({
     mutationFn: async (bookingId: number) => {
-      const token = localStorage.getItem('adminToken');
-      return fetch(`/api/admin/bookings/${bookingId}/send-ticket`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      return apiRequest('POST', `/api/admin/bookings/${bookingId}/send-ticket`);
     },
-    onSuccess: () => {
-      toast({ title: 'Success', description: 'Ticket sent successfully' });
+    onSuccess: (data: any) => {
+      toast({ 
+        title: '🎫 Tickets Sent Successfully!', 
+        description: data.paymentAutoVerified ? 'Payment verified and tickets sent' : 'Tickets sent to customer email'
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
     },
     onError: (error: any) => {
       toast({ 
-        title: 'Error', 
-        description: error.message || 'Failed to send ticket',
+        title: 'Failed to send tickets', 
+        description: error.message || 'Please check booking details and try again',
         variant: 'destructive' 
       });
     },
@@ -1134,7 +1132,7 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
 
                           {/* Send ticket functionality for all bookings */}
                           <PermissionGuard 
-                            permissions={['verify_payments']} 
+                            permissions={['send_tickets']} 
                             userPermissions={user.permissions}
                           >
                             <Button
