@@ -1,6 +1,6 @@
 import type { User, InsertUser, Booking, Coupon, InsertCoupon, Promoter, InsertPromoter, Event, EventPhase, TicketType } from '@shared/schema';
 import { db } from './db';
-import { users, bookings, coupons, teluguNightCounter, teluguNightConfig, promoters, events, eventPhases, ticketTypes } from '@shared/schema';
+import { users, bookings, coupons, teluguNightCounter, teluguNightConfig, promoters, events, eventPhases, ticketTypes, ROLE_PERMISSIONS } from '@shared/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 
 interface AdminSession {
@@ -87,6 +87,10 @@ export class DatabaseStorage implements IStorage {
     phase1Limit: number;
     phase2Count: number;
     phase2Limit: number;
+    phase3Count: number;
+    phase3Limit: number;
+    phase4Count: number;
+    phase4Limit: number;
     totalSold: number;
     maxCapacity: number;
     lastUpdated: number;
@@ -120,7 +124,8 @@ export class DatabaseStorage implements IStorage {
         await db.insert(users).values({
           username: 'aashvee',
           password: hashedPassword,
-          role: 'super_admin'
+          role: 'super_admin',
+          permissions: []
         });
         console.log('✅ Default admin user created');
       }
@@ -161,7 +166,7 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values([insertUser])
       .returning();
     return user;
   }
@@ -482,6 +487,10 @@ export class DatabaseStorage implements IStorage {
     phase1Limit: number;
     phase2Count: number;
     phase2Limit: number;
+    phase3Count: number;
+    phase3Limit: number;
+    phase4Count: number;
+    phase4Limit: number;
     totalSold: number;
     maxCapacity: number;
   }> {
@@ -494,6 +503,10 @@ export class DatabaseStorage implements IStorage {
         phase1Limit: this.ticketCountCache.phase1Limit || 200,
         phase2Count: this.ticketCountCache.phase2Count || 0,
         phase2Limit: this.ticketCountCache.phase2Limit || 210,
+        phase3Count: this.ticketCountCache.phase3Count || 0,
+        phase3Limit: this.ticketCountCache.phase3Limit || 100,
+        phase4Count: this.ticketCountCache.phase4Count || 0,
+        phase4Limit: this.ticketCountCache.phase4Limit || 100,
         totalSold: this.ticketCountCache.totalSold || 0,
         maxCapacity: this.ticketCountCache.maxCapacity || 500
       };
@@ -510,6 +523,10 @@ export class DatabaseStorage implements IStorage {
         phase1Limit: config ? (config.phase1Limit || 200) : 200,
         phase2Count: counter ? (counter.phase2Count || 0) : 0,
         phase2Limit: config ? (config.phase2Limit || 210) : 210,
+        phase3Count: counter ? (counter.phase3Count || 0) : 0,
+        phase3Limit: config ? (config.phase3Limit || 100) : 100,
+        phase4Count: counter ? (counter.phase4Count || 0) : 0,
+        phase4Limit: config ? (config.phase4Limit || 100) : 100,
         totalSold: counter ? (counter.totalSold || 0) : 0,
         maxCapacity: config ? (config.maxCapacity || 500) : 500,
       };
@@ -530,6 +547,10 @@ export class DatabaseStorage implements IStorage {
         phase1Limit: 200,
         phase2Count: 0,
         phase2Limit: 210,
+        phase3Count: 0,
+        phase3Limit: 100,
+        phase4Count: 0,
+        phase4Limit: 100,
         totalSold: 0,
         maxCapacity: 500
       };
@@ -572,7 +593,8 @@ export class DatabaseStorage implements IStorage {
       const currentCount = currentCounts[updateField === 'earlyBirdCount' ? 'earlyBirdCount' : 
                                          updateField === 'phase1Count' ? 'phase1Count' : 
                                          updateField === 'phase2Count' ? 'phase2Count' :
-                                         updateField === 'phase3Count' ? 'phase3Count' : 'phase4Count'];
+                                         updateField === 'phase3Count' ? 'phase3Count' : 
+                                         updateField === 'phase4Count' ? 'phase4Count' : 'earlyBirdCount'] as number;
       const newCount = currentCount + ticketCount;
       const newTotalSold = currentCounts.totalSold + ticketCount;
       
@@ -629,7 +651,8 @@ export class DatabaseStorage implements IStorage {
       const currentCount = currentCounts[updateField === 'earlyBirdCount' ? 'earlyBirdCount' : 
                                          updateField === 'phase1Count' ? 'phase1Count' : 
                                          updateField === 'phase2Count' ? 'phase2Count' :
-                                         updateField === 'phase3Count' ? 'phase3Count' : 'phase4Count'];
+                                         updateField === 'phase3Count' ? 'phase3Count' : 
+                                         updateField === 'phase4Count' ? 'phase4Count' : 'earlyBirdCount'] as number;
       const newCount = Math.max(0, currentCount - ticketCount); // Ensure count doesn't go negative
       const newTotalSold = Math.max(0, currentCounts.totalSold - ticketCount);
       
