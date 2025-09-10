@@ -9,6 +9,16 @@ const Index = () => {
 
   const LandingPage = () => (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+      {/* Embedded iframe */}
+      <div className="w-full h-screen">
+        <iframe
+          src="https://v0-telugunightlanding3k.vercel.app/"
+          className="w-full h-full border-0"
+          title="Telugu Night Landing Page"
+          data-testid="iframe-landing"
+        />
+      </div>
+      
       <div className="container mx-auto px-4 py-16">
         <div className="text-center space-y-8">
           <h1 className="text-6xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
