@@ -2688,10 +2688,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Home page now served by React SPA (handled by vite fallback)
-
-  return app;
-}
+  // Iframe route for Telugu Night frontend
+  app.get('/iframe', (req, res) => {
+    const iframeHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telugu Night</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        .iframe-container { width: 100vw; height: 100vh; }
+        .iframe-container iframe { width: 100%; height: 100%; border: none; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
         <p>Loading Telugu Night frontend...</p>
     </div>
     
@@ -2723,6 +2737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send(iframeHTML);
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // Home page now served by React SPA (handled by vite fallback)
+
+  return app;
 }
