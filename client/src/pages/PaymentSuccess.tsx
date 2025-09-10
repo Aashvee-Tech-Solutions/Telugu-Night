@@ -37,12 +37,10 @@ export default function PaymentSuccess() {
   const { data: booking, isLoading, error } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
     enabled: !!bookingId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // 1s, 2s, 3s
+    retry: 1, // Reduced retry to prevent infinite loading
     refetchOnWindowFocus: false,
-    // Add timeout to prevent infinite loading
-    staleTime: 30000, // 30 seconds
-    gcTime: 30000, // 30 seconds
+    staleTime: 5000, // Reduced timeout
+    gcTime: 5000,
   });
 
   // Add loading timeout to prevent infinite spinner
@@ -66,7 +64,8 @@ export default function PaymentSuccess() {
     if (booking) {
       console.log('✅ PaymentSuccess: Booking data fetched:', booking.id, 'Status:', booking.paymentStatus);
     }
-  }, [booking, error]);
+    console.log('🐛 PaymentSuccess Debug - bookingId:', bookingId, 'isLoading:', isLoading, 'error:', error, 'booking:', booking);
+  }, [booking, error, bookingId, isLoading]);
 
   // Send QR tickets mutation
   const sendTicketsMutation = useMutation({
@@ -333,6 +332,9 @@ export default function PaymentSuccess() {
     }
   };
 
+  // Debug logging just before render
+  console.log('🔍 PaymentSuccess: About to render - booking:', booking, 'isPaymentVerified:', booking ? booking.paymentStatus === 'verified' : 'no booking');
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
       <div className="container mx-auto px-4 py-8">
@@ -342,14 +344,16 @@ export default function PaymentSuccess() {
             <CardContent className="text-center p-8">
               <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
               <h1 className="text-3xl font-bold text-green-600 mb-2">
-                Payment Successful! 🎉
+                {isPaymentVerified ? 'Payment Successful! 🎉' : 'Payment Processing 🔄'}
               </h1>
               <p className="text-gray-700 text-lg">
-                Your booking for Telugu Night has been confirmed!
+                {isPaymentVerified 
+                  ? 'Your booking for Telugu Night has been confirmed!' 
+                  : 'Your booking is being processed. You will receive your tickets soon!'}
               </p>
               <div className="mt-4 bg-green-100 border border-green-300 rounded-lg p-3 inline-block">
                 <p className="text-green-800 font-medium">
-                  Booking ID: #{booking.id}
+                  Booking ID: #{booking?.id || bookingId}
                 </p>
               </div>
             </CardContent>
