@@ -55,7 +55,7 @@ export default function PaymentSuccess() {
     failed: false
   });
 
-  // Show immediate success - webhook handles all automation
+  // Handle payment status redirection
   useEffect(() => {
     if (booking) {
       if (booking.paymentStatus === 'failed') {
@@ -64,8 +64,23 @@ export default function PaymentSuccess() {
         return;
       }
       
-      // Show success message immediately - webhook will handle ticket generation
-      console.log('🎊 Payment successful! Webhook will process tickets automatically.');
+      // For pending payments, wait a bit then redirect to proper handling
+      if (booking.paymentStatus === 'pending') {
+        const createdTime = new Date(booking.createdAt || '').getTime();
+        const timeElapsed = Date.now() - createdTime;
+        
+        // If payment has been pending for more than 5 minutes, mark as failed
+        if (timeElapsed > 5 * 60 * 1000) {
+          console.log('⏰ Payment timeout detected, redirecting to failure page');
+          window.location.href = `/payment/failure?booking=${booking.id}`;
+          return;
+        }
+      }
+      
+      // Show success message for verified payments
+      if (booking.paymentStatus === 'verified') {
+        console.log('🎊 Payment successful! Webhook processed tickets automatically.');
+      }
     }
   }, [booking?.id, booking?.paymentStatus]);
 
@@ -150,8 +165,8 @@ export default function PaymentSuccess() {
   // Calculate how long we've been waiting in seconds
   const waitingTime = booking ? Math.round((Date.now() - new Date(booking.createdAt || '').getTime()) / 1000) : 0;
 
-  // Show immediate success for all payment redirects (webhook handles automation)
-  if (booking && (booking.paymentStatus === 'pending' || booking.paymentStatus === 'verified')) {
+  // Show immediate success only for verified payments or very recent pending payments  
+  if (booking && booking.paymentStatus === 'verified') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center px-4">
         <Card className="max-w-lg w-full">
