@@ -987,8 +987,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         const checkoutCallbacks = {
                           onSuccess: function(data: any) {
                             console.log('Payment successful:', data);
-                            // Redirect to payment success page
-                            window.location.href = `/payment/success?booking=${bookingId}`;
+                            // Redirect to payment success page on same domain to avoid cross-domain issues
+                            window.location.href = `${window.location.protocol}//${window.location.host}/payment/success?booking=${bookingId}`;
                           },
                           onFailure: function(data: any) {
                             console.log('Payment failed:', data);
