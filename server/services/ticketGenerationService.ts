@@ -121,7 +121,7 @@ export class TicketGenerationService extends EventEmitter {
 
       // Generate ONLY ONE QR code per booking (not per ticket)
       const qrCodes: string[] = [];
-      const bookingQRData = `TELUGU-NIGHT-2.0-${booking.id}`;
+      const bookingQRData = `${booking.id}`; // Use simple numeric booking ID for scanner compatibility
       
       const qrCodeImage = await QRCode.toDataURL(bookingQRData, {
         width: 300,

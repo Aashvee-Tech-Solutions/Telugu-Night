@@ -111,7 +111,9 @@ export class DatabaseStorage implements IStorage {
       // Check if admin user exists
       const adminUser = await this.getUserByUsername('aashvee');
       if (!adminUser) {
-        const hashedPassword = await import('bcryptjs').then(bcrypt => bcrypt.hashSync('Rudra@78611', 10));
+        // Use environment variable for admin password, fallback for development only
+        const adminPassword = process.env.ADMIN_PASSWORD || 'change-this-password-immediately';
+        const hashedPassword = await import('bcryptjs').then(bcrypt => bcrypt.hashSync(adminPassword, 10));
         await db.insert(users).values({
           username: 'aashvee',
           password: hashedPassword,
