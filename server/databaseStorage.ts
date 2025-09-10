@@ -111,8 +111,11 @@ export class DatabaseStorage implements IStorage {
       // Check if admin user exists
       const adminUser = await this.getUserByUsername('aashvee');
       if (!adminUser) {
-        // Use environment variable for admin password, fallback for development only
-        const adminPassword = process.env.ADMIN_PASSWORD || 'change-this-password-immediately';
+        // Require ADMIN_PASSWORD in production - fail hard if missing
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        if (!adminPassword) {
+          throw new Error('ADMIN_PASSWORD environment variable is required to initialize admin user');
+        }
         const hashedPassword = await import('bcryptjs').then(bcrypt => bcrypt.hashSync(adminPassword, 10));
         await db.insert(users).values({
           username: 'aashvee',
@@ -122,7 +125,8 @@ export class DatabaseStorage implements IStorage {
         console.log('✅ Default admin user created');
       }
     } catch (error) {
-      console.log('Admin user initialization error:', error);
+      console.error('❌ Admin user initialization failed:', error);
+      throw error; // Fail startup if admin initialization fails
     }
   }
 
