@@ -87,6 +87,39 @@ export default function PaymentSuccess() {
     },
   });
 
+  // Mutation to manually check payment status for stuck payments
+  const checkStatusMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/bookings/${bookingId}/check-status`);
+    },
+    onSuccess: (data: any) => {
+      if (data.status === 'failed') {
+        toast({
+          title: "Payment Timeout",
+          description: "Your payment has timed out and will be marked as failed.",
+          variant: "destructive",
+        });
+        setIsRedirecting(true);
+        setRedirectMessage('Payment failed. Refreshing page...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        toast({
+          title: "Status Checked",
+          description: `Payment is still ${data.status}. Time pending: ${data.timePending}`,
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Check Failed",
+        description: error.message || "Failed to check payment status.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Enhanced payment status handling with loading states
   useEffect(() => {
     if (!booking || isRedirecting) return;
@@ -239,39 +272,6 @@ export default function PaymentSuccess() {
     );
   }
 
-  // Mutation to manually check payment status for stuck payments
-  const checkStatusMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest('POST', `/api/bookings/${bookingId}/check-status`);
-    },
-    onSuccess: (data: any) => {
-      if (data.status === 'failed') {
-        toast({
-          title: "Payment Timeout",
-          description: "Your payment has timed out and will be marked as failed.",
-          variant: "destructive",
-        });
-        // Force a refetch to get updated status with loading state
-        setIsRedirecting(true);
-        setRedirectMessage('Payment failed. Refreshing page...');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        toast({
-          title: "Status Checked",
-          description: `Payment is still ${data.status}. Time pending: ${data.timePending}`,
-        });
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Check Failed",
-        description: error.message || "Failed to check payment status.",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Calculate how long we've been waiting in seconds
   const waitingTime = booking ? Math.round((Date.now() - new Date(booking.createdAt || '').getTime()) / 1000) : 0;
