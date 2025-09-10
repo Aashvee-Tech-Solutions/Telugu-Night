@@ -62,7 +62,7 @@ export class PaymentService {
         },
         order_meta: {
           return_url: `${process.env.FRONTEND_URL || 'https://events.qlora.in'}/payment/success?booking=${bookingData.bookingId}`,
-          notify_url: 'https://events.qlora.in/api/webhooks/cashfree',
+          notify_url: this.getWebhookUrl(),
         },
       });
 
@@ -239,5 +239,39 @@ export class PaymentService {
     // Accept any 10-digit phone number for flexibility
     const phoneRegex = /^\d{10}$/;
     return phoneRegex.test(phone.replace(/\D/g, ''));
+  }
+
+  private getWebhookUrl(): string {
+    // Priority 1: Use SERVER_URL if explicitly set
+    if (process.env.SERVER_URL) {
+      const baseUrl = process.env.SERVER_URL.endsWith('/') 
+        ? process.env.SERVER_URL.slice(0, -1) 
+        : process.env.SERVER_URL;
+      return `${baseUrl}/api/webhooks/cashfree`;
+    }
+
+    // Priority 2: Use APP_BASE_URL if set (alternative environment variable)
+    if (process.env.APP_BASE_URL) {
+      const baseUrl = process.env.APP_BASE_URL.endsWith('/') 
+        ? process.env.APP_BASE_URL.slice(0, -1) 
+        : process.env.APP_BASE_URL;
+      return `${baseUrl}/api/webhooks/cashfree`;
+    }
+
+    // Priority 3: For development, use localhost with port 5000
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Using localhost webhook URL for development. This will not work for production webhooks!');
+      return 'http://localhost:5000/api/webhooks/cashfree';
+    }
+
+    // Priority 4: Fallback to production URL (same as frontend base)
+    const fallbackUrl = process.env.FRONTEND_URL || 'https://events.qlora.in';
+    console.warn(`⚠️ No SERVER_URL or APP_BASE_URL configured. Using fallback: ${fallbackUrl}`);
+    console.warn('💡 For production, set SERVER_URL environment variable to your publicly accessible backend URL');
+    
+    const baseUrl = fallbackUrl.endsWith('/') 
+      ? fallbackUrl.slice(0, -1) 
+      : fallbackUrl;
+    return `${baseUrl}/api/webhooks/cashfree`;
   }
 }
