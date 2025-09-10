@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Download, Calendar, MapPin, Clock, Users, AlertCircle, Loader2, FileDown, Share2 } from 'lucide-react';
@@ -13,6 +13,8 @@ export default function PaymentSuccess() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [redirectMessage, setRedirectMessage] = useState('');
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [paymentVerificationTimeout, setPaymentVerificationTimeout] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Extract booking ID from URL with enhanced validation
   useEffect(() => {
@@ -56,17 +58,6 @@ export default function PaymentSuccess() {
     }
   }, [isLoading, bookingId, loadingTimeout]);
 
-  // Add logging for booking data fetch
-  useEffect(() => {
-    if (error) {
-      console.error('❌ PaymentSuccess: Failed to fetch booking:', error);
-    }
-    if (booking) {
-      console.log('✅ PaymentSuccess: Booking data fetched:', booking.id, 'Status:', booking.paymentStatus);
-    }
-    console.log('🐛 PaymentSuccess Debug - bookingId:', bookingId, 'isLoading:', isLoading, 'error:', error, 'booking:', booking);
-  }, [booking, error, bookingId, isLoading]);
-
   // Send QR tickets mutation
   const sendTicketsMutation = useMutation({
     mutationFn: async () => {
@@ -109,6 +100,10 @@ export default function PaymentSuccess() {
           title: "Status Checked",
           description: `Payment is still ${data.status}. Time pending: ${data.timePending}`,
         });
+        // Trigger another polling cycle after manual status check
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/bookings/${bookingId}`] 
+        });
       }
     },
     onError: (error: any) => {
@@ -119,6 +114,75 @@ export default function PaymentSuccess() {
       });
     },
   });
+
+  // Add 10-second timeout for payment verification and trigger manual status check
+  useEffect(() => {
+    if (booking && booking.paymentStatus === 'pending' && !paymentVerificationTimeout && !isRedirecting) {
+      console.log('⏱️ PaymentSuccess: Starting 10-second timeout for payment verification');
+      const timer = setTimeout(() => {
+        console.log('⏰ PaymentSuccess: Payment verification timeout after 10 seconds - showing mail message and checking status');
+        setPaymentVerificationTimeout(true);
+        // Optionally trigger manual status check after 10s timeout
+        if (bookingId) {
+          checkStatusMutation.mutate();
+        }
+      }, 10000); // 10 second timeout
+      
+      return () => clearTimeout(timer);
+    }
+  }, [booking?.paymentStatus, paymentVerificationTimeout, isRedirecting, bookingId]);
+
+  // Automatic payment verification polling
+  useEffect(() => {
+    // Clean up any existing polling interval first
+    if (pollingInterval) {
+      console.log('🛑 PaymentSuccess: Clearing existing polling interval');
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+
+    // Only start new polling when payment is pending and not redirecting
+    if (booking && booking.paymentStatus === 'pending' && !isRedirecting && bookingId) {
+      console.log('🔄 PaymentSuccess: Starting automatic payment verification polling every 3 seconds');
+      
+      const interval = setInterval(() => {
+        console.log('🔄 PaymentSuccess: Polling payment status for booking:', bookingId);
+        // Invalidate the booking query to refetch the latest data
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/bookings/${bookingId}`] 
+        });
+      }, 3000); // Poll every 3 seconds
+      
+      setPollingInterval(interval);
+      
+      return () => {
+        console.log('🛑 PaymentSuccess: Clearing payment verification polling on cleanup');
+        clearInterval(interval);
+        setPollingInterval(null);
+      };
+    }
+  }, [booking?.paymentStatus, isRedirecting, bookingId]);
+
+  // Cleanup polling on component unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        console.log('🛑 PaymentSuccess: Cleanup polling on component unmount');
+        clearInterval(pollingInterval);
+      }
+    };
+  }, []);
+
+  // Add logging for booking data fetch
+  useEffect(() => {
+    if (error) {
+      console.error('❌ PaymentSuccess: Failed to fetch booking:', error);
+    }
+    if (booking) {
+      console.log('✅ PaymentSuccess: Booking data fetched:', booking.id, 'Status:', booking.paymentStatus);
+    }
+    console.log('🐛 PaymentSuccess Debug - bookingId:', bookingId, 'isLoading:', isLoading, 'error:', error, 'booking:', booking);
+  }, [booking, error, bookingId, isLoading]);
 
   // Enhanced payment status handling with loading states
   useEffect(() => {
@@ -525,17 +589,48 @@ export default function PaymentSuccess() {
                   )}
                 </div>
               ) : (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-yellow-600 mb-2">
-                    <Clock className="h-5 w-5" />
-                    <p className="font-medium">⏳ Payment Processing...</p>
+                <div className={`${paymentVerificationTimeout ? 'bg-blue-50 border-blue-200' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4`}>
+                  <div className={`flex items-center gap-2 ${paymentVerificationTimeout ? 'text-blue-600' : 'text-yellow-600'} mb-2`}>
+                    {paymentVerificationTimeout ? (
+                      <Download className="h-5 w-5" />
+                    ) : (
+                      <Clock className="h-5 w-5" />
+                    )}
+                    <p className="font-medium">
+                      {paymentVerificationTimeout ? '📧 We Will Send Your Tickets!' : '⏳ Payment Processing...'}
+                    </p>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">
-                    Your payment is being confirmed. QR tickets will be automatically sent once verified.
+                    {paymentVerificationTimeout 
+                      ? `Your payment is being processed and QR tickets will be automatically sent to ${booking.email} once verified.`
+                      : 'Your payment is being confirmed. QR tickets will be automatically sent once verified.'
+                    }
                   </p>
-                  <p className="text-yellow-600 text-xs">
-                    💡 This page will update automatically. Please wait a moment.
+                  <p className={`${paymentVerificationTimeout ? 'text-blue-600' : 'text-yellow-600'} text-xs mb-3`}>
+                    {paymentVerificationTimeout 
+                      ? '💡 Payment verification may take a few minutes. We will email your tickets as soon as payment is confirmed.'
+                      : '💡 This page will update automatically. Please wait a moment.'
+                    }
                   </p>
+                  {paymentVerificationTimeout && (
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        onClick={() => sendTicketsMutation.mutate()} 
+                        disabled={sendTicketsMutation.isPending}
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        data-testid="button-send-tickets-timeout"
+                      >
+                        {sendTicketsMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        {sendTicketsMutation.isPending ? 'Sending...' : 'Send Tickets Manually'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
