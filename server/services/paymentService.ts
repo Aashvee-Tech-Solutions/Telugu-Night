@@ -62,7 +62,7 @@ export class PaymentService {
         },
         order_meta: {
           return_url: `${process.env.FRONTEND_URL || 'https://events.qlora.in'}/payment/success?booking=${bookingData.bookingId}`,
-          notify_url: `${process.env.BACKEND_URL || 'https://events.qlora.in'}/api/webhooks/cashfree`,
+          notify_url: 'https://events.qlora.in/api/webhooks/cashfree',
         },
       });
 

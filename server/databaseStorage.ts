@@ -44,7 +44,7 @@ export interface IStorage {
   createCoupon(insertCoupon: InsertCoupon): Promise<Coupon>;
   getCouponByCode(code: string): Promise<Coupon | undefined>;
   updateCouponUsage(code: string): Promise<void>;
-  validateCoupon(code: string): Promise<{ valid: boolean; discount: number; message: string }>;
+  validateCoupon(code: string, email: string): Promise<{ valid: boolean; discount: number; message: string }>;
   getAllCoupons(): Promise<Coupon[]>;
   updateCoupon(id: number, updateData: Partial<Coupon>): Promise<Coupon>;
   deleteCoupon(id: number): Promise<void>;
@@ -808,8 +808,8 @@ export class DatabaseStorage implements IStorage {
       
       if (!existingConfig) {
         await db.insert(teluguNightConfig).values({
-          earlyBirdPrice: "300",
-          phase1Price: "350",
+          earlyBirdPrice: 300,
+          phase1Price: 350,
           earlyBirdLimit: 90,
           phase1Limit: 200,
           isEarlyBirdActive: true,
