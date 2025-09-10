@@ -198,19 +198,38 @@ export default function PaymentSuccess() {
               }
             </p>
             <p className="text-sm text-gray-500 mb-4" data-testid="text-booking-id">Booking ID: #{bookingId}</p>
-            <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {loadingTimeout && (
                 <Button 
                   onClick={() => {
                     setLoadingTimeout(false);
                     window.location.reload();
                   }} 
-                  className="w-full sm:w-auto mr-2"
+                  className="w-full sm:w-auto"
                   data-testid="button-retry"
                 >
                   🔄 Check Status Again
                 </Button>
               )}
+              <Button 
+                onClick={() => sendTicketsMutation.mutate()} 
+                disabled={sendTicketsMutation.isPending}
+                variant="secondary"
+                className="w-full sm:w-auto"
+                data-testid="button-manual-send"
+              >
+                {sendTicketsMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Send Tickets Manually
+                  </>
+                )}
+              </Button>
               <Button onClick={() => window.location.href = '/'} variant="outline" className="w-full sm:w-auto" data-testid="button-home">
                 Return to Home
               </Button>
@@ -444,9 +463,25 @@ export default function PaymentSuccess() {
                       <p className="text-gray-600 text-sm mb-2">
                         🎫 Your QR tickets have been sent to <strong>{booking.email}</strong>
                       </p>
-                      <p className="text-green-600 text-xs">
+                      <p className="text-green-600 text-xs mb-3">
                         📧 Please check your email (including spam folder) for your QR tickets.
                       </p>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => sendTicketsMutation.mutate()} 
+                          disabled={sendTicketsMutation.isPending}
+                          size="sm"
+                          className="flex items-center gap-2"
+                          data-testid="button-resend-tickets"
+                        >
+                          {sendTicketsMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
+                          {sendTicketsMutation.isPending ? 'Sending...' : 'Resend Tickets'}
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -457,7 +492,7 @@ export default function PaymentSuccess() {
                       <p className="text-gray-600 text-sm mb-2">
                         Your QR tickets are being automatically generated and sent to <strong>{booking.email}</strong>
                       </p>
-                      <p className="text-blue-600 text-xs">
+                      <p className="text-blue-600 text-xs mb-3">
                         ⏱️ This usually takes 1-2 minutes. Please check your email (including spam folder).
                       </p>
                       {sendTicketsMutation.isPending && (
@@ -465,6 +500,23 @@ export default function PaymentSuccess() {
                           🚀 Sending tickets now...
                         </p>
                       )}
+                      <div className="flex gap-2 mt-3">
+                        <Button 
+                          onClick={() => sendTicketsMutation.mutate()} 
+                          disabled={sendTicketsMutation.isPending}
+                          size="sm"
+                          variant="outline"
+                          className="flex items-center gap-2"
+                          data-testid="button-send-tickets"
+                        >
+                          {sendTicketsMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
+                          {sendTicketsMutation.isPending ? 'Sending...' : 'Send Tickets Now'}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
