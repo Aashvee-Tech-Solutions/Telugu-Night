@@ -1262,8 +1262,9 @@ export async function registerRoutes(app: Express): Promise<Express> {
         return res.status(404).json({ message: 'Booking not found' });
       }
 
-      if (booking.paymentStatus !== 'verified') {
-        return res.status(400).json({ message: 'Payment not verified yet' });
+      // Allow sending tickets even if payment not verified - admin override capability
+      if (booking.paymentStatus !== 'verified' && booking.paymentStatus !== 'pending') {
+        return res.status(400).json({ message: 'Payment failed or refunded - cannot send tickets' });
       }
 
       // Check if QR codes already exist - if so, reuse them instead of generating new ones
@@ -1277,11 +1278,18 @@ export async function registerRoutes(app: Express): Promise<Express> {
         try {
           await enhancedEmailService.sendTicketEmails(toBookingData(booking));
           
+          // Auto-verify payment when tickets are successfully sent by admin
+          if (booking.paymentStatus !== 'verified') {
+            console.log(`🔄 Auto-verifying payment for booking ${bookingId} after successful ticket resend`);
+            await storage.updateBookingPaymentStatus(bookingId, 'verified');
+          }
+          
           return res.json({ 
             message: 'Existing tickets resent successfully!',
             guestCodes: booking.guestCodes,
             passIds: booking.passIds,
-            note: 'Used existing QR codes'
+            note: 'Used existing QR codes',
+            paymentAutoVerified: booking.paymentStatus !== 'verified'
           });
         } catch (emailError: any) {
           console.error('Failed to resend existing tickets:', emailError);
@@ -1307,11 +1315,18 @@ export async function registerRoutes(app: Express): Promise<Express> {
       const result = await ticketGenerationService.generateTicketsForBooking(bookingId);
       
       if (result.status === 'completed') {
+        // Auto-verify payment when tickets are successfully sent by admin
+        if (booking.paymentStatus !== 'verified') {
+          console.log(`🔄 Auto-verifying payment for booking ${bookingId} after successful ticket generation`);
+          await storage.updateBookingPaymentStatus(bookingId, 'verified');
+        }
+        
         res.json({ 
           message: 'New tickets generated and sent successfully!',
           guestCodes: result.guestCodes,
           passIds: result.passIds,
-          note: 'Generated new QR codes'
+          note: 'Generated new QR codes',
+          paymentAutoVerified: booking.paymentStatus !== 'verified'
         });
       } else {
         res.status(500).json({ 
@@ -1322,6 +1337,137 @@ export async function registerRoutes(app: Express): Promise<Express> {
     } catch (error: any) {
       console.error('Failed to send ticket:', error);
       res.status(500).json({ message: 'Failed to send ticket' });
+    }
+  });
+
+  // Payment sync endpoint - Check old pending payments against Cashfree API
+  app.post('/api/admin/sync-payment-statuses', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
+    try {
+      console.log('🔄 Starting payment status sync with Cashfree API...');
+      
+      // Get all bookings with pending payment status that have a paymentId
+      const allBookings = await storage.getAllBookings();
+      const pendingBookings = allBookings.filter(booking => 
+        booking.paymentStatus === 'pending' && 
+        booking.paymentId && 
+        booking.paymentId.trim() !== ''
+      );
+      
+      console.log(`🔍 Found ${pendingBookings.length} pending payments to check`);
+      
+      if (pendingBookings.length === 0) {
+        return res.json({ 
+          message: 'No pending payments found to sync',
+          checked: 0,
+          updated: 0,
+          errors: []
+        });
+      }
+      
+      const results = {
+        checked: 0,
+        updated: 0,
+        errors: [] as string[],
+        details: [] as any[]
+      };
+      
+      // Import CashfreeService
+      const { CashfreeService } = await import('./services/cashfreeService');
+      const cashfreeService = new CashfreeService();
+      
+      // Process bookings in batches to avoid rate limiting
+      const batchSize = 5;
+      for (let i = 0; i < pendingBookings.length; i += batchSize) {
+        const batch = pendingBookings.slice(i, i + batchSize);
+        
+        // Process batch with delay between API calls
+        for (const booking of batch) {
+          try {
+            console.log(`📊 Checking payment status for booking ${booking.id} (order: ${booking.paymentId})`);
+            results.checked++;
+            
+            // Check order status with Cashfree (we've already filtered for non-null paymentIds)
+            const orderStatus = await cashfreeService.getOrderStatus(booking.paymentId!);
+            
+            // Check if payment was successful
+            if (orderStatus.order_status === 'PAID' || orderStatus.order_status === 'SUCCESS') {
+              console.log(`✅ Payment verified for booking ${booking.id} - updating status`);
+              
+              // Update payment status to verified
+              await storage.updateBookingPaymentStatus(booking.id, 'verified');
+              results.updated++;
+              
+              results.details.push({
+                bookingId: booking.id,
+                name: booking.name,
+                email: booking.email,
+                orderId: booking.paymentId,
+                oldStatus: 'pending',
+                newStatus: 'verified',
+                cashfreeStatus: orderStatus.order_status,
+                action: 'updated'
+              });
+              
+              console.log(`📧 Booking ${booking.id} for ${booking.name} marked as verified`);
+            } else {
+              results.details.push({
+                bookingId: booking.id,
+                name: booking.name,
+                email: booking.email,
+                orderId: booking.paymentId,
+                oldStatus: 'pending',
+                newStatus: 'pending',
+                cashfreeStatus: orderStatus.order_status,
+                action: 'no_change'
+              });
+              
+              console.log(`⏳ Booking ${booking.id} still pending - Cashfree status: ${orderStatus.order_status}`);
+            }
+            
+            // Add small delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+          } catch (error: any) {
+            console.error(`❌ Error checking booking ${booking.id}:`, error);
+            const errorMsg = `Booking ${booking.id}: ${error.message}`;
+            results.errors.push(errorMsg);
+            
+            results.details.push({
+              bookingId: booking.id,
+              name: booking.name,
+              email: booking.email,
+              orderId: booking.paymentId,
+              oldStatus: 'pending',
+              newStatus: 'pending',
+              error: error.message,
+              action: 'error'
+            });
+          }
+        }
+        
+        // Add delay between batches
+        if (i + batchSize < pendingBookings.length) {
+          console.log(`⏳ Waiting before next batch...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      console.log(`✅ Payment sync completed - Checked: ${results.checked}, Updated: ${results.updated}, Errors: ${results.errors.length}`);
+      
+      res.json({
+        message: `Payment sync completed successfully`,
+        checked: results.checked,
+        updated: results.updated,
+        errors: results.errors,
+        details: results.details
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Payment sync failed:', error);
+      res.status(500).json({ 
+        message: 'Payment sync failed', 
+        error: error.message 
+      });
     }
   });
 
