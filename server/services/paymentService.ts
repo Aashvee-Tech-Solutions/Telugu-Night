@@ -61,7 +61,7 @@ export class PaymentService {
           customer_phone: bookingData.customerPhone,
         },
         order_meta: {
-          return_url: `${process.env.FRONTEND_URL || 'https://v0-telugunightlanding3k.vercel.app'}/payment/success?booking=${bookingData.bookingId}`,
+          return_url: `${process.env.BACKEND_URL || 'https://events.qlora.in'}/payment/success?booking=${bookingData.bookingId}`,
           notify_url: `${process.env.BACKEND_URL || 'https://events.qlora.in'}/api/webhooks/cashfree`,
         },
       });
