@@ -12,6 +12,7 @@ export default function PaymentSuccess() {
   const [bookingId, setBookingId] = useState<number | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [redirectMessage, setRedirectMessage] = useState('');
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Extract booking ID from URL with enhanced validation
   useEffect(() => {
@@ -32,14 +33,30 @@ export default function PaymentSuccess() {
     }
   }, []);
 
-  // Fetch booking details with enhanced error handling
+  // Fetch booking details with enhanced error handling and timeout
   const { data: booking, isLoading, error } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
     enabled: !!bookingId,
-    retry: 2,
-    retryDelay: 1000,
-    refetchOnWindowFocus: false
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // 1s, 2s, 3s
+    refetchOnWindowFocus: false,
+    // Add timeout to prevent infinite loading
+    staleTime: 30000, // 30 seconds
+    gcTime: 30000, // 30 seconds
   });
+
+  // Add loading timeout to prevent infinite spinner
+  useEffect(() => {
+    if (isLoading && bookingId && !loadingTimeout) {
+      console.log('⏱️ PaymentSuccess: Starting 15-second timeout for booking fetch');
+      const timer = setTimeout(() => {
+        console.error('❌ PaymentSuccess: Booking fetch timeout after 15 seconds');
+        setLoadingTimeout(true);
+      }, 15000); // 15 second timeout
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, bookingId, loadingTimeout]);
 
   // Add logging for booking data fetch
   useEffect(() => {
@@ -164,19 +181,40 @@ export default function PaymentSuccess() {
     );
   }
 
-  if (error || !booking) {
-    console.error('❌ PaymentSuccess: Booking not found or error occurred:', error);
+  if (error || !booking || loadingTimeout) {
+    console.error('❌ PaymentSuccess: Booking not found, error occurred, or loading timeout:', error, 'timeout:', loadingTimeout);
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4" data-testid="page-error">
         <Card className="max-w-md w-full">
           <CardContent className="text-center p-6 sm:p-8">
             <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" data-testid="icon-error" />
-            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2" data-testid="text-error-title">Booking Not Found</h2>
-            <p className="text-gray-600 mb-6 text-sm sm:text-base" data-testid="text-error-description">We couldn't find your booking. Please contact support.</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2" data-testid="text-error-title">
+              {loadingTimeout ? 'Payment Processing Delayed' : 'Booking Not Found'}
+            </h2>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base" data-testid="text-error-description">
+              {loadingTimeout 
+                ? "Your payment may still be processing. Please wait a few minutes or contact support if the issue persists."
+                : "We couldn't find your booking. Please contact support."
+              }
+            </p>
             <p className="text-sm text-gray-500 mb-4" data-testid="text-booking-id">Booking ID: #{bookingId}</p>
-            <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto" data-testid="button-home">
-              Return to Home
-            </Button>
+            <div className="space-y-3">
+              {loadingTimeout && (
+                <Button 
+                  onClick={() => {
+                    setLoadingTimeout(false);
+                    window.location.reload();
+                  }} 
+                  className="w-full sm:w-auto mr-2"
+                  data-testid="button-retry"
+                >
+                  🔄 Check Status Again
+                </Button>
+              )}
+              <Button onClick={() => window.location.href = '/'} variant="outline" className="w-full sm:w-auto" data-testid="button-home">
+                Return to Home
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
