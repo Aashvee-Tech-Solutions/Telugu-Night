@@ -241,6 +241,78 @@ export class PaymentService {
     return phoneRegex.test(phone.replace(/\D/g, ''));
   }
 
+  /**
+   * Centralized status mapping logic for consistent payment status handling
+   * @param cashfreeStatus - The status from Cashfree API
+   * @returns Internal payment status
+   */
+  mapCashfreeStatusToInternal(cashfreeStatus: string): 'pending' | 'verified' | 'failed' {
+    const status = cashfreeStatus?.toUpperCase();
+    
+    // Definitive success states - only these should be mapped to 'verified'
+    if (status === 'PAID' || status === 'SUCCESS') {
+      return 'verified';
+    }
+    
+    // Definitive failure states
+    if (status === 'FAILED' || status === 'CANCELLED' || status === 'EXPIRED' || 
+        status === 'TERMINATED' || status === 'USER_DROPPED') {
+      return 'failed';
+    }
+    
+    // In-progress or pending states - keep as pending
+    // ACTIVE means payment link is open, NOT that payment is complete
+    // CREATED, PENDING mean payment is not yet completed
+    if (status === 'ACTIVE' || status === 'CREATED' || status === 'PENDING' || 
+        status === 'INITIATED') {
+      return 'pending';
+    }
+    
+    // Unknown status - default to pending for safety
+    console.warn(`⚠️ Unknown Cashfree status: ${status}. Defaulting to 'pending' for safety.`);
+    return 'pending';
+  }
+
+  /**
+   * Verify payment with proper status mapping
+   * @param orderId - Cashfree order ID
+   * @returns Payment verification result with mapped status
+   */
+  async verifyPaymentWithMapping(orderId: string): Promise<PaymentVerificationResult & { mappedStatus: string }> {
+    try {
+      console.log(`🔍 Verifying payment with status mapping for order: ${orderId}`);
+      
+      if (!orderId?.trim()) {
+        throw new Error('Order ID is required for payment verification');
+      }
+      
+      const orderStatus = await this.cashfree.getOrderStatus(orderId);
+      const mappedStatus = this.mapCashfreeStatusToInternal(orderStatus.order_status);
+      
+      console.log(`📊 Payment verification for ${orderId}: ${orderStatus.order_status} -> ${mappedStatus}`);
+      
+      return {
+        success: true,
+        status: orderStatus.order_status,
+        mappedStatus,
+        amount: orderStatus.order_amount,
+        paymentId: orderStatus.cf_order_id,
+      };
+      
+    } catch (error: any) {
+      console.error(`❌ Payment verification failed for order ${orderId}:`, error);
+      
+      const userMessage = this.cashfree.getUserFriendlyError(error);
+      
+      return {
+        success: false,
+        mappedStatus: 'pending', // Safe default
+        error: error.message,
+        userMessage,
+      };
+    }
+  }
+
   private getWebhookUrl(): string {
     // Priority 1: Use SERVER_URL if explicitly set
     if (process.env.SERVER_URL) {
