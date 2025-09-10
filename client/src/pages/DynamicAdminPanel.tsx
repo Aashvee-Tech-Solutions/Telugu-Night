@@ -1132,23 +1132,21 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
                             </Dialog>
                           )}
 
-                          {/* Send ticket functionality for completed payments */}
+                          {/* Send ticket functionality for all bookings */}
                           <PermissionGuard 
                             permissions={['verify_payments']} 
                             userPermissions={user.permissions}
                           >
-                            {(booking.paymentStatus === 'verified' || booking.paymentStatus === 'completed' || booking.paymentStatus === 'paid') && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => sendTicketMutation.mutate(booking.id)}
-                                disabled={sendTicketMutation.isPending}
-                                data-testid={`button-send-ticket-${booking.id}`}
-                              >
-                                <Send className="w-4 h-4 mr-1" />
-                                {sendTicketMutation.isPending ? 'Sending...' : 'Send Ticket'}
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => sendTicketMutation.mutate(booking.id)}
+                              disabled={sendTicketMutation.isPending}
+                              data-testid={`button-send-ticket-${booking.id}`}
+                            >
+                              <Send className="w-4 h-4 mr-1" />
+                              {sendTicketMutation.isPending ? 'Sending...' : 'Send Ticket'}
+                            </Button>
                           </PermissionGuard>
 
                           <PermissionGuard 
