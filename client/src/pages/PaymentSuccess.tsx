@@ -346,10 +346,10 @@ export default function PaymentSuccess() {
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                       <div className="flex items-center gap-2 text-green-600 mb-2">
                         <CheckCircle className="h-5 w-5" />
-                        <p className="font-medium">QR Tickets Generated!</p>
+                        <p className="font-medium">🎫 QR Tickets Ready!</p>
                       </div>
                       <p className="text-gray-600 text-sm mb-4">
-                        Your QR tickets have been sent to <strong>{booking.email}</strong>
+                        ✅ QR tickets have been automatically sent to <strong>{booking.email}</strong>
                       </p>
                       
                       {/* QR Code Display */}
@@ -423,14 +423,17 @@ export default function PaymentSuccess() {
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-center gap-2 text-blue-600 mb-2">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        <p className="font-medium">Generating QR Tickets...</p>
+                        <p className="font-medium">📧 QR Tickets Being Sent...</p>
                       </div>
-                      <p className="text-gray-600 text-sm">
-                        Your QR tickets are being generated and will be sent to your email shortly.
+                      <p className="text-gray-600 text-sm mb-2">
+                        Your QR tickets are being automatically generated and sent to <strong>{booking.email}</strong>
+                      </p>
+                      <p className="text-blue-600 text-xs">
+                        ⏱️ This usually takes 1-2 minutes. Please check your email (including spam folder).
                       </p>
                       {sendTicketsMutation.isPending && (
                         <p className="text-blue-600 text-sm mt-2 font-medium">
-                          Sending tickets now...
+                          🚀 Sending tickets now...
                         </p>
                       )}
                     </div>
@@ -440,10 +443,13 @@ export default function PaymentSuccess() {
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-yellow-600 mb-2">
                     <Clock className="h-5 w-5" />
-                    <p className="font-medium">Payment Processing...</p>
+                    <p className="font-medium">⏳ Payment Processing...</p>
                   </div>
-                  <p className="text-gray-600 text-sm">
-                    Your payment is being processed. QR tickets will be sent once payment is confirmed.
+                  <p className="text-gray-600 text-sm mb-2">
+                    Your payment is being confirmed. QR tickets will be automatically sent once verified.
+                  </p>
+                  <p className="text-yellow-600 text-xs">
+                    💡 This page will update automatically. Please wait a moment.
                   </p>
                 </div>
               )}
