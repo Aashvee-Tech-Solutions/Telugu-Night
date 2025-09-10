@@ -10,24 +10,46 @@ import type { Booking } from '../../../shared/schema';
 export default function PaymentSuccess() {
   const { toast } = useToast();
   const [bookingId, setBookingId] = useState<number | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [redirectMessage, setRedirectMessage] = useState('');
 
-  // Extract booking ID from URL
+  // Extract booking ID from URL with enhanced validation
   useEffect(() => {
+    console.log('🔍 PaymentSuccess: Extracting booking ID from URL:', window.location.search);
     const params = new URLSearchParams(window.location.search);
     const booking = params.get('booking');
+    
     if (booking) {
-      setBookingId(parseInt(booking));
+      const parsedId = parseInt(booking);
+      if (!isNaN(parsedId) && parsedId > 0) {
+        console.log('✅ PaymentSuccess: Valid booking ID extracted:', parsedId);
+        setBookingId(parsedId);
+      } else {
+        console.error('❌ PaymentSuccess: Invalid booking ID format:', booking);
+      }
+    } else {
+      console.error('❌ PaymentSuccess: No booking parameter found in URL');
     }
   }, []);
 
-  // Fetch booking details (no polling - webhook handles automation)
+  // Fetch booking details with enhanced error handling
   const { data: booking, isLoading, error } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
     enabled: !!bookingId,
     retry: 2,
     retryDelay: 1000,
-    refetchOnWindowFocus: false, // No automatic refreshing
+    refetchOnWindowFocus: false
   });
+
+  // Add logging for booking data fetch
+  useEffect(() => {
+    if (error) {
+      console.error('❌ PaymentSuccess: Failed to fetch booking:', error);
+    }
+    if (booking) {
+      console.log('✅ PaymentSuccess: Booking data fetched:', booking.id, 'Status:', booking.paymentStatus);
+    }
+  }, [booking, error]);
 
   // Send QR tickets mutation
   const sendTicketsMutation = useMutation({
@@ -49,50 +71,75 @@ export default function PaymentSuccess() {
     },
   });
 
-  // Track if we've already shown status messages to prevent repeated toasts
-  const [statusShown, setStatusShown] = useState({
-    pending: false,
-    failed: false
-  });
-
-  // Handle payment status redirection
+  // Enhanced payment status handling with loading states
   useEffect(() => {
-    if (booking) {
-      if (booking.paymentStatus === 'failed') {
-        console.log('❌ Payment failed, redirecting to failure page');
+    if (!booking || isRedirecting) return;
+    
+    console.log('🔄 PaymentSuccess: Processing payment status:', booking.paymentStatus, 'for booking:', booking.id);
+    
+    if (booking.paymentStatus === 'failed') {
+      console.log('❌ Payment failed, initiating redirect to failure page');
+      setIsRedirecting(true);
+      setRedirectMessage('Payment failed. Redirecting to failure page...');
+      
+      // Add a small delay to show the loading state
+      setTimeout(() => {
         window.location.href = `/payment/failure?booking=${booking.id}`;
+      }, 1500);
+      return;
+    }
+    
+    // For pending payments, check timeout
+    if (booking.paymentStatus === 'pending') {
+      const createdTime = new Date(booking.createdAt || '').getTime();
+      const timeElapsed = Date.now() - createdTime;
+      
+      console.log('⏳ Payment pending for', Math.round(timeElapsed / 1000), 'seconds');
+      
+      // If payment has been pending for more than 5 minutes, redirect to failure
+      if (timeElapsed > 5 * 60 * 1000) {
+        console.log('⏰ Payment timeout detected, initiating redirect to failure page');
+        setIsRedirecting(true);
+        setRedirectMessage('Payment timed out. Redirecting to failure page...');
+        
+        setTimeout(() => {
+          window.location.href = `/payment/failure?booking=${booking.id}`;
+        }, 1500);
         return;
       }
-      
-      // For pending payments, wait a bit then redirect to proper handling
-      if (booking.paymentStatus === 'pending') {
-        const createdTime = new Date(booking.createdAt || '').getTime();
-        const timeElapsed = Date.now() - createdTime;
-        
-        // If payment has been pending for more than 5 minutes, mark as failed
-        if (timeElapsed > 5 * 60 * 1000) {
-          console.log('⏰ Payment timeout detected, redirecting to failure page');
-          window.location.href = `/payment/failure?booking=${booking.id}`;
-          return;
-        }
-      }
-      
-      // Show success message for verified payments
-      if (booking.paymentStatus === 'verified') {
-        console.log('🎊 Payment successful! Webhook processed tickets automatically.');
-      }
     }
-  }, [booking?.id, booking?.paymentStatus]);
+    
+    // Show success message for verified payments
+    if (booking.paymentStatus === 'verified') {
+      console.log('🎊 Payment successful! Webhook processed tickets automatically.');
+    }
+  }, [booking?.id, booking?.paymentStatus, isRedirecting]);
+
+  // Show redirecting state
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4" data-testid="page-redirecting">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-blue-500 mx-auto mb-4 animate-spin" data-testid="spinner-redirect" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2" data-testid="text-redirect-title">Redirecting...</h2>
+            <p className="text-gray-600 text-sm sm:text-base" data-testid="text-redirect-message">{redirectMessage}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!bookingId) {
+    console.error('❌ PaymentSuccess: No booking ID provided');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center" data-testid="page-invalid-link">
         <Card className="max-w-md w-full mx-4">
           <CardContent className="text-center p-8">
-            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-red-600 mb-2">Invalid Payment Link</h2>
-            <p className="text-gray-600 mb-6">The payment link is missing booking information.</p>
-            <Button onClick={() => window.location.href = '/'}>
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" data-testid="icon-error" />
+            <h2 className="text-2xl font-bold text-red-600 mb-2" data-testid="text-error-title">Invalid Payment Link</h2>
+            <p className="text-gray-600 mb-6" data-testid="text-error-description">The payment link is missing booking information.</p>
+            <Button onClick={() => window.location.href = '/'} data-testid="button-home">
               Return to Home
             </Button>
           </CardContent>
@@ -102,13 +149,15 @@ export default function PaymentSuccess() {
   }
 
   if (isLoading) {
+    console.log('⏳ PaymentSuccess: Loading booking data for ID:', bookingId);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4" data-testid="page-loading">
         <Card className="max-w-md w-full">
           <CardContent className="text-center p-6 sm:p-8">
-            <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-blue-500 mx-auto mb-4 animate-spin" />
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Processing Payment...</h2>
-            <p className="text-gray-600 text-sm sm:text-base">Please wait while we confirm your payment and generate your tickets.</p>
+            <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-blue-500 mx-auto mb-4 animate-spin" data-testid="spinner-loading" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2" data-testid="text-loading-title">Processing Payment...</h2>
+            <p className="text-gray-600 text-sm sm:text-base" data-testid="text-loading-description">Please wait while we confirm your payment and generate your tickets.</p>
+            <p className="text-sm text-gray-500 mt-2" data-testid="text-booking-id">Booking ID: #{bookingId}</p>
           </CardContent>
         </Card>
       </div>
@@ -116,14 +165,16 @@ export default function PaymentSuccess() {
   }
 
   if (error || !booking) {
+    console.error('❌ PaymentSuccess: Booking not found or error occurred:', error);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4" data-testid="page-error">
         <Card className="max-w-md w-full">
           <CardContent className="text-center p-6 sm:p-8">
-            <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2">Booking Not Found</h2>
-            <p className="text-gray-600 mb-6 text-sm sm:text-base">We couldn't find your booking. Please contact support.</p>
-            <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto">
+            <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" data-testid="icon-error" />
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2" data-testid="text-error-title">Booking Not Found</h2>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base" data-testid="text-error-description">We couldn't find your booking. Please contact support.</p>
+            <p className="text-sm text-gray-500 mb-4" data-testid="text-booking-id">Booking ID: #{bookingId}</p>
+            <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto" data-testid="button-home">
               Return to Home
             </Button>
           </CardContent>
@@ -144,8 +195,12 @@ export default function PaymentSuccess() {
           description: "Your payment has timed out and will be marked as failed.",
           variant: "destructive",
         });
-        // Force a refetch to get updated status
-        window.location.reload();
+        // Force a refetch to get updated status with loading state
+        setIsRedirecting(true);
+        setRedirectMessage('Payment failed. Refreshing page...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         toast({
           title: "Status Checked",

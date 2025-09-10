@@ -10,22 +10,44 @@ import type { Booking } from '../../../shared/schema';
 export default function PaymentFailure() {
   const { toast } = useToast();
   const [bookingId, setBookingId] = useState<number | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [redirectMessage, setRedirectMessage] = useState('');
 
-  // Extract booking ID from URL
+  // Extract booking ID from URL with enhanced validation
   useEffect(() => {
+    console.log('🔍 PaymentFailure: Extracting booking ID from URL:', window.location.search);
     const params = new URLSearchParams(window.location.search);
     const booking = params.get('booking');
+    
     if (booking) {
-      setBookingId(parseInt(booking));
+      const parsedId = parseInt(booking);
+      if (!isNaN(parsedId) && parsedId > 0) {
+        console.log('✅ PaymentFailure: Valid booking ID extracted:', parsedId);
+        setBookingId(parsedId);
+      } else {
+        console.error('❌ PaymentFailure: Invalid booking ID format:', booking);
+      }
+    } else {
+      console.error('❌ PaymentFailure: No booking parameter found in URL');
     }
   }, []);
 
-  // Fetch booking details
+  // Fetch booking details with enhanced error handling
   const { data: booking, isLoading, error } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
     enabled: !!bookingId,
-    retry: 1, // Don't retry too much for failed payments
+    retry: 1
   });
+
+  // Add logging for booking data fetch
+  useEffect(() => {
+    if (error) {
+      console.error('❌ PaymentFailure: Failed to fetch booking:', error);
+    }
+    if (booking) {
+      console.log('✅ PaymentFailure: Booking data fetched:', booking.id, 'Status:', booking.paymentStatus);
+    }
+  }, [booking, error]);
 
   // Delete failed booking mutation
   const deleteBookingMutation = useMutation({
@@ -48,22 +70,85 @@ export default function PaymentFailure() {
   });
 
   const handleRetryPayment = () => {
+    console.log('🔄 PaymentFailure: Starting retry payment process for booking:', bookingId);
     // Delete the failed booking and redirect to home for new booking
     deleteBookingMutation.mutate();
+    setIsRedirecting(true);
+    setRedirectMessage('Cancelling failed booking and redirecting to home...');
     setTimeout(() => {
       window.location.href = '/';
     }, 2000);
   };
 
-  if (!bookingId) {
+  const handleHomeRedirect = () => {
+    console.log('🏠 PaymentFailure: Redirecting to home page');
+    setIsRedirecting(true);
+    setRedirectMessage('Returning to home page...');
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 1000);
+  };
+
+  // Show redirecting state
+  if (isRedirecting) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4" data-testid="page-redirecting">
         <Card className="max-w-md w-full">
           <CardContent className="text-center p-6 sm:p-8">
-            <AlertTriangle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2">Invalid Payment Link</h2>
-            <p className="text-gray-600 mb-6 text-sm sm:text-base">The payment link is missing booking information.</p>
-            <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto">
+            <RotateCcw className="h-12 w-12 sm:h-16 sm:w-16 text-blue-500 mx-auto mb-4 animate-spin" data-testid="spinner-redirect" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2" data-testid="text-redirect-title">Processing...</h2>
+            <p className="text-gray-600 text-sm sm:text-base" data-testid="text-redirect-message">{redirectMessage}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!bookingId) {
+    console.error('❌ PaymentFailure: No booking ID provided');
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4" data-testid="page-invalid-link">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <AlertTriangle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" data-testid="icon-error" />
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2" data-testid="text-error-title">Invalid Payment Link</h2>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base" data-testid="text-error-description">The payment link is missing booking information.</p>
+            <Button onClick={handleHomeRedirect} className="w-full sm:w-auto" data-testid="button-home">
+              Return to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    console.log('⏳ PaymentFailure: Loading booking data for ID:', bookingId);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4" data-testid="page-loading">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <AlertTriangle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4 animate-pulse" data-testid="spinner-loading" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2" data-testid="text-loading-title">Loading Payment Details...</h2>
+            <p className="text-gray-600 text-sm sm:text-base" data-testid="text-loading-description">Please wait while we fetch your payment information.</p>
+            <p className="text-sm text-gray-500 mt-2" data-testid="text-booking-id">Booking ID: #{bookingId}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error || !booking) {
+    console.error('❌ PaymentFailure: Booking not found or error occurred:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4" data-testid="page-error">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <XCircle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" data-testid="icon-error" />
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2" data-testid="text-error-title">Booking Not Found</h2>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base" data-testid="text-error-description">We couldn't find your booking details. Please contact support.</p>
+            <p className="text-sm text-gray-500 mb-4" data-testid="text-booking-id">Booking ID: #{bookingId}</p>
+            <Button onClick={handleHomeRedirect} className="w-full sm:w-auto" data-testid="button-home">
               Return to Home
             </Button>
           </CardContent>
@@ -77,18 +162,18 @@ export default function PaymentFailure() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Failure Header */}
-          <Card className="mb-6 border-red-200 bg-red-50">
+          <Card className="mb-6 border-red-200 bg-red-50" data-testid="card-failure-header">
             <CardContent className="text-center p-8">
-              <XCircle className="h-20 w-20 text-red-500 mx-auto mb-4" />
-              <h1 className="text-3xl font-bold text-red-600 mb-2">
+              <XCircle className="h-20 w-20 text-red-500 mx-auto mb-4" data-testid="icon-failure" />
+              <h1 className="text-3xl font-bold text-red-600 mb-2" data-testid="text-failure-title">
                 Payment Failed ❌
               </h1>
-              <p className="text-gray-700 text-lg">
+              <p className="text-gray-700 text-lg" data-testid="text-failure-description">
                 Unfortunately, your payment could not be processed.
               </p>
               {booking && (
-                <div className="mt-4 bg-red-100 border border-red-300 rounded-lg p-3 inline-block">
-                  <p className="text-red-800 font-medium">
+                <div className="mt-4 bg-red-100 border border-red-300 rounded-lg p-3 inline-block" data-testid="container-booking-id">
+                  <p className="text-red-800 font-medium" data-testid="text-booking-id">
                     Booking ID: #{booking.id}
                   </p>
                 </div>
@@ -155,13 +240,14 @@ export default function PaymentFailure() {
                 </p>
                 <Button 
                   onClick={handleRetryPayment}
-                  disabled={deleteBookingMutation.isPending}
+                  disabled={deleteBookingMutation.isPending || isRedirecting}
                   className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-retry-payment"
                 >
-                  {deleteBookingMutation.isPending ? (
+                  {deleteBookingMutation.isPending || isRedirecting ? (
                     <>
                       <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
-                      Cancelling...
+                      {isRedirecting ? 'Redirecting...' : 'Cancelling...'}
                     </>
                   ) : (
                     <>
@@ -178,8 +264,10 @@ export default function PaymentFailure() {
                   Go back to the main page without making any changes.
                 </p>
                 <Button 
-                  onClick={() => window.location.href = '/'}
+                  onClick={handleHomeRedirect}
                   variant="outline"
+                  disabled={isRedirecting}
+                  data-testid="button-home"
                 >
                   <Home className="h-4 w-4 mr-2" />
                   Return to Home
