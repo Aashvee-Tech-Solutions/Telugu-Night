@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from 'bcryptjs';
 import compression from 'compression';
+import path from "path";
+import fs from "fs";
 import { storage } from "./databaseStorage";
 import { GoogleSheetsService } from "./services/googleSheets";
 import { EmailService } from "./services/emailService";
@@ -16,6 +18,19 @@ import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 // All payments are fully automated via Cashfree webhooks - no manual uploads or verification needed
+
+// Helper function to convert database booking to BookingData format
+function toBookingData(booking: any): any {
+  return {
+    ...booking,
+    guests: booking.guests || [],
+    guestCodes: booking.guestCodes || [],
+    paymentStatus: booking.paymentStatus || 'pending',
+    qrCodes: booking.qrCodes || [],
+    passIds: booking.passIds || [],
+    totalAmount: booking.totalAmount ? booking.totalAmount.toString() : '0'
+  };
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // PRIORITY: Cashfree webhook endpoints (must be FIRST to avoid middleware interference)
@@ -760,7 +775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const { EnhancedEmailService } = await import('./services/enhancedEmailService');
           const enhancedEmailService = new EnhancedEmailService();
-          await enhancedEmailService.sendPaymentFailureEmail(booking);
+          await enhancedEmailService.sendPaymentFailureEmail(toBookingData(booking));
           console.log(`📧 Payment timeout email sent to ${booking.email}`);
         } catch (emailError) {
           console.error('Failed to send timeout email:', emailError);
@@ -1220,14 +1235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const updatedBooking = await storage.getBooking(bookingId);
         if (updatedBooking) {
           try {
-            await enhancedEmailService.sendTicketEmails({
-              ...updatedBooking,
-              guests: (updatedBooking.guests as string[]) || [],
-              guestCodes: (updatedBooking.guestCodes as string[]) || [],
-              qrCodes: (updatedBooking.qrCodes as string[]) || [],
-              passIds: (updatedBooking.passIds as string[]) || [],
-              paymentStatus: updatedBooking.paymentStatus || 'verified'
-            });
+            await enhancedEmailService.sendTicketEmails(toBookingData(updatedBooking));
             console.log(`✅ QR tickets sent successfully to ${updatedBooking.email}`);
           } catch (emailError) {
             console.error('Email sending failed (non-critical):', emailError);
@@ -1267,13 +1275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`♻️ Reusing existing QR codes for booking ${bookingId}`);
         
         try {
-          await enhancedEmailService.sendTicketEmails({
-            ...booking,
-            guests: (booking.guests as string[]) || [],
-            qrCodes: (booking.qrCodes as string[]) || [],
-            passIds: (booking.passIds as string[]) || [],
-            guestCodes: (booking.guestCodes as string[]) || []
-          });
+          await enhancedEmailService.sendTicketEmails(toBookingData(booking));
           
           return res.json({ 
             message: 'Existing tickets resent successfully!',
@@ -1475,7 +1477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isGuestCode) {
         // Individual guest check-in logic
         const guestCode = code.toUpperCase();
-        const guestIndex = booking.guestCodes.indexOf(guestCode);
+        const guestIndex = (booking.guestCodes || []).indexOf(guestCode);
         const guestName = booking.guests?.[guestIndex] || `Guest ${guestIndex + 1}`;
         
         // Check if this specific guest has already been scanned
@@ -1707,7 +1709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: 'Test email sent successfully', result });
     } catch (error) {
       console.error('Test email failed:', error);
-      res.status(500).json({ message: 'Test email failed', error: error.message });
+      res.status(500).json({ message: 'Test email failed', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -1774,7 +1776,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { EnhancedEmailService } = await import('./services/enhancedEmailService');
         const enhancedEmailService = new EnhancedEmailService();
-        await enhancedEmailService.sendPaymentFailureEmail(booking);
+        await enhancedEmailService.sendPaymentFailureEmail(toBookingData(booking));
       } catch (emailError) {
         console.error('Failed to send payment failure email:', emailError);
       }
@@ -2071,7 +2073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalAmount: b.totalAmount,
           paymentStatus: b.paymentStatus,
           createdAt: b.createdAt,
-        })).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        })).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
       };
       
       console.log(`📊 Dashboard stats for ${promoter.name}: ${stats.totalBookings} bookings, ₹${stats.totalRevenue} revenue, ₹${stats.commission.toFixed(2)} commission`);
@@ -2403,7 +2405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               const { EnhancedEmailService } = await import('./services/enhancedEmailService');
               const enhancedEmailService = new EnhancedEmailService();
-              await enhancedEmailService.sendPaymentFailureEmail(booking);
+              await enhancedEmailService.sendPaymentFailureEmail(toBookingData(booking));
               console.log(`📧 [${webhookId}] Payment failure email sent to ${booking.email} for booking ${booking.id}`);
               actionTaken = 'payment_failed_email_sent';
             } catch (emailError: any) {
@@ -2638,13 +2640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`♻️ Public route: Reusing existing QR codes for booking ${bookingId}`);
         
         try {
-          await enhancedEmailService.sendTicketEmails({
-            ...booking,
-            guests: (booking.guests as string[]) || [],
-            qrCodes: (booking.qrCodes as string[]) || [],
-            passIds: (booking.passIds as string[]) || [],
-            guestCodes: (booking.guestCodes as string[]) || []
-          });
+          await enhancedEmailService.sendTicketEmails(toBookingData(booking));
           
           return res.json({ 
             message: 'QR tickets sent successfully!',

@@ -381,7 +381,7 @@ export class CashfreeService {
     // Get convenience fee from configuration
     const { DatabaseStorage } = await import('../databaseStorage');
     const storage = new DatabaseStorage();
-    const config = await storage.getTeluguNightConfig();
+    const config = await storage.getTicketConfig();
     const convenienceFeePerTicket = parseFloat(config.convenientFee || '0');
     const convenienceFeeTotal = ticketCount * convenienceFeePerTicket;
     

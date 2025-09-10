@@ -36,6 +36,7 @@ export interface IStorage {
   
   // Ticket configuration operations
   getTicketConfig(): Promise<any>;
+  getTeluguNightConfig(): Promise<any>; // Alias for getTicketConfig
   updateTicketConfig(config: any, updatedBy: number): Promise<void>;
   initializeTicketConfig(): Promise<void>;
 
@@ -683,6 +684,11 @@ export class DatabaseStorage implements IStorage {
         bookingOpen: false
       };
     }
+  }
+
+  // Alias method for backward compatibility
+  async getTeluguNightConfig(): Promise<any> {
+    return this.getTicketConfig();
   }
 
   async updateTicketConfig(config: any, updatedBy: number): Promise<void> {
