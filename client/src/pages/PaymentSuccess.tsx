@@ -35,7 +35,7 @@ export default function PaymentSuccess() {
 
   // Fetch booking details with enhanced error handling and timeout
   const { data: booking, isLoading, error } = useQuery<Booking>({
-    queryKey: [`/api/bookings/${bookingId}`],
+    queryKey: [`/api/bookings/${bookingId || 'null'}`],
     enabled: !!bookingId,
     retry: 1, // Reduced retry to prevent infinite loading
     refetchOnWindowFocus: false,
