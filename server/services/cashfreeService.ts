@@ -132,6 +132,14 @@ export class CashfreeService {
           errorDetails = { message: errorText };
         }
 
+        console.error(`❌ Cashfree API Error (${response.status}):`, {
+          url,
+          method,
+          status: response.status,
+          errorText,
+          errorDetails
+        });
+
         throw new CashfreeAPIError(
           errorDetails.message || `API request failed with status ${response.status}`,
           response.status,
@@ -230,7 +238,9 @@ export class CashfreeService {
         'x-client-secret': this.secretKey,
       };
 
-      console.log(`Checking order status for: ${orderId}`);
+      console.log(`🔍 Checking order status for: ${orderId}`);
+      console.log(`🔗 API URL: ${this.baseUrl}/orders/${orderId}`);
+      console.log(`🔑 Using App ID: ${this.appId.substring(0, 8)}...`);
       
       const result = await this.makeRequest(
         `${this.baseUrl}/orders/${orderId}`,
@@ -345,11 +355,11 @@ export class CashfreeService {
         case 400:
           return 'Invalid payment information provided. Please check your details and try again.';
         case 401:
-          return 'Payment service authentication failed. Please contact support.';
+          return 'Cashfree authentication failed. API credentials may be invalid or expired. Please contact support.';
         case 403:
           return 'Payment not authorized. Please contact support.';
         case 404:
-          return 'Payment order not found. Please check your order details.';
+          return 'Payment order not found. This may be a very old order or the order ID might be incorrect.';
         case 408:
           return 'Payment request timed out. Please try again.';
         case 429:
@@ -360,12 +370,15 @@ export class CashfreeService {
         case 504:
           return 'Payment service is temporarily unavailable. Please try again in a few minutes.';
         default:
+          if (error.details?.message?.includes('authentication Failed')) {
+            return 'Cashfree API authentication failed. Please contact support to update payment credentials.';
+          }
           return error.details?.message || 'Payment processing failed. Please try again or contact support.';
       }
     }
     
     if (error instanceof PaymentRetryError) {
-      return 'Payment failed after multiple attempts. Please check your internet connection and try again.';
+      return 'Cashfree API is currently unavailable after multiple attempts. Please try again later or contact support.';
     }
     
     return 'An unexpected error occurred during payment processing. Please contact support.';
