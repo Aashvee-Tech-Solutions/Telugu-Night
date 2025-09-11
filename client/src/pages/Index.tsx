@@ -2,9 +2,11 @@ import { useState } from "react";
 import { TicketBookingForm } from "@/components/TicketBookingForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePricing } from "@/hooks/usePricing";
 
 const Index = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const { currentTier, isLoading: pricingLoading, formatCurrency } = usePricing();
 
 
   const LandingPage = () => (
@@ -39,7 +41,17 @@ const Index = () => {
             </div>
             <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
               <p className="font-bold text-yellow-400 text-base mb-2">💰 Price</p>
-              <p className="text-slate-200 text-sm">₹300 (₹200 Food Coupon + ₹100)</p>
+              <p className="text-slate-200 text-sm">
+                {pricingLoading ? (
+                  'Loading...'
+                ) : currentTier ? (
+                  <>
+                    ₹{currentTier.price} <span className="text-yellow-300">({currentTier.name})</span>
+                  </>
+                ) : (
+                  'Price unavailable'
+                )}
+              </p>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t-2 border-slate-600">
