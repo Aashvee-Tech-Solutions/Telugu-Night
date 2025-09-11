@@ -68,22 +68,45 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      console.log('🎯 [MUTATION] Starting fetch request to /api/bookings');
+      console.log('🎯 [MUTATION] Request data:', JSON.stringify(data, null, 2));
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Booking failed');
+      try {
+        console.log('🎯 [MUTATION] About to call fetch...');
+        
+        const response = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        
+        console.log('🎯 [MUTATION] Fetch completed! Response status:', response.status);
+        console.log('🎯 [MUTATION] Response ok:', response.ok);
+        console.log('🎯 [MUTATION] Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        if (!response.ok) {
+          console.log('🎯 [MUTATION] Response not ok, attempting to read error data...');
+          const errorData = await response.json();
+          console.log('🎯 [MUTATION] Error data:', errorData);
+          throw new Error(errorData.message || 'Booking failed');
+        }
+        
+        console.log('🎯 [MUTATION] Reading successful response...');
+        const responseData = await response.json();
+        console.log('🎯 [MUTATION] Success response data:', responseData);
+        return responseData;
+      } catch (fetchError: any) {
+        console.error('🎯 [MUTATION] Fetch error occurred:', fetchError);
+        console.error('🎯 [MUTATION] Error type:', fetchError.constructor.name);
+        console.error('🎯 [MUTATION] Error message:', fetchError.message);
+        console.error('🎯 [MUTATION] Error stack:', fetchError.stack);
+        throw fetchError;
       }
-      
-      return response.json();
     },
     onSuccess: (data) => {
+      console.log('🎯 [MUTATION] onSuccess called with data:', data);
       setBookingId(data.booking.id);
       setPaymentLink(data.paymentLink);
       setStep(4);
@@ -93,6 +116,9 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
       });
     },
     onError: (error: Error) => {
+      console.error('🎯 [MUTATION] onError called with error:', error);
+      console.error('🎯 [MUTATION] Error type:', error.constructor.name);
+      console.error('🎯 [MUTATION] Error message:', error.message);
       toast({
         title: "Booking Failed",
         description: error.message,
@@ -288,7 +314,18 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
   };
 
   const handleBooking = () => {
+    console.log('🚀 [HANDLER] handleBooking called');
+    console.log('🚀 [HANDLER] Form data state:', {
+      ticketCount: formData.ticketCount,
+      isAnyTicketAvailable,
+      gender: formData.gender,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone
+    });
+    
     if (formData.ticketCount < 1) {
+      console.log('🚀 [HANDLER] Validation failed: ticketCount < 1');
       toast({
         title: "No Tickets Selected",
         description: "Please select at least one ticket before booking.",
@@ -298,6 +335,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
     }
     
     if (!isAnyTicketAvailable) {
+      console.log('🚀 [HANDLER] Validation failed: no tickets available');
       toast({
         title: "Tickets Not Available",
         description: "Ticket sales are currently paused. Please check back later.",
@@ -308,6 +346,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
 
     // Additional validation to ensure gender is selected
     if (!formData.gender || formData.gender.trim() === "") {
+      console.log('🚀 [HANDLER] Validation failed: gender not selected');
       toast({
         title: "Gender Required",
         description: "Please select your gender to proceed with booking.",
@@ -315,6 +354,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
       });
       return;
     }
+    
+    console.log('🚀 [HANDLER] All validations passed, preparing booking data...');
     
     const bookingData = {
       name: formData.name.trim(),
@@ -329,10 +370,40 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
       referrer: formData.referrer?.trim() || referralCode || null,
     };
     
-    // Debug logging to see what's actually being sent
-    console.log('🚀 Booking data being sent:', JSON.stringify(bookingData, null, 2));
+    console.log('🚀 [HANDLER] Booking data prepared:', JSON.stringify(bookingData, null, 2));
+    console.log('🚀 [HANDLER] Mutation state before calling mutate:', {
+      isPending: createBookingMutation.isPending,
+      isError: createBookingMutation.isError,
+      isSuccess: createBookingMutation.isSuccess,
+      error: createBookingMutation.error
+    });
     
-    createBookingMutation.mutate(bookingData);
+    try {
+      console.log('🚀 [HANDLER] About to call createBookingMutation.mutate...');
+      console.log('🚀 [HANDLER] Mutation object:', createBookingMutation);
+      console.log('🚀 [HANDLER] Mutation mutate function:', typeof createBookingMutation.mutate);
+      
+      // Add a test to see if the mutation function exists
+      if (!createBookingMutation.mutate) {
+        console.error('🚀 [HANDLER] ERROR: createBookingMutation.mutate is undefined!');
+        toast({
+          title: "Technical Error",
+          description: "Booking system initialization failed. Please refresh the page.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      createBookingMutation.mutate(bookingData);
+      console.log('🚀 [HANDLER] createBookingMutation.mutate called successfully');
+    } catch (error) {
+      console.error('🚀 [HANDLER] Error calling createBookingMutation.mutate:', error);
+      toast({
+        title: "Technical Error",
+        description: "Failed to start booking process. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
 
