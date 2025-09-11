@@ -56,6 +56,7 @@ export interface IStorage {
   // Payment operations
   updateBookingPaymentId(id: number, paymentId: string): Promise<void>;
   getBookingByPaymentId(paymentId: string): Promise<Booking | undefined>;
+  getStuckPayments(thresholdSeconds: number): Promise<Booking[]>;
 
   // Promoter operations
   createPromoter(promoterData: InsertPromoter): Promise<Promoter>;
@@ -121,12 +122,12 @@ export class DatabaseStorage implements IStorage {
           throw new Error('ADMIN_PASSWORD environment variable is required to initialize admin user');
         }
         const hashedPassword = await import('bcryptjs').then(bcrypt => bcrypt.hashSync(adminPassword, 10));
-        await db.insert(users).values({
+        await db.insert(users).values([{
           username: 'aashvee',
           password: hashedPassword,
-          role: 'super_admin',
-          permissions: []
-        });
+          role: 'super_admin' as const,
+          permissions: [] as string[]
+        }]);
         console.log('✅ Default admin user created');
       }
     } catch (error) {
@@ -164,9 +165,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    const permissions: string[] = insertUser.permissions ? [...insertUser.permissions] : [];
+    const userData = {
+      username: insertUser.username,
+      password: insertUser.password,
+      role: insertUser.role,
+      permissions
+    };
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values([userData])
       .returning();
     return user;
   }
@@ -896,6 +904,30 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Failed to get booking by payment ID:', error);
       throw error;
+    }
+  }
+
+  async getStuckPayments(thresholdSeconds: number = 30): Promise<Booking[]> {
+    try {
+      const thresholdTime = new Date(Date.now() - thresholdSeconds * 1000);
+      console.log(`🔍 Looking for stuck payments older than ${thresholdSeconds} seconds (before ${thresholdTime.toISOString()})`);
+      
+      const stuckBookings = await db
+        .select()
+        .from(bookings)
+        .where(
+          sql`
+            ${bookings.paymentStatus} = 'pending' 
+            AND ${bookings.paymentId} IS NOT NULL 
+            AND ${bookings.createdAt} < ${thresholdTime}
+          `
+        );
+      
+      console.log(`Found ${stuckBookings.length} potentially stuck payments`);
+      return stuckBookings;
+    } catch (error) {
+      console.error('Failed to get stuck payments:', error);
+      return [];
     }
   }
 

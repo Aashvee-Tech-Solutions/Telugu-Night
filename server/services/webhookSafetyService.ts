@@ -1,4 +1,4 @@
-import { storage } from '../storage.js';
+import { storage } from '../databaseStorage';
 import { CashfreeService } from './cashfreeService.js';
 import { enhancedEmailService } from './enhancedEmailService.js';
 
@@ -138,10 +138,19 @@ export class WebhookSafetyService {
         throw new Error(`Booking ${entry.bookingId} not found`);
       }
 
-      await storage.updateBookingStatus(entry.bookingId, 'confirmed');
+      await storage.updateBookingPaymentStatus(entry.bookingId, 'verified');
 
       // Send confirmation email and tickets
-      await enhancedEmailService.sendPaymentConfirmationEmail(booking);
+      const bookingData = {
+        ...booking,
+        guests: booking.guests || [],
+        guestCodes: booking.guestCodes || [],
+        paymentStatus: booking.paymentStatus || 'pending',
+        qrCodes: booking.qrCodes || [],
+        passIds: booking.passIds || [],
+        totalAmount: booking.totalAmount ? booking.totalAmount.toString() : '0'
+      };
+      await enhancedEmailService.sendPaymentConfirmationEmail(bookingData);
 
       // Remove from monitoring
       this.pendingPayments.delete(orderId);
@@ -163,7 +172,7 @@ export class WebhookSafetyService {
   private async handleFailedPayment(orderId: string, entry: PaymentMonitoringEntry, paymentData: any): Promise<void> {
     try {
       // Update booking status to failed
-      await storage.updateBookingStatus(entry.bookingId, 'payment_failed');
+      await storage.updateBookingPaymentStatus(entry.bookingId, 'failed');
 
       // Remove from monitoring
       this.pendingPayments.delete(orderId);
