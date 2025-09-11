@@ -1203,60 +1203,6 @@ export async function registerRoutes(app: Express): Promise<Express> {
     });
   });
 
-  // PUBLIC: Allow users to manually resend their QR tickets
-  app.post('/api/public/bookings/:id/send-tickets', async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const booking = await storage.getBooking(bookingId);
-      
-      if (!booking) {
-        return res.status(404).json({ message: 'Booking not found' });
-      }
-
-      // Only allow sending tickets for verified payments
-      if (booking.paymentStatus !== 'verified') {
-        return res.status(400).json({ 
-          message: 'Tickets can only be sent for verified payments. Please wait for payment confirmation.' 
-        });
-      }
-
-      console.log(`📧 Manual ticket resend requested for booking ${bookingId} by user`);
-
-      // Use ticket generation service to send tickets
-      try {
-        const { TicketGenerationService } = await import('./services/ticketGenerationService');
-        const ticketService = new TicketGenerationService();
-        const result = await ticketService.generateTicketsForBooking(bookingId);
-        
-        if (result.status === 'completed') {
-          console.log(`✅ Manual ticket resend successful for booking ${bookingId}`);
-          return res.json({ 
-            message: 'QR tickets have been sent to your email address',
-            guestCodes: result.guestCodes,
-            qrCodesGenerated: result.qrCodes.length
-          });
-        } else {
-          console.error(`❌ Manual ticket resend failed for booking ${bookingId}:`, result.errors);
-          return res.status(500).json({ 
-            message: 'Failed to send tickets. Please contact support.',
-            errors: result.errors
-          });
-        }
-      } catch (ticketError: any) {
-        console.error(`❌ Manual ticket resend error for booking ${bookingId}:`, ticketError);
-        return res.status(500).json({ 
-          message: 'Failed to send tickets. Please contact support.',
-          error: ticketError.message
-        });
-      }
-    } catch (error: any) {
-      console.error('Manual ticket resend error:', error);
-      res.status(500).json({ 
-        message: 'Failed to send tickets. Please contact support.'
-      });
-    }
-  });
-
   // DISABLED: Manual payment verification route - payments are now automatically processed by Cashfree webhook
   // app.post('/api/bookings/:id/verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
   //   // This route has been disabled as payments are now automatically verified via webhook

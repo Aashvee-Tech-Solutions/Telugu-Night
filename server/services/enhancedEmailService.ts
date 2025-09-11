@@ -19,7 +19,6 @@ interface BookingData {
 export class EnhancedEmailService {
   private transporter!: nodemailer.Transporter;
   private calendar: any;
-  private fromEmail!: string;
 
   constructor() {
     this.initializeTransporter();
@@ -27,25 +26,14 @@ export class EnhancedEmailService {
   }
 
   private initializeTransporter() {
-    // Validate required environment variables
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPassword = process.env.SMTP_PASSWORD;
-    const smtpHost = process.env.SMTP_HOST || 'smtp.hostinger.com';
-    const smtpPort = parseInt(process.env.SMTP_PORT || '465');
-    this.fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@example.com';
-
-    if (!smtpUser || !smtpPassword) {
-      throw new Error('SMTP credentials not found. Please set SMTP_USER and SMTP_PASSWORD environment variables.');
-    }
-
     // Use working Hostinger SMTP configuration
     const smtpConfig = {
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465, // Use SSL for port 465
+      host: 'smtp.hostinger.com',
+      port: 465,
+      secure: true, // Use SSL
       auth: {
-        user: smtpUser,
-        pass: smtpPassword
+        user: process.env.SMTP_USER || 'mis@aashveetech.com',
+        pass: process.env.SMTP_PASS || 'Mis@1234@1234'
       },
       connectionTimeout: 10000,
       greetingTimeout: 5000,
@@ -61,7 +49,6 @@ export class EnhancedEmailService {
     };
 
     this.transporter = nodemailer.createTransport(smtpConfig as any);
-    console.log(`✅ SMTP transporter initialized with user: ${smtpUser.replace(/(.{3}).*@/, '$1***@')}`);
   }
 
   private async initializeGoogleCalendar() {
@@ -189,7 +176,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
       `;
 
       await this.transporter.sendMail({
-        from: this.fromEmail,
+        from: 'mis@aashveetech.com',
         to: booking.email,
         subject: `🎉 Payment Successful - Telugu Night Tickets Confirmed #${booking.id}`,
         html: emailHtml
@@ -279,7 +266,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
       `;
 
       await this.transporter.sendMail({
-        from: this.fromEmail,
+        from: 'mis@aashveetech.com',
         to: booking.email,
         subject: `❌ Payment Failed - Telugu Night Booking Cancelled #${booking.id}`,
         html: emailHtml
@@ -300,7 +287,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
       
       // Send test email
       await this.transporter.sendMail({
-        from: this.fromEmail,
+        from: 'mis@aashveetech.com',
         to: testEmail,
         subject: 'SMTP Connection Test - Telugu Night System',
         html: `
@@ -348,7 +335,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
       const calendarLink = this.generateCalendarEvent(booking);
 
       const mailOptions = {
-        from: this.fromEmail,
+        from: 'mis@aashveetech.com',
         to: booking.email,
         subject: '🎫 Your Telugu Night Tickets - QR Codes & Calendar Event Ready!',
         html: this.generateEnhancedTicketEmailHTML(booking, generatedQRCodes, calendarLink),
