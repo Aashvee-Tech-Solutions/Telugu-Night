@@ -191,6 +191,29 @@ export const teluguNightCounter = pgTable("telugu_night_counter", {
   lastUpdated: timestamp("updated_at").defaultNow(),
 });
 
+// Webhook processing log for idempotency and monitoring
+export const webhookProcessingLog = pgTable("webhook_processing_log", {
+  id: serial("id").primaryKey(),
+  webhookId: text("webhook_id").notNull().unique(), // Generated webhook ID for tracking
+  signature: text("signature").notNull(), // Webhook signature for verification
+  webhookTimestamp: text("webhook_timestamp").notNull(), // Timestamp from webhook headers
+  eventType: text("event_type").notNull(), // PAYMENT_SUCCESS_WEBHOOK, PAYMENT_FAILED_WEBHOOK, etc.
+  orderId: text("order_id"), // Cashfree order ID
+  bookingId: integer("booking_id").references(() => bookings.id), // Related booking
+  status: text("status", { enum: ["processing", "completed", "failed", "duplicate"] }).default("processing"),
+  processingStartedAt: timestamp("processing_started_at").defaultNow(),
+  processingCompletedAt: timestamp("processing_completed_at"),
+  processingTimeMs: integer("processing_time_ms"), // Processing time in milliseconds
+  errorMessage: text("error_message"), // Error details if failed
+  retryCount: integer("retry_count").default(0), // Number of retry attempts
+  lastRetryAt: timestamp("last_retry_at"), // Last retry timestamp
+  userAgent: text("user_agent"), // Request user agent for debugging
+  clientIp: text("client_ip"), // Client IP for security monitoring
+  payloadHash: text("payload_hash"), // Hash of webhook payload for duplicate detection
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertEventSchema = createInsertSchema(events).pick({
   title: true,
   description: true,
@@ -321,6 +344,9 @@ export type Promoter = typeof promoters.$inferSelect;
 export type InsertPromoter = z.infer<typeof insertPromoterSchema>;
 export type TeluguNightConfig = typeof teluguNightConfig.$inferSelect;
 export type InsertTeluguNightConfig = z.infer<typeof insertTeluguNightConfigSchema>;
+
+export type WebhookProcessingLog = typeof webhookProcessingLog.$inferSelect;
+export type InsertWebhookProcessingLog = typeof webhookProcessingLog.$inferInsert;
 
 // Permission system constants
 export const PERMISSIONS = {

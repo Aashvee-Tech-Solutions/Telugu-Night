@@ -5,7 +5,7 @@ import { CheckCircle, Clock, XCircle, Loader2, Mail, AlertCircle } from 'lucide-
 
 export default function PaymentSuccess() {
   const [bookingId, setBookingId] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(6);
+  const [countdown, setCountdown] = useState(30);
 
   // Extract booking ID from URL
   useEffect(() => {
