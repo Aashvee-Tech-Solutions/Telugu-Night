@@ -1030,12 +1030,16 @@ export async function registerRoutes(app: Express): Promise<Express> {
       
       console.log(`🔍 Checking status for booking ${bookingId}, current status: ${booking.paymentStatus}`);
       
-      // Skip API verification if already verified/failed/refunded
-      if (['verified', 'failed', 'refunded'].includes(booking.paymentStatus || '')) {
+      // Enhanced idempotency protection - prevent re-verification of finalized bookings
+      const finalizedStatuses = ['verified', 'failed', 'refunded'] as const;
+      if (finalizedStatuses.includes(booking.paymentStatus as any)) {
+        console.log(`🛡️ Idempotency: Booking ${bookingId} already finalized with status: ${booking.paymentStatus}`);
         return res.json({ 
-          message: 'Booking status already finalized',
+          message: `Payment ${booking.paymentStatus === 'verified' ? 'already verified' : booking.paymentStatus === 'failed' ? 'already failed' : 'already refunded'}. No further verification needed.`,
           status: booking.paymentStatus,
-          bookingId: bookingId
+          bookingId: bookingId,
+          finalized: true,
+          finalizedAt: booking.updatedAt
         });
       }
       
@@ -1066,8 +1070,8 @@ export async function registerRoutes(app: Express): Promise<Express> {
             if (verificationResult.success && verificationResult.status) {
               console.log(`📊 Cashfree API status: ${verificationResult.status} -> ${verificationResult.mappedStatus}`);
               
-              // Use the centralized status mapping instead of incorrect inline mapping
-              const newStatus = verificationResult.mappedStatus as any;
+              // Use the centralized status mapping - already properly typed
+              const newStatus = verificationResult.mappedStatus;
               const shouldSendSuccessEmail = newStatus === 'verified';
               
               // Log the status mapping for debugging
@@ -1111,7 +1115,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
                       emailError: 'Ticket email pending'
                     });
                   }
-                } else if (newStatus === 'failed' as any) {
+                } else if (newStatus === 'failed') {
                   try {
                     console.log(`📧 Sending failure email to ${booking.email}`);
                     const { EnhancedEmailService } = await import('./services/enhancedEmailService');
@@ -1384,7 +1388,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
           totalAmount: booking.totalAmount,
           guests: booking.guests || [],
           guestCodes: booking.guestCodes || [],
-          paymentStatus: booking.paymentStatus as any
+          paymentStatus: booking.paymentStatus || 'pending'
         });
         console.log(`✅ Booking confirmation email sent to ${booking.email}`);
       } catch (emailError: any) {
@@ -1530,10 +1534,16 @@ export async function registerRoutes(app: Express): Promise<Express> {
         return res.status(404).json({ message: 'Booking not found' });
       }
 
-      // Check if booking already verified
-      if (booking.paymentStatus === 'verified') {
-        return res.status(400).json({ 
-          message: 'Payment is already verified for this booking' 
+      // Enhanced idempotency protection for emergency verification
+      const finalizedStatuses = ['verified', 'failed', 'refunded'] as const;
+      if (finalizedStatuses.includes(booking.paymentStatus as any)) {
+        console.log(`🛡️ Emergency verification blocked: Booking ${bookingId} already ${booking.paymentStatus}`);
+        return res.status(409).json({ 
+          message: `Cannot verify payment: Booking is already ${booking.paymentStatus}`,
+          currentStatus: booking.paymentStatus,
+          bookingId: bookingId,
+          reason: 'ALREADY_FINALIZED',
+          finalizedAt: booking.updatedAt
         });
       }
 
@@ -1626,6 +1636,113 @@ export async function registerRoutes(app: Express): Promise<Express> {
       console.error(`❌ Emergency verification error for booking ${req.body.bookingId}:`, error);
       return res.status(500).json({ 
         message: `Emergency verification failed: ${error.message}` 
+      });
+    }
+  });
+
+  // Manual payment verification - BYPASSES gateway entirely
+  app.post('/api/admin/manual-verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
+    try {
+      const { bookingId } = req.body;
+      const adminUser = req.user;
+      
+      if (!bookingId || typeof bookingId !== 'number') {
+        return res.status(400).json({ message: 'Valid booking ID is required' });
+      }
+
+      // Get booking details
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+
+      // Enhanced idempotency protection for manual verification
+      const finalizedStatuses = ['verified', 'failed', 'refunded'] as const;
+      if (finalizedStatuses.includes(booking.paymentStatus as any)) {
+        console.log(`🛡️ Manual verification blocked: Booking ${bookingId} already ${booking.paymentStatus}`);
+        return res.status(409).json({ 
+          message: `Cannot manually verify payment: Booking is already ${booking.paymentStatus}. Manual verification is only allowed for pending/paid bookings.`,
+          currentStatus: booking.paymentStatus,
+          bookingId: bookingId,
+          reason: 'ALREADY_FINALIZED',
+          finalizedAt: booking.updatedAt,
+          warning: 'Manual verification bypasses payment gateway checks and should only be used for confirmed payments.'
+        });
+      }
+
+      console.log(`🚨 MANUAL OVERRIDE: Admin ${adminUser?.username} (${adminUser?.role}) manually verifying payment for booking ${bookingId} WITHOUT gateway verification`);
+      console.log(`📋 Booking details: ${booking.name} (${booking.email}) - ${booking.ticketCount} tickets - Amount: ₹${booking.totalAmount}`);
+      console.log(`⚠️  WARNING: This bypasses all payment gateway verification checks`);
+
+      // CRITICAL: Update booking status directly to verified WITHOUT checking gateway
+      await storage.updateBookingPaymentStatus(bookingId, 'verified');
+      console.log(`✅ Booking ${bookingId} payment status manually set to 'verified'`);
+
+      // Generate guest codes and pass IDs if not already generated
+      let updatedBooking = await storage.getBooking(bookingId);
+      let guestCodes = updatedBooking!.guestCodes;
+      let passIds = updatedBooking!.passIds;
+      
+      if (!guestCodes || guestCodes.length === 0) {
+        const { generateGuestCodes } = await import('./services/emailService');
+        guestCodes = generateGuestCodes(updatedBooking!.ticketCount);
+        console.log(`🎯 Generated guest codes: ${guestCodes.join(', ')}`);
+      }
+      
+      if (!passIds || passIds.length === 0) {
+        const { generatePassIds } = await import('./services/emailService');
+        passIds = generatePassIds(updatedBooking!.id, updatedBooking!.ticketCount);
+        console.log(`🎫 Generated pass IDs: ${passIds.join(', ')}`);
+      }
+
+      // Update booking with codes if needed
+      if (guestCodes !== updatedBooking!.guestCodes || passIds !== updatedBooking!.passIds) {
+        await storage.updateBookingQRCodes(bookingId, [], passIds, guestCodes);
+        console.log(`📝 Updated booking codes in database`);
+      }
+
+      // Generate and send tickets
+      try {
+        const ticketGenerationService = new TicketGenerationService();
+        await ticketGenerationService.generateTicketsForBooking(bookingId);
+        console.log(`🎫 Manual verification: Tickets generated and sent for booking ${bookingId}`);
+        
+        // Sync to Google Sheets
+        try {
+          const finalBooking = await storage.getBooking(bookingId);
+          if (finalBooking) {
+            await googleSheetsService.addBookingToSheet(finalBooking);
+            console.log(`📊 Booking ${bookingId} synced to Google Sheets after manual verification`);
+          }
+        } catch (sheetError) {
+          console.warn(`⚠️ Failed to sync booking ${bookingId} to Google Sheets:`, sheetError);
+        }
+
+        return res.json({
+          success: true,
+          message: `Manual verification complete! Payment marked as verified and tickets sent to ${booking.email}`,
+          paymentStatus: 'verified',
+          verificationMethod: 'manual_bypass',
+          verifiedBy: adminUser?.username,
+          verifiedAt: new Date().toISOString(),
+          warning: 'Payment gateway verification was bypassed - admin manually confirmed payment received'
+        });
+
+      } catch (emailError: any) {
+        console.error(`❌ Manual verification: Booking verified but ticket sending failed for booking ${bookingId}:`, emailError);
+        return res.status(500).json({
+          message: `Manual verification completed but failed to send tickets: ${emailError.message}. Please try sending tickets manually.`,
+          paymentStatus: 'verified',
+          ticketsSent: false,
+          verificationMethod: 'manual_bypass',
+          verifiedBy: adminUser?.username
+        });
+      }
+
+    } catch (error: any) {
+      console.error(`❌ Manual verification error for booking ${req.body.bookingId}:`, error);
+      return res.status(500).json({ 
+        message: `Manual verification failed: ${error.message}` 
       });
     }
   });
@@ -2528,7 +2645,8 @@ export async function registerRoutes(app: Express): Promise<Express> {
       await storage.deleteBooking(bookingId);
       
       // SAFEGUARD: Only send failure email if payment is actually failed, not verified
-      if (booking.paymentStatus !== 'verified') {
+      const paymentStatus = booking.paymentStatus as 'pending' | 'paid' | 'verified' | 'failed' | 'refunded' | null;
+      if (paymentStatus !== 'verified' && paymentStatus !== null) {
         try {
           console.log(`📧 Sending deletion notification for failed booking ${bookingId} with status: ${booking.paymentStatus}`);
           const { EnhancedEmailService } = await import('./services/enhancedEmailService');

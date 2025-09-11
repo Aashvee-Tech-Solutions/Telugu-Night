@@ -121,12 +121,12 @@ export class DatabaseStorage implements IStorage {
           throw new Error('ADMIN_PASSWORD environment variable is required to initialize admin user');
         }
         const hashedPassword = await import('bcryptjs').then(bcrypt => bcrypt.hashSync(adminPassword, 10));
-        await db.insert(users).values({
+        await db.insert(users).values([{
           username: 'aashvee',
           password: hashedPassword,
-          role: 'super_admin',
+          role: 'super_admin' as const,
           permissions: []
-        });
+        }]);
         console.log('✅ Default admin user created');
       }
     } catch (error) {
@@ -166,7 +166,11 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values([{
+        username: insertUser.username,
+        password: insertUser.password,
+        role: insertUser.role || 'scanner'
+      }])
       .returning();
     return user;
   }
@@ -227,7 +231,7 @@ export class DatabaseStorage implements IStorage {
 
   async getBooking(id: number): Promise<Booking | undefined> {
     const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
-    return booking || undefined;
+    return booking as Booking || undefined;
   }
 
   async getAllBookings(): Promise<Booking[]> {
@@ -240,16 +244,22 @@ export class DatabaseStorage implements IStorage {
     
     // Update cache
     this.bookingsCache = {
-      data: result,
+      data: result as Booking[],
       lastUpdated: Date.now()
     };
     
-    return result;
+    return result as Booking[];
   }
 
   async updateBookingPaymentStatus(id: number, status: string, screenshot?: string): Promise<void> {
+    // Validate status is a valid payment status
+    const validStatuses = ['pending', 'paid', 'verified', 'failed', 'refunded'] as const;
+    if (!validStatuses.includes(status as any)) {
+      throw new Error(`Invalid payment status: ${status}`);
+    }
+    
     const updateData: any = {
-      paymentStatus: status as any,
+      paymentStatus: status,
       updatedAt: new Date(),
     };
     if (screenshot) updateData.paymentScreenshot = screenshot;
@@ -339,8 +349,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateBookingVerification(id: number, status: string, guestCodes: string[]): Promise<void> {
+    // Validate status is a valid payment status  
+    const validStatuses = ['pending', 'paid', 'verified', 'failed', 'refunded'] as const;
+    if (!validStatuses.includes(status as any)) {
+      throw new Error(`Invalid payment status: ${status}`);
+    }
+    
     await db.update(bookings).set({
-      paymentStatus: status as any,
+      paymentStatus: status as 'pending' | 'paid' | 'verified' | 'failed' | 'refunded',
       guestCodes,
       updatedAt: new Date(),
     }).where(eq(bookings.id, id));
