@@ -14,6 +14,7 @@ export interface PaymentOrderResult {
   orderId?: string;
   error?: string;
   userMessage?: string;
+  diagnostics?: any;
 }
 
 export interface PaymentVerificationResult {
@@ -36,19 +37,108 @@ export interface RefundResult {
 
 export class PaymentService {
   private cashfree: CashfreeService;
+  private fallbackEnabled: boolean = true;
+  private maxFallbackAttempts: number = 2;
+  private serviceHealthCache: Map<string, { healthy: boolean, lastChecked: number }> = new Map();
+  private healthCacheTimeout: number = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
     this.cashfree = new CashfreeService();
+    
+    // Initialize health monitoring
+    this.initializeHealthMonitoring();
+  }
+
+  private async initializeHealthMonitoring(): Promise<void> {
+    // Perform initial health check
+    setInterval(() => {
+      this.performBackgroundHealthCheck();
+    }, 2 * 60 * 1000); // Check every 2 minutes
+  }
+
+  private async performBackgroundHealthCheck(): Promise<void> {
+    try {
+      const isHealthy = await this.cashfree.healthCheck();
+      this.serviceHealthCache.set('cashfree', {
+        healthy: isHealthy,
+        lastChecked: Date.now()
+      });
+      
+      if (!isHealthy) {
+        console.warn('🚨 Background health check: Cashfree service is unhealthy');
+      }
+    } catch (error) {
+      console.error('Background health check failed:', error);
+    }
+  }
+
+  private async isServiceHealthy(service: string): Promise<boolean> {
+    const cached = this.serviceHealthCache.get(service);
+    
+    if (cached && (Date.now() - cached.lastChecked) < this.healthCacheTimeout) {
+      return cached.healthy;
+    }
+    
+    // Perform fresh health check
+    try {
+      const isHealthy = await this.cashfree.healthCheck();
+      this.serviceHealthCache.set(service, {
+        healthy: isHealthy,
+        lastChecked: Date.now()
+      });
+      return isHealthy;
+    } catch (error) {
+      console.error('Fresh health check failed:', error);
+      return false;
+    }
   }
 
   async createPaymentOrder(bookingData: PaymentOrderData): Promise<PaymentOrderResult> {
     const orderId = this.cashfree.generateOrderId(bookingData.bookingId);
+    const operationId = `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log(`🚀 [${operationId}] Starting payment order creation for booking ${bookingData.bookingId} with amount ₹${bookingData.amount}`);
     
     try {
-      console.log(`💳 Creating payment order for booking ${bookingData.bookingId} with amount ₹${bookingData.amount}`);
-      
       // Validate input data
       this.validatePaymentOrderData(bookingData);
+      
+      // Check service health before attempting
+      const isHealthy = await this.isServiceHealthy('cashfree');
+      if (!isHealthy) {
+        console.warn(`⚠️ [${operationId}] Cashfree service appears unhealthy, proceeding with caution`);
+      }
+      
+      // Primary attempt with Cashfree
+      const result = await this.attemptCashfreePayment(bookingData, orderId, operationId);
+      
+      if (result.success) {
+        console.log(`✅ [${operationId}] Payment order created successfully via primary method`);
+        return result;
+      }
+      
+      // If primary method fails and fallback is enabled, try fallback mechanisms
+      if (this.fallbackEnabled) {
+        console.log(`🔄 [${operationId}] Primary payment failed, attempting fallback mechanisms`);
+        return await this.handlePaymentFallback(bookingData, result.error || 'Unknown payment error', operationId);
+      }
+      
+      return result;
+      
+    } catch (error: any) {
+      console.error(`❌ [${operationId}] Payment order creation failed critically:`, error);
+      
+      return {
+        success: false,
+        error: error.message,
+        userMessage: 'Payment processing is temporarily unavailable. Please try again in a few minutes.',
+      };
+    }
+  }
+  
+  private async attemptCashfreePayment(bookingData: PaymentOrderData, orderId: string, operationId: string): Promise<PaymentOrderResult> {
+    try {
+      console.log(`💳 [${operationId}] Attempting Cashfree payment creation`);
       
       const orderResponse = await this.cashfree.createOrder({
         order_amount: bookingData.amount,
@@ -66,8 +156,6 @@ export class PaymentService {
         },
       });
 
-      console.log(`✅ Payment order created successfully: ${orderResponse.cf_order_id}`);
-      
       return {
         success: true,
         paymentLink: orderResponse.payment_link,
@@ -75,7 +163,12 @@ export class PaymentService {
       };
       
     } catch (error: any) {
-      console.error(`❌ Payment order creation failed for booking ${bookingData.bookingId}:`, error);
+      console.error(`❌ [${operationId}] Cashfree payment creation failed:`, {
+        error: error.message,
+        statusCode: error.statusCode,
+        errorCode: error.errorCode,
+        bookingId: bookingData.bookingId
+      });
       
       const userMessage = this.cashfree.getUserFriendlyError(error);
       
@@ -85,6 +178,53 @@ export class PaymentService {
         userMessage,
       };
     }
+  }
+  
+  private async handlePaymentFallback(bookingData: PaymentOrderData, primaryError: string, operationId: string): Promise<PaymentOrderResult> {
+    console.log(`🔄 [${operationId}] Initiating payment fallback procedures`);
+    
+    // Fallback 1: Retry with network diagnostics
+    try {
+      console.log(`🔍 [${operationId}] Running network diagnostics before retry`);
+      const diagnostics = await this.cashfree.performNetworkDiagnostics();
+      
+      console.log(`📊 [${operationId}] Network diagnostics completed:`, {
+        dnsSuccess: diagnostics.diagnostics.dns.success,
+        connectivitySuccess: diagnostics.diagnostics.connectivity.success,
+        apiAccessSuccess: diagnostics.diagnostics.apiAccess.success,
+        averageLatency: diagnostics.diagnostics.latency.average
+      });
+      
+      // If diagnostics show the service should work, try once more
+      if (diagnostics.diagnostics.apiAccess.success) {
+        console.log(`🔂 [${operationId}] Diagnostics positive, retrying payment creation`);
+        const retryResult = await this.attemptCashfreePayment(bookingData, 
+          `${this.cashfree.generateOrderId(bookingData.bookingId)}_RETRY`, operationId);
+        
+        if (retryResult.success) {
+          console.log(`✅ [${operationId}] Payment succeeded on diagnostic retry`);
+          return retryResult;
+        }
+      }
+      
+    } catch (diagError: any) {
+      console.error(`❌ [${operationId}] Diagnostic retry failed:`, diagError.message);
+    }
+    
+    // Fallback 2: Graceful degradation - Return structured error for manual processing
+    console.log(`🆘 [${operationId}] All payment methods failed, enabling manual processing mode`);
+    
+    return {
+      success: false,
+      error: primaryError,
+      userMessage: this.generateFallbackUserMessage(operationId),
+    };
+  }
+  
+  private generateFallbackUserMessage(operationId: string): string {
+    return `We're experiencing temporary payment processing issues. Your booking details have been saved. ` +
+           `Please contact our support team with reference ID: ${operationId} to complete your payment manually. ` +
+           `We apologize for the inconvenience and will process your booking priority.`;
   }
 
   async verifyPayment(orderId: string): Promise<PaymentVerificationResult> {
@@ -199,6 +339,95 @@ export class PaymentService {
     } catch (error) {
       console.error('Payment service health check failed:', error);
       return false;
+    }
+  }
+  
+  async generateDiagnosticReport(error?: any): Promise<any> {
+    const report = {
+      timestamp: new Date().toISOString(),
+      error: error ? {
+        message: error.message,
+        statusCode: error.statusCode,
+        errorCode: error.errorCode,
+        type: error.constructor.name
+      } : null,
+      networkDiagnostics: null as any,
+      serviceHealth: {
+        cashfree: await this.isServiceHealthy('cashfree')
+      },
+      classification: error ? this.classifyPaymentError(error) : 'NO_ERROR'
+    };
+    
+    try {
+      report.networkDiagnostics = await this.cashfree.performNetworkDiagnostics();
+    } catch (diagError) {
+      report.networkDiagnostics = { error: 'Diagnostics failed' };
+    }
+    
+    return report;
+  }
+  
+  private classifyPaymentError(error: any): string {
+    if (error instanceof CashfreeAPIError) {
+      switch (error.statusCode) {
+        case 0:
+          return 'NETWORK_CONNECTIVITY_ISSUE';
+        case 408:
+          return 'TIMEOUT_ISSUE';
+        case 429:
+          return 'RATE_LIMITING_ISSUE';
+        case 500:
+        case 502:
+        case 503:
+        case 504:
+          return 'API_SERVER_ISSUE';
+        case 400:
+        case 401:
+        case 403:
+          return 'API_AUTHENTICATION_OR_VALIDATION_ISSUE';
+        default:
+          return 'UNKNOWN_API_ISSUE';
+      }
+    }
+    
+    if (error instanceof PaymentRetryError) {
+      return 'RETRY_EXHAUSTED_ISSUE';
+    }
+    
+    return 'UNKNOWN_ERROR';
+  }
+  
+  // Enhanced verification methods with better error handling
+  async verifyPaymentEnhanced(orderId: string): Promise<PaymentVerificationResult & { diagnosticInfo?: any }> {
+    const operationId = `verify_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+      console.log(`🔍 [${operationId}] Enhanced payment verification for order: ${orderId}`);
+      
+      const result = await this.verifyPaymentWithMapping(orderId);
+      
+      if (!result.success) {
+        // Generate diagnostic report for failed verification
+        const diagnosticReport = await this.generateDiagnosticReport(new Error(result.error));
+        return {
+          ...result,
+          diagnosticInfo: diagnosticReport
+        };
+      }
+      
+      return result;
+      
+    } catch (error: any) {
+      console.error(`❌ [${operationId}] Enhanced payment verification failed:`, error);
+      
+      const diagnosticReport = await this.generateDiagnosticReport(error);
+      
+      return {
+        success: false,
+        error: error.message,
+        userMessage: this.cashfree.getUserFriendlyError(error),
+        diagnosticInfo: diagnosticReport
+      };
     }
   }
 

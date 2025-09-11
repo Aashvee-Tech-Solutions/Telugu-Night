@@ -69,6 +69,57 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Production Environment Validation
+  console.log('🔍 Starting production environment validation...');
+  
+  // Check critical environment variables
+  const criticalEnvVars = [
+    'DATABASE_URL',
+    'CASHFREE_APP_ID',
+    'CASHFREE_SECRET_KEY'
+  ];
+  
+  const missingVars = criticalEnvVars.filter(envVar => !process.env[envVar]);
+  if (missingVars.length > 0) {
+    console.error('❌ CRITICAL: Missing environment variables:', missingVars);
+    console.error('🚨 Application may not work properly in production without these variables');
+  } else {
+    console.log('✅ All critical environment variables are present');
+  }
+  
+  // Check optional but recommended environment variables
+  const recommendedVars = ['SMTP_USER', 'SMTP_PASSWORD', 'GOOGLE_SHEETS_CREDENTIALS'];
+  const missingRecommended = recommendedVars.filter(envVar => !process.env[envVar]);
+  if (missingRecommended.length > 0) {
+    console.warn('⚠️  Missing recommended environment variables (features may not work):', missingRecommended);
+  }
+  
+  // Test database connectivity
+  try {
+    console.log('🗄️  Testing database connectivity...');
+    const { db } = await import('./db');
+    const { sql } = await import('drizzle-orm');
+    
+    // Simple connectivity test
+    const result = await db.execute(sql`SELECT 1 as test`);
+    console.log('✅ Database connectivity test passed:', result);
+  } catch (dbError: any) {
+    console.error('❌ CRITICAL DATABASE ERROR:', {
+      message: dbError.message,
+      code: dbError.code,
+      stack: dbError.stack?.split('\n').slice(0, 3).join('\n'),
+      hasDbUrl: !!process.env.DATABASE_URL
+    });
+  }
+  
+  console.log('🌍 Environment details:', {
+    nodeEnv: process.env.NODE_ENV || 'development',
+    platform: process.platform,
+    nodeVersion: process.version,
+    memoryUsage: process.memoryUsage(),
+    timestamp: new Date().toISOString()
+  });
+
   await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

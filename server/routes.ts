@@ -48,6 +48,84 @@ export async function registerRoutes(app: Express): Promise<Express> {
     chunkSize: 16 * 1024 // 16KB chunks
   }));
 
+  // Payment Service Diagnostic Routes (for admin debugging)
+  app.get('/api/admin/payment/health', authenticate, requireRole('admin'), async (req, res) => {
+    try {
+      const paymentService = new PaymentService();
+      const healthCheck = await paymentService.healthCheck();
+      const diagnosticReport = await paymentService.generateDiagnosticReport();
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        health: {
+          overall: healthCheck,
+          details: diagnosticReport
+        }
+      });
+    } catch (error: any) {
+      console.error('Payment health check endpoint failed:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Health check failed',
+        message: error.message
+      });
+    }
+  });
+
+  app.get('/api/admin/payment/diagnostics', authenticate, requireRole('admin'), async (req, res) => {
+    try {
+      const paymentService = new PaymentService();
+      const diagnostics = await paymentService.generateDiagnosticReport();
+      
+      res.json({
+        success: true,
+        diagnostics
+      });
+    } catch (error: any) {
+      console.error('Payment diagnostics endpoint failed:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Diagnostics failed',
+        message: error.message
+      });
+    }
+  });
+
+  app.post('/api/admin/payment/test-order', authenticate, requireRole('admin'), async (req, res) => {
+    try {
+      const { amount = 1, customerName = 'Test User', customerEmail = 'test@example.com', customerPhone = '9876543210' } = req.body;
+      const paymentService = new PaymentService();
+      
+      const testBookingId = Date.now();
+      const result = await paymentService.createPaymentOrder({
+        bookingId: testBookingId,
+        amount: parseFloat(amount),
+        customerName,
+        customerEmail,
+        customerPhone
+      });
+      
+      if (!result.success) {
+        const diagnostics = await paymentService.generateDiagnosticReport(new Error(result.error));
+        result.diagnostics = diagnostics;
+      }
+      
+      res.json({
+        success: true,
+        testResult: result,
+        testBookingId
+      });
+    } catch (error: any) {
+      console.error('Payment test order endpoint failed:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Test order failed',
+        message: error.message
+      });
+    }
+  });
+
   // PUBLIC Scanner Routes (must be before any auth middleware)
   app.post('/api/scanner/scan', async (req, res) => {
     try {
@@ -1189,13 +1267,18 @@ export async function registerRoutes(app: Express): Promise<Express> {
 
   // Booking Routes
   app.post('/api/bookings', async (req, res) => {
+    const requestId = Math.random().toString(36).substr(2, 9);
+    const startTime = Date.now();
+    
     try {
-      console.log('📋 Received booking request:', JSON.stringify(req.body, null, 2));
+      console.log(`[${requestId}] 📋 Received booking request:`, JSON.stringify(req.body, null, 2));
+      console.log(`[${requestId}] 🌍 Environment: ${process.env.NODE_ENV || 'unknown'}`);
+      console.log(`[${requestId}] 🗄️ Database URL exists: ${!!process.env.DATABASE_URL}`);
       
       // Validate booking data using Zod schema
       const validationResult = insertBookingSchema.safeParse(req.body);
       if (!validationResult.success) {
-        console.log('❌ Validation failed:', validationResult.error.issues);
+        console.error(`[${requestId}] ❌ Validation failed:`, validationResult.error.issues);
         return res.status(400).json({ 
           message: 'Validation failed', 
           errors: validationResult.error.issues.map(issue => ({
@@ -1207,12 +1290,35 @@ export async function registerRoutes(app: Express): Promise<Express> {
       
       const bookingData = validationResult.data;
       
+      console.log(`[${requestId}] 📊 Fetching existing bookings and configuration...`);
+      
       // Get all bookings for capacity checking
-      const existingBookings = await storage.getAllBookings();
+      let existingBookings, counts, config;
+      try {
+        existingBookings = await storage.getAllBookings();
+        console.log(`[${requestId}] ✅ Retrieved ${existingBookings.length} existing bookings`);
+      } catch (dbError: any) {
+        console.error(`[${requestId}] ❌ Database error getting bookings:`, dbError);
+        return res.status(500).json({ 
+          message: 'Database error - unable to retrieve bookings', 
+          error: dbError.message,
+          requestId 
+        });
+      }
       
       // Get current ticket counts and config to determine pricing
-      const counts = await storage.getTicketCounts();
-      const config = await storage.getTicketConfig();
+      try {
+        counts = await storage.getTicketCounts();
+        config = await storage.getTicketConfig();
+        console.log(`[${requestId}] ✅ Retrieved ticket counts and config:`, { counts, config });
+      } catch (configError: any) {
+        console.error(`[${requestId}] ❌ Database error getting configuration:`, configError);
+        return res.status(500).json({ 
+          message: 'Database error - unable to retrieve ticket configuration', 
+          error: configError.message,
+          requestId 
+        });
+      }
       
       // Enhanced capacity checking
       const totalCurrentBookings = existingBookings.reduce((sum, b) => sum + b.ticketCount, 0);
@@ -1278,20 +1384,44 @@ export async function registerRoutes(app: Express): Promise<Express> {
       // Generate unique guest codes for each ticket
       const guestCodes = generateGuestCodes(bookingData.ticketCount);
       
-      const booking = await storage.createBooking({
-        ...bookingData,
-        ticketType,
-        guestCodes,
-        couponCode: bookingData.couponCode || null,
-        totalAmount: totalAmount.toString(),
-        couponDiscount,
-        paymentStatus: 'pending'
-      });
+      console.log(`[${requestId}] 💾 Creating booking in database...`);
+      let booking;
+      try {
+        booking = await storage.createBooking({
+          ...bookingData,
+          ticketType,
+          guestCodes,
+          couponCode: bookingData.couponCode || null,
+          totalAmount: totalAmount.toString(),
+          couponDiscount,
+          paymentStatus: 'pending'
+        });
+        console.log(`[${requestId}] ✅ Booking created successfully with ID: ${booking.id}`);
+      } catch (bookingError: any) {
+        console.error(`[${requestId}] ❌ Failed to create booking in database:`, bookingError);
+        console.error(`[${requestId}] Database connection status:`, { 
+          hasConnection: !!process.env.DATABASE_URL,
+          error: bookingError.message,
+          stack: bookingError.stack
+        });
+        return res.status(500).json({ 
+          message: 'Database error - unable to create booking', 
+          error: bookingError.message,
+          requestId 
+        });
+      }
 
       console.log(`✅ Booking created with ID: ${booking.id}`);
 
       // Update ticket counts
-      await storage.updateTicketCounts(ticketType, bookingData.ticketCount);
+      console.log(`[${requestId}] 🎫 Updating ticket counts for ${ticketType}...`);
+      try {
+        await storage.updateTicketCounts(ticketType, bookingData.ticketCount);
+        console.log(`[${requestId}] ✅ Updated ticket counts for ${ticketType}`);
+      } catch (ticketCountError: any) {
+        console.error(`[${requestId}] ❌ Failed to update ticket counts:`, ticketCountError);
+        // Continue with booking even if ticket count update fails
+      }
 
       // Update promoter stats if referrer was used
       if (booking.promoterId) {
@@ -1335,19 +1465,38 @@ export async function registerRoutes(app: Express): Promise<Express> {
       }
 
       // Create Cashfree payment order
-      const paymentResult = await paymentService.createPaymentOrder({
-        bookingId: booking.id,
-        amount: totalAmount,
-        customerName: booking.name,
-        customerEmail: booking.email,
-        customerPhone: booking.phone,
-      });
-      
-      if (!paymentResult.success) {
-        console.error('Payment order creation failed:', paymentResult.error);
-        return res.status(500).json({ 
-          message: 'Payment order creation failed', 
-          error: paymentResult.userMessage || paymentResult.error 
+      console.log(`[${requestId}] 💳 Creating Cashfree payment order...`);
+      let paymentResult;
+      try {
+        paymentResult = await paymentService.createPaymentOrder({
+          bookingId: booking.id,
+          amount: totalAmount,
+          customerName: booking.name,
+          customerEmail: booking.email,
+          customerPhone: booking.phone,
+        });
+        
+        if (!paymentResult.success) {
+          console.error(`[${requestId}] ❌ Payment order creation failed:`, {
+            error: paymentResult.error,
+            userMessage: paymentResult.userMessage,
+            bookingId: booking.id,
+            amount: totalAmount
+          });
+          return res.status(500).json({
+            message: paymentResult.userMessage || 'Payment processing is temporarily unavailable',
+            error: paymentResult.error,
+            requestId
+          });
+        }
+        
+        console.log(`[${requestId}] ✅ Payment order created successfully: ${paymentResult.orderId}`);
+      } catch (paymentError: any) {
+        console.error(`[${requestId}] ❌ Unexpected error in payment processing:`, paymentError);
+        return res.status(500).json({
+          message: 'Payment processing failed unexpectedly',
+          error: paymentError.message,
+          requestId
         });
       }
       
@@ -1363,6 +1512,9 @@ export async function registerRoutes(app: Express): Promise<Express> {
         // Don't fail the booking if safety service fails
       }
       
+      const processingTime = Date.now() - startTime;
+      console.log(`[${requestId}] ✅ Booking completed successfully in ${processingTime}ms for booking ${booking.id}`);
+      
       res.json({ 
         booking: {
           ...booking,
@@ -1371,11 +1523,27 @@ export async function registerRoutes(app: Express): Promise<Express> {
         }, 
         paymentLink: paymentResult.paymentLink,
         orderId: paymentResult.orderId,
-        ticketCounts: await storage.getTicketCounts()
+        ticketCounts: await storage.getTicketCounts(),
+        requestId,
+        processingTime: `${processingTime}ms`
       });
     } catch (error: any) {
-      console.error('❌ Booking creation error:', error);
-      res.status(500).json({ message: 'Booking creation failed', error: error.message });
+      const processingTime = Date.now() - startTime;
+      console.error(`[${requestId}] ❌ CRITICAL BOOKING ERROR after ${processingTime}ms:`, {
+        error: error.message,
+        stack: error.stack,
+        requestBody: req.body,
+        environment: process.env.NODE_ENV || 'unknown',
+        databaseUrl: !!process.env.DATABASE_URL,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.status(500).json({ 
+        message: 'Booking creation failed unexpectedly', 
+        error: error.message,
+        requestId,
+        processingTime: `${processingTime}ms`
+      });
     }
   });
 
