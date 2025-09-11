@@ -370,26 +370,35 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
     },
   });
 
-  // Emergency manual verification mutation - only for when webhooks fail
-  const emergencyVerifyMutation = useMutation({
+  // Check payment status from Cashfree - compares local vs gateway status
+  const checkCashfreeStatusMutation = useMutation({
     mutationFn: async (bookingId: number) => {
       const token = localStorage.getItem('adminToken');
-      return await apiRequest('POST', `/api/admin/emergency-verify-payment`, { bookingId }, {
+      return await apiRequest('POST', `/api/admin/check-cashfree-status`, { bookingId }, {
         Authorization: `Bearer ${token}`
       });
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics'] });
-      toast({ 
-        title: '🚨 Emergency Verification Complete', 
-        description: data.message || 'Payment verified manually and tickets sent if successful'
-      });
+      
+      // Show appropriate toast based on result
+      if (data.statusUpdated) {
+        toast({ 
+          title: '✅ Status Updated from Cashfree', 
+          description: data.message || 'Status synchronized successfully'
+        });
+      } else {
+        toast({ 
+          title: '🔍 Status Check Complete', 
+          description: data.message || 'Status compared with Cashfree successfully'
+        });
+      }
     },
     onError: (error: any) => {
       toast({ 
-        title: 'Emergency Verification Failed', 
-        description: error.message || 'Failed to manually verify payment',
+        title: 'Cashfree Status Check Failed', 
+        description: error.message || 'Failed to check status with Cashfree',
         variant: 'destructive' 
       });
     },
@@ -1131,45 +1140,46 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
                             </div>
                           </div>
 
-                          {/* Emergency Manual Verification Button - Only for webhook failures */}
+                          {/* Check Status from Cashfree - Compare local vs gateway status */}
                           {(booking.paymentStatus === 'pending' || booking.paymentStatus === 'failed') && (
                             <PermissionGuard 
                               permissions={['verify_payments']} 
                               userPermissions={user.permissions}
                             >
-                              <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-3">
+                              <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-orange-600 text-sm font-medium">🚨 EMERGENCY USE ONLY</span>
+                                  <span className="text-blue-600 text-sm font-medium">🔍 STATUS VERIFICATION</span>
                                 </div>
-                                <p className="text-xs text-orange-700 mb-3">
-                                  Use only when automated webhook verification fails. This manually checks payment status with Cashfree.
+                                <p className="text-xs text-blue-700 mb-3">
+                                  Check the actual payment status directly from Cashfree and compare with local database. 
+                                  This will automatically sync status and send tickets if payment is verified on Cashfree.
                                 </p>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="bg-orange-500 hover:bg-orange-600 text-white border-orange-600 hover:border-orange-700"
+                                  className="bg-blue-500 hover:bg-blue-600 text-white border-blue-600 hover:border-blue-700"
                                   onClick={() => {
-                                    if (confirm(`EMERGENCY: Manually verify payment for ${booking.name}?\n\nThis should only be used if webhook verification failed.\n\nThis will check payment status directly with Cashfree and send tickets if payment is verified.`)) {
-                                      emergencyVerifyMutation.mutate(booking.id);
+                                    if (confirm(`Check payment status from Cashfree for ${booking.name}?\n\nThis will:\n• Query Cashfree directly for current payment status\n• Compare with local database status\n• Update status and send tickets if payment is verified on Cashfree\n\nProceed with status check?`)) {
+                                      checkCashfreeStatusMutation.mutate(booking.id);
                                     }
                                   }}
-                                  disabled={emergencyVerifyMutation.isPending}
-                                  data-testid={`button-emergency-verify-${booking.id}`}
+                                  disabled={checkCashfreeStatusMutation.isPending}
+                                  data-testid={`button-check-cashfree-status-${booking.id}`}
                                 >
-                                  {emergencyVerifyMutation.isPending ? (
+                                  {checkCashfreeStatusMutation.isPending ? (
                                     <>
                                       <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                                      Verifying...
+                                      Checking...
                                     </>
                                   ) : (
                                     <>
-                                      <Shield className="w-4 h-4 mr-2" />
-                                      EMERGENCY MANUAL VERIFY
+                                      <Activity className="w-4 h-4 mr-2" />
+                                      CHECK STATUS FROM CASHFREE
                                     </>
                                   )}
                                 </Button>
-                                <p className="text-xs text-orange-600 mt-2 font-medium">
-                                  ⚠️ Webhooks Failed - Manual Override Required
+                                <p className="text-xs text-blue-600 mt-2 font-medium">
+                                  🔗 Verify against Cashfree Gateway
                                 </p>
                               </div>
                             </PermissionGuard>

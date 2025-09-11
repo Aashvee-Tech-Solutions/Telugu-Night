@@ -1479,6 +1479,137 @@ export async function registerRoutes(app: Express): Promise<Express> {
     }
   });
 
+  // Check payment status from Cashfree - Returns status comparison without automatic verification
+  app.post('/api/admin/check-cashfree-status', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
+    try {
+      const { bookingId } = req.body;
+      
+      if (!bookingId || typeof bookingId !== 'number') {
+        return res.status(400).json({ message: 'Valid booking ID is required' });
+      }
+
+      // Get booking details
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+
+      // Check if booking has payment ID
+      if (!booking.paymentId) {
+        return res.status(400).json({ 
+          message: 'No payment ID found for this booking. Cannot check status with Cashfree.',
+          localStatus: booking.paymentStatus,
+          cashfreeStatus: 'NO_PAYMENT_ID'
+        });
+      }
+
+      const localStatus = booking.paymentStatus;
+      console.log(`🔍 Checking Cashfree status for booking ${bookingId} (local: ${localStatus}) with payment ID ${booking.paymentId}`);
+
+      try {
+        // Check payment status with Cashfree
+        const verificationResult = await paymentService.verifyPaymentWithMapping(booking.paymentId);
+        
+        if (!verificationResult.success) {
+          console.error(`❌ Cashfree status check failed for booking ${bookingId}:`, verificationResult.error);
+          return res.status(500).json({ 
+            message: `Failed to fetch status from Cashfree: ${verificationResult.userMessage || verificationResult.error}`,
+            localStatus,
+            cashfreeStatus: 'CHECK_FAILED',
+            error: verificationResult.error
+          });
+        }
+
+        const cashfreeStatus = verificationResult.mappedStatus;
+        const rawCashfreeStatus = verificationResult.status;
+
+        console.log(`📊 Status comparison for booking ${bookingId}: Local=${localStatus}, Cashfree=${cashfreeStatus} (raw: ${rawCashfreeStatus})`);
+
+        // Check if there's a mismatch that needs correction
+        let statusUpdated = false;
+        let ticketsSent = false;
+        let message = '';
+
+        if (localStatus !== cashfreeStatus) {
+          if (cashfreeStatus === 'verified' && (localStatus === 'pending' || localStatus === 'failed')) {
+            // Payment is verified on Cashfree but not locally - update and send tickets
+            await storage.updateBookingPaymentStatus(bookingId, 'verified');
+            statusUpdated = true;
+
+            try {
+              const bookingData = toBookingData(booking);
+              await enhancedEmailService.sendTicketEmails(bookingData);
+              ticketsSent = true;
+              console.log(`✅ Status sync: Tickets sent for booking ${bookingId} after Cashfree verification`);
+              
+              // Sync to Google Sheets
+              try {
+                await googleSheetsService.addBookingToSheet(booking);
+                console.log(`📊 Booking ${bookingId} synced to Google Sheets after status correction`);
+              } catch (sheetError) {
+                console.warn(`⚠️ Failed to sync booking ${bookingId} to Google Sheets:`, sheetError);
+              }
+
+              message = `✅ Status Corrected: Payment was verified on Cashfree! Local status updated and tickets sent to ${booking.email}`;
+            } catch (emailError: any) {
+              console.error(`❌ Status sync: Payment verified but ticket sending failed for booking ${bookingId}:`, emailError);
+              message = `✅ Status Corrected: Payment verified on Cashfree, but ticket sending failed: ${emailError.message}`;
+            }
+          } else if (cashfreeStatus === 'failed' && localStatus === 'pending') {
+            // Payment failed on Cashfree but still pending locally
+            await storage.updateBookingPaymentStatus(bookingId, 'failed');
+            statusUpdated = true;
+            message = `❌ Status Updated: Payment failed on Cashfree. Local status updated to failed.`;
+          } else {
+            // Other status mismatches
+            message = `⚠️ Status Mismatch Detected: Local status (${localStatus}) differs from Cashfree (${cashfreeStatus}). Review required.`;
+          }
+        } else {
+          // Statuses match
+          if (cashfreeStatus === 'verified') {
+            message = `✅ Status Confirmed: Payment is verified on both local and Cashfree systems.`;
+          } else if (cashfreeStatus === 'pending') {
+            message = `⏳ Status Confirmed: Payment is still pending on both local and Cashfree systems.`;
+          } else if (cashfreeStatus === 'failed') {
+            message = `❌ Status Confirmed: Payment has failed on both local and Cashfree systems.`;
+          } else {
+            message = `🔍 Status Confirmed: Both systems show status as ${cashfreeStatus}.`;
+          }
+        }
+
+        return res.json({
+          success: true,
+          message,
+          localStatus,
+          cashfreeStatus,
+          rawCashfreeStatus,
+          statusUpdated,
+          ticketsSent,
+          checkedBy: req.user?.username,
+          checkedAt: new Date().toISOString(),
+          bookingId,
+          paymentId: booking.paymentId
+        });
+
+      } catch (cashfreeError: any) {
+        console.error(`❌ Cashfree API error for booking ${bookingId}:`, cashfreeError);
+        return res.status(500).json({ 
+          message: `Failed to connect to Cashfree API: ${cashfreeError.message}`,
+          localStatus,
+          cashfreeStatus: 'API_ERROR',
+          error: cashfreeError.message
+        });
+      }
+
+    } catch (error: any) {
+      console.error(`❌ Check Cashfree status error for booking ${req.body.bookingId}:`, error);
+      return res.status(500).json({ 
+        message: `Failed to check Cashfree status: ${error.message}`,
+        error: error.message
+      });
+    }
+  });
+
   // Manual payment verification - BYPASSES gateway entirely
   app.post('/api/admin/manual-verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
     try {
