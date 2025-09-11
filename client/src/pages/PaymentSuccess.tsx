@@ -1,12 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Mail, Clock, ArrowRight } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, Download, Calendar, MapPin, Clock, Users, AlertCircle, Loader2, FileDown, Share2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import type { Booking } from '../../../shared/schema';
 
 export default function PaymentSuccess() {
+  const { toast } = useToast();
   const [bookingId, setBookingId] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(7);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [redirectMessage, setRedirectMessage] = useState('');
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [paymentVerificationTimeout, setPaymentVerificationTimeout] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Extract booking ID from URL
+  // Extract booking ID from URL with enhanced validation
   useEffect(() => {
     console.log('🔍 PaymentSuccess: Extracting booking ID from URL:', window.location.search);
     const params = new URLSearchParams(window.location.search);
@@ -25,43 +35,304 @@ export default function PaymentSuccess() {
     }
   }, []);
 
-  // Auto-redirect countdown and redirect
+  // Fetch booking details with enhanced error handling and timeout
+  const { data: booking, isLoading, error } = useQuery<Booking>({
+    queryKey: [`/api/bookings/${bookingId || 'null'}`],
+    enabled: !!bookingId,
+    retry: 1, // Reduced retry to prevent infinite loading
+    refetchOnWindowFocus: false,
+    staleTime: 5000, // Reduced timeout
+    gcTime: 5000,
+  });
+
+  // Add loading timeout to prevent infinite spinner
   useEffect(() => {
-    if (!bookingId) return;
+    if (isLoading && bookingId && !loadingTimeout) {
+      console.log('⏱️ PaymentSuccess: Starting 15-second timeout for booking fetch');
+      const timer = setTimeout(() => {
+        console.error('❌ PaymentSuccess: Booking fetch timeout after 15 seconds');
+        setLoadingTimeout(true);
+      }, 15000); // 15 second timeout
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, bookingId, loadingTimeout]);
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Redirect to home page
-          console.log('🏠 PaymentSuccess: Auto-redirecting to home page');
-          window.location.href = '/';
-          return 0;
-        }
-        return prev - 1;
+  // Send QR tickets mutation
+  const sendTicketsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/public/bookings/${bookingId}/send-tickets`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "🎫 QR Tickets Sent!",
+        description: "Your QR tickets have been sent to your email address.",
       });
-    }, 1000);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to send tickets",
+        description: error.message || "Please contact support for assistance.",
+        variant: "destructive",
+      });
+    },
+  });
 
-    return () => clearInterval(timer);
-  }, [bookingId]);
+  // Mutation to manually check payment status for stuck payments
+  const checkStatusMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/bookings/${bookingId}/check-status`);
+    },
+    onSuccess: (data: any) => {
+      if (data.status === 'failed') {
+        toast({
+          title: "Payment Timeout",
+          description: "Your payment has timed out and will be marked as failed.",
+          variant: "destructive",
+        });
+        setIsRedirecting(true);
+        setRedirectMessage('Payment failed. Refreshing page...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        toast({
+          title: "Status Checked",
+          description: `Payment is still ${data.status}. Time pending: ${data.timePending}`,
+        });
+        // Trigger another polling cycle after manual status check
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/bookings/${bookingId}`] 
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Check Failed",
+        description: error.message || "Failed to check payment status.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  // Handle invalid booking ID
+  // Add 10-second timeout for payment verification and trigger manual status check
+  useEffect(() => {
+    if (booking && booking.paymentStatus === 'pending' && !paymentVerificationTimeout && !isRedirecting) {
+      console.log('⏱️ PaymentSuccess: Starting 10-second timeout for payment verification');
+      const timer = setTimeout(() => {
+        console.log('⏰ PaymentSuccess: Payment verification timeout after 10 seconds - showing mail message and checking status');
+        setPaymentVerificationTimeout(true);
+        // Optionally trigger manual status check after 10s timeout
+        if (bookingId) {
+          checkStatusMutation.mutate();
+        }
+      }, 10000); // 10 second timeout
+      
+      return () => clearTimeout(timer);
+    }
+  }, [booking?.paymentStatus, paymentVerificationTimeout, isRedirecting, bookingId]);
+
+  // Automatic payment verification polling
+  useEffect(() => {
+    // Clean up any existing polling interval first
+    if (pollingInterval) {
+      console.log('🛑 PaymentSuccess: Clearing existing polling interval');
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+
+    // Only start new polling when payment is pending and not redirecting
+    // Stop polling once payment is verified or failed
+    if (booking && booking.paymentStatus === 'pending' && !isRedirecting && bookingId) {
+      console.log('🔄 PaymentSuccess: Starting automatic payment verification polling every 3 seconds');
+      
+      const interval = setInterval(() => {
+        console.log('🔄 PaymentSuccess: Polling payment status for booking:', bookingId);
+        // Invalidate the booking query to refetch the latest data
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/bookings/${bookingId}`] 
+        });
+      }, 3000); // Poll every 3 seconds
+      
+      setPollingInterval(interval);
+      
+      return () => {
+        console.log('🛑 PaymentSuccess: Clearing payment verification polling on cleanup');
+        clearInterval(interval);
+        setPollingInterval(null);
+      };
+    } else if (booking && booking.paymentStatus === 'verified') {
+      // Stop polling when payment is verified
+      console.log('✅ PaymentSuccess: Payment verified, stopping polling');
+    }
+  }, [booking?.paymentStatus, isRedirecting, bookingId]);
+
+  // Cleanup polling on component unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        console.log('🛑 PaymentSuccess: Cleanup polling on component unmount');
+        clearInterval(pollingInterval);
+      }
+    };
+  }, []);
+
+  // Add logging for booking data fetch
+  useEffect(() => {
+    if (error) {
+      console.error('❌ PaymentSuccess: Failed to fetch booking:', error);
+    }
+    if (booking) {
+      console.log('✅ PaymentSuccess: Booking data fetched:', booking.id, 'Status:', booking.paymentStatus);
+    }
+    console.log('🐛 PaymentSuccess Debug - bookingId:', bookingId, 'isLoading:', isLoading, 'error:', error, 'booking:', booking);
+  }, [booking, error, bookingId, isLoading]);
+
+  // Enhanced payment status handling with loading states
+  useEffect(() => {
+    if (!booking || isRedirecting) return;
+    
+    console.log('🔄 PaymentSuccess: Processing payment status:', booking.paymentStatus, 'for booking:', booking.id);
+    
+    if (booking.paymentStatus === 'failed') {
+      console.log('❌ Payment failed, initiating redirect to failure page');
+      setIsRedirecting(true);
+      setRedirectMessage('Payment failed. Redirecting to failure page...');
+      
+      // Add a small delay to show the loading state
+      setTimeout(() => {
+        window.location.href = `/payment/failure?booking=${booking.id}`;
+      }, 1500);
+      return;
+    }
+    
+    // For pending payments, check timeout
+    if (booking.paymentStatus === 'pending') {
+      const createdTime = new Date(booking.createdAt || '').getTime();
+      const timeElapsed = Date.now() - createdTime;
+      
+      console.log('⏳ Payment pending for', Math.round(timeElapsed / 1000), 'seconds');
+      
+      // If payment has been pending for more than 5 minutes, redirect to failure
+      if (timeElapsed > 5 * 60 * 1000) {
+        console.log('⏰ Payment timeout detected, initiating redirect to failure page');
+        setIsRedirecting(true);
+        setRedirectMessage('Payment timed out. Redirecting to failure page...');
+        
+        setTimeout(() => {
+          window.location.href = `/payment/failure?booking=${booking.id}`;
+        }, 1500);
+        return;
+      }
+    }
+    
+    // Show success message for verified payments
+    if (booking.paymentStatus === 'verified') {
+      console.log('🎊 Payment verified! Tickets automatically generated and sent via webhook.');
+    }
+  }, [booking?.id, booking?.paymentStatus, isRedirecting]);
+
+  // Show redirecting state
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4" data-testid="page-redirecting">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-blue-500 mx-auto mb-4 animate-spin" data-testid="spinner-redirect" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2" data-testid="text-redirect-title">Redirecting...</h2>
+            <p className="text-gray-600 text-sm sm:text-base" data-testid="text-redirect-message">{redirectMessage}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!bookingId) {
     console.error('❌ PaymentSuccess: No booking ID provided');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4" data-testid="page-invalid-link">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center" data-testid="page-invalid-link">
+        <Card className="max-w-md w-full mx-4">
           <CardContent className="text-center p-8">
-            <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ArrowRight className="h-8 w-8 text-red-500" data-testid="icon-error" />
-            </div>
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" data-testid="icon-error" />
             <h2 className="text-2xl font-bold text-red-600 mb-2" data-testid="text-error-title">Invalid Payment Link</h2>
-            <p className="text-gray-600 mb-6" data-testid="text-error-description">
-              The payment link is missing booking information. You'll be redirected to the home page.
+            <p className="text-gray-600 mb-6" data-testid="text-error-description">The payment link is missing booking information.</p>
+            <Button onClick={() => window.location.href = '/'} data-testid="button-home">
+              Return to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    console.log('⏳ PaymentSuccess: Loading booking data for ID:', bookingId);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4" data-testid="page-loading">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-blue-500 mx-auto mb-4 animate-spin" data-testid="spinner-loading" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2" data-testid="text-loading-title">Processing Payment...</h2>
+            <p className="text-gray-600 text-sm sm:text-base" data-testid="text-loading-description">Please wait while we confirm your payment and generate your tickets.</p>
+            <p className="text-sm text-gray-500 mt-2" data-testid="text-booking-id">Booking ID: #{bookingId}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error || !booking || loadingTimeout) {
+    console.error('❌ PaymentSuccess: Booking not found, error occurred, or loading timeout:', error, 'timeout:', loadingTimeout);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center px-4" data-testid="page-error">
+        <Card className="max-w-md w-full">
+          <CardContent className="text-center p-6 sm:p-8">
+            <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" data-testid="icon-error" />
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2" data-testid="text-error-title">
+              {loadingTimeout ? 'Payment Processing Delayed' : 'Booking Not Found'}
+            </h2>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base" data-testid="text-error-description">
+              {loadingTimeout 
+                ? "Your payment may still be processing. Please wait a few minutes or contact support if the issue persists."
+                : "We couldn't find your booking. Please contact support."
+              }
             </p>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-700">
-                Redirecting in {timeLeft} seconds...
-              </p>
+            <p className="text-sm text-gray-500 mb-4" data-testid="text-booking-id">Booking ID: #{bookingId}</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {loadingTimeout && (
+                <Button 
+                  onClick={() => {
+                    setLoadingTimeout(false);
+                    window.location.reload();
+                  }} 
+                  className="w-full sm:w-auto"
+                  data-testid="button-retry"
+                >
+                  🔄 Check Status Again
+                </Button>
+              )}
+              <Button 
+                onClick={() => sendTicketsMutation.mutate()} 
+                disabled={sendTicketsMutation.isPending}
+                variant="secondary"
+                className="w-full sm:w-auto"
+                data-testid="button-manual-send"
+              >
+                {sendTicketsMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Send Tickets Manually
+                  </>
+                )}
+              </Button>
+              <Button onClick={() => window.location.href = '/'} variant="outline" className="w-full sm:w-auto" data-testid="button-home">
+                Return to Home
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -69,76 +340,335 @@ export default function PaymentSuccess() {
     );
   }
 
+
+  // Calculate how long we've been waiting in seconds
+  const waitingTime = booking ? Math.round((Date.now() - new Date(booking.createdAt || '').getTime()) / 1000) : 0;
+
+  // Show immediate success only for verified payments or very recent pending payments  
+  // REMOVED: Early return that was causing blank page - use full success page below instead
+
+  const isPaymentVerified = booking.paymentStatus === 'verified';
+  const hasTickets = booking.qrCodes && Array.isArray(booking.qrCodes) && booking.qrCodes.length > 0;
+
+  // Download functions
+  const downloadQRCode = (qrCodeDataUrl: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = qrCodeDataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadAllTickets = () => {
+    if (booking && booking.qrCodes) {
+      booking.qrCodes.forEach((qrCode, index) => {
+        setTimeout(() => {
+          downloadQRCode(qrCode, `telugu-night-ticket-${index + 1}.png`);
+        }, index * 100); // Small delay to prevent browser blocking multiple downloads
+      });
+      toast({
+        title: "📥 Downloading Tickets",
+        description: `Downloading ${booking.qrCodes.length} QR ticket(s)...`,
+      });
+    }
+  };
+
+  const shareTicket = async () => {
+    if (navigator.share && booking) {
+      try {
+        await navigator.share({
+          title: 'Telugu Night Tickets',
+          text: `My Telugu Night tickets are ready! Booking ID: #${booking.id}`,
+          url: window.location.href
+        });
+      } catch (error) {
+        // Fallback to copying URL
+        navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "📋 Link Copied",
+          description: "Payment link copied to clipboard",
+        });
+      }
+    } else {
+      // Fallback for browsers that don't support native sharing
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "📋 Link Copied",
+        description: "Payment link copied to clipboard",
+      });
+    }
+  };
+
+  // Debug logging just before render
+  console.log('🔍 PaymentSuccess: About to render - booking:', booking, 'isPaymentVerified:', booking ? booking.paymentStatus === 'verified' : 'no booking');
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-100 flex items-center justify-center px-4" data-testid="page-processing">
-      <Card className="max-w-lg w-full">
-        <CardContent className="text-center p-8 sm:p-10">
-          {/* Success Icon */}
-          <div className="relative mb-6">
-            <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-12 w-12 text-green-500" data-testid="icon-success" />
-            </div>
-            <div className="absolute -top-2 -right-2 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <Clock className="h-5 w-5 text-blue-500 animate-pulse" />
-            </div>
-          </div>
-
-          {/* Main Message */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3" data-testid="text-main-title">
-            🎉 Payment Submitted Successfully!
-          </h1>
-          
-          <p className="text-lg text-gray-700 mb-6" data-testid="text-main-description">
-            Your payment for Telugu Night has been submitted and is being processed.
-          </p>
-
-          {/* Booking ID */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-blue-800 font-medium" data-testid="text-booking-id">
-              Booking ID: #{bookingId}
-            </p>
-          </div>
-
-          {/* Email Notification Info */}
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <Mail className="h-6 w-6 text-green-600" data-testid="icon-email" />
-              <h3 className="text-lg font-semibold text-green-800">We'll Update You Shortly</h3>
-            </div>
-            <div className="space-y-2 text-sm text-gray-700">
-              <p data-testid="text-email-notification">
-                ✅ <strong>Payment successful?</strong> You'll receive QR tickets via email within 2-3 minutes
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Success Header */}
+          <Card className={`mb-6 ${isPaymentVerified ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'}`}>
+            <CardContent className="text-center p-8">
+              {isPaymentVerified ? (
+                <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
+              ) : (
+                <Loader2 className="h-20 w-20 text-blue-500 mx-auto mb-4 animate-spin" />
+              )}
+              <h1 className={`text-3xl font-bold mb-2 ${isPaymentVerified ? 'text-green-600' : 'text-blue-600'}`}>
+                {isPaymentVerified ? '🎉 Payment Successful!' : '🔄 Payment Processing'}
+              </h1>
+              <p className="text-gray-700 text-lg">
+                {isPaymentVerified 
+                  ? 'Your booking for Telugu Night has been confirmed and QR tickets have been sent to your email!' 
+                  : 'Your payment is being verified. QR tickets will be sent automatically once confirmed.'}
               </p>
-              <p data-testid="text-email-notification-failed">
-                ❌ <strong>Payment failed?</strong> You'll receive a failure notification with next steps
-              </p>
-              <p className="text-green-700 font-medium mt-3" data-testid="text-email-promise">
-                📧 Check your email inbox for the update!
-              </p>
-            </div>
-          </div>
+              <div className={`mt-4 ${isPaymentVerified ? 'bg-green-100 border-green-300' : 'bg-blue-100 border-blue-300'} border rounded-lg p-3 inline-block`}>
+                <p className={`${isPaymentVerified ? 'text-green-800' : 'text-blue-800'} font-medium`}>
+                  Booking ID: #{booking?.id || bookingId}
+                </p>
+              </div>
+              {isPaymentVerified && (
+                <div className="mt-4 text-center">
+                  <div className="inline-flex items-center gap-2 bg-green-200 text-green-800 px-4 py-2 rounded-full">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="font-medium">QR Tickets Sent via Email</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          {/* Auto-redirect Message */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <p className="text-gray-600 text-sm" data-testid="text-redirect-info">
-              This page will automatically close in <span className="font-bold text-blue-600">{timeLeft}</span> seconds
-            </p>
-            <p className="text-gray-500 text-xs mt-1">
-              You can safely close this page now
-            </p>
-          </div>
+          {/* Booking Details */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Booking Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="font-medium text-gray-600">Name</p>
+                  <p className="text-lg">{booking.name}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-600">Email</p>
+                  <p className="text-lg">{booking.email}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-600">Phone</p>
+                  <p className="text-lg">{booking.phone}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-600">Tickets</p>
+                  <p className="text-lg font-bold text-blue-600">{booking.ticketCount}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-600">Total Amount</p>
+                  <p className="text-lg font-bold text-green-600">₹{booking.totalAmount}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-600">Payment Status</p>
+                  <p className={`text-lg font-medium ${isPaymentVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {isPaymentVerified ? '✓ Verified' : '⏳ Processing'}
+                  </p>
+                </div>
+              </div>
 
-          {/* Important Note */}
-          <div className="mt-6 text-left bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-semibold text-yellow-800 mb-2">📋 Important:</h4>
-            <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• Keep your Booking ID: #{bookingId}</li>
-              <li>• Check email (including spam folder)</li>
-              <li>• Contact support if no email within 10 minutes</li>
-            </ul>
+              {booking.guestCodes && booking.guestCodes.length > 0 && (
+                <div>
+                  <p className="font-medium text-gray-600 mb-2">Guest Entry Codes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {booking.guestCodes.map((code: string, index: number) => (
+                      <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg font-mono">
+                        {code}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Event Information */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Event Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <p className="font-medium">Venue</p>
+                    <p className="text-sm text-gray-600">DTR, Down to Road Manipal</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-green-500" />
+                  <div>
+                    <p className="font-medium">Date</p>
+                    <p className="text-sm text-gray-600">September 19, 2025</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="h-5 w-5 text-purple-500" />
+                  <div>
+                    <p className="font-medium">Time</p>
+                    <p className="text-sm text-gray-600">6:30 PM - 11:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* QR Tickets Status */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download className="h-5 w-5" />
+                QR Tickets
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isPaymentVerified ? (
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-green-600 mb-3">
+                      <CheckCircle className="h-5 w-5" />
+                      <p className="font-medium text-lg">✅ Payment Successful & Tickets Sent!</p>
+                    </div>
+                    <div className="space-y-2 mb-4">
+                      <p className="text-gray-700 text-sm">
+                        🎫 Your QR tickets have been <strong>automatically sent</strong> to <strong>{booking.email}</strong>
+                      </p>
+                      <p className="text-green-700 text-sm font-medium">
+                        📧 Check your email (including spam/junk folder) for your QR tickets.
+                      </p>
+                      <p className="text-gray-600 text-xs">
+                        💡 Tickets were generated and sent automatically when your payment was verified.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        onClick={() => sendTicketsMutation.mutate()} 
+                        disabled={sendTicketsMutation.isPending}
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        data-testid="button-resend-tickets"
+                      >
+                        {sendTicketsMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        {sendTicketsMutation.isPending ? 'Sending...' : 'Resend to Email'}
+                      </Button>
+                      <Button 
+                        onClick={shareTicket}
+                        size="sm"
+                        variant="secondary"
+                        className="flex items-center gap-2"
+                        data-testid="button-share-ticket"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        Share Booking
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className={`${paymentVerificationTimeout ? 'bg-blue-50 border-blue-200' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4`}>
+                  <div className={`flex items-center gap-2 ${paymentVerificationTimeout ? 'text-blue-600' : 'text-yellow-600'} mb-2`}>
+                    {paymentVerificationTimeout ? (
+                      <Download className="h-5 w-5" />
+                    ) : (
+                      <Clock className="h-5 w-5" />
+                    )}
+                    <p className="font-medium">
+                      {paymentVerificationTimeout ? '📧 We Will Send Your Tickets!' : '⏳ Payment Processing...'}
+                    </p>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {paymentVerificationTimeout 
+                      ? `Your payment is being processed and QR tickets will be automatically sent to ${booking.email} once verified.`
+                      : 'Your payment is being confirmed. QR tickets will be automatically sent once verified.'
+                    }
+                  </p>
+                  <p className={`${paymentVerificationTimeout ? 'text-blue-600' : 'text-yellow-600'} text-xs mb-3`}>
+                    {paymentVerificationTimeout 
+                      ? '💡 Payment verification may take a few minutes. We will email your tickets as soon as payment is confirmed.'
+                      : '💡 This page will update automatically. Please wait a moment.'
+                    }
+                  </p>
+                  {paymentVerificationTimeout && (
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        onClick={() => sendTicketsMutation.mutate()} 
+                        disabled={sendTicketsMutation.isPending}
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        data-testid="button-send-tickets-timeout"
+                      >
+                        {sendTicketsMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        {sendTicketsMutation.isPending ? 'Sending...' : 'Send Tickets Manually'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Important Notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5" />
+                Important Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-gray-600">
+              {isPaymentVerified ? (
+                <>
+                  <p>📧 <strong>Email sent:</strong> QR tickets have been automatically sent to {booking.email}</p>
+                  <p>🚪 <strong>Entry requirement:</strong> Show your QR code at the venue for entry</p>
+                  <p>🎫 <strong>Individual codes:</strong> Each guest gets a unique QR code for separate entry</p>
+                  <p>📱 <strong>Save tickets:</strong> Download or screenshot your QR codes for offline access</p>
+                </>
+              ) : (
+                <>
+                  <p>⏳ <strong>Processing:</strong> Your payment is being verified automatically</p>
+                  <p>📧 <strong>Auto-delivery:</strong> QR tickets will be sent to {booking.email} once payment is confirmed</p>
+                  <p>🔄 <strong>Updates:</strong> This page will refresh automatically with your ticket status</p>
+                </>
+              )}
+              <p>📞 <strong>Support:</strong> Contact mis@aashveetech.com or +91 6281614117 for assistance</p>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="mt-6 flex justify-center gap-4">
+            <Button 
+              onClick={() => window.location.href = '/'}
+              variant="outline"
+            >
+              Return to Home
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

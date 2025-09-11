@@ -48,84 +48,6 @@ export async function registerRoutes(app: Express): Promise<Express> {
     chunkSize: 16 * 1024 // 16KB chunks
   }));
 
-  // Payment Service Diagnostic Routes (for admin debugging)
-  app.get('/api/admin/payment/health', authenticate, requireRole('admin'), async (req, res) => {
-    try {
-      const paymentService = new PaymentService();
-      const healthCheck = await paymentService.healthCheck();
-      const diagnosticReport = await paymentService.generateDiagnosticReport();
-      
-      res.json({
-        success: true,
-        timestamp: new Date().toISOString(),
-        health: {
-          overall: healthCheck,
-          details: diagnosticReport
-        }
-      });
-    } catch (error: any) {
-      console.error('Payment health check endpoint failed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Health check failed',
-        message: error.message
-      });
-    }
-  });
-
-  app.get('/api/admin/payment/diagnostics', authenticate, requireRole('admin'), async (req, res) => {
-    try {
-      const paymentService = new PaymentService();
-      const diagnostics = await paymentService.generateDiagnosticReport();
-      
-      res.json({
-        success: true,
-        diagnostics
-      });
-    } catch (error: any) {
-      console.error('Payment diagnostics endpoint failed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Diagnostics failed',
-        message: error.message
-      });
-    }
-  });
-
-  app.post('/api/admin/payment/test-order', authenticate, requireRole('admin'), async (req, res) => {
-    try {
-      const { amount = 1, customerName = 'Test User', customerEmail = 'test@example.com', customerPhone = '9876543210' } = req.body;
-      const paymentService = new PaymentService();
-      
-      const testBookingId = Date.now();
-      const result = await paymentService.createPaymentOrder({
-        bookingId: testBookingId,
-        amount: parseFloat(amount),
-        customerName,
-        customerEmail,
-        customerPhone
-      });
-      
-      if (!result.success) {
-        const diagnostics = await paymentService.generateDiagnosticReport(new Error(result.error));
-        result.diagnostics = diagnostics;
-      }
-      
-      res.json({
-        success: true,
-        testResult: result,
-        testBookingId
-      });
-    } catch (error: any) {
-      console.error('Payment test order endpoint failed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Test order failed',
-        message: error.message
-      });
-    }
-  });
-
   // PUBLIC Scanner Routes (must be before any auth middleware)
   app.post('/api/scanner/scan', async (req, res) => {
     try {
@@ -297,227 +219,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
   // Import helper functions
   const { generateGuestCodes, generatePassIds } = await import('./services/emailService');
   
-  // Import webhook safety service for stuck payment handling
-  const { webhookSafetyService } = await import('./services/webhookSafetyService');
 
-  // STUCK PAYMENT DETECTION AND RESOLUTION ENDPOINT
-  app.post('/api/admin/fix-stuck-payments', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
-    try {
-      const { thresholdSeconds = 30, dryRun = false } = req.body;
-      
-      console.log(`🔧 Starting stuck payment detection (threshold: ${thresholdSeconds}s, dryRun: ${dryRun})`);
-      
-      // Get all stuck payments
-      const stuckPayments = await storage.getStuckPayments(thresholdSeconds);
-      
-      if (stuckPayments.length === 0) {
-        return res.json({
-          success: true,
-          message: 'No stuck payments found',
-          stuckPayments: [],
-          fixed: 0,
-          errors: []
-        });
-      }
-      
-      console.log(`Found ${stuckPayments.length} potentially stuck payments`);
-      
-      const results = {
-        stuckPayments: stuckPayments.map(p => ({
-          id: p.id,
-          name: p.name,
-          email: p.email,
-          paymentId: p.paymentId,
-          totalAmount: p.totalAmount,
-          createdAt: p.createdAt,
-          timePending: Math.round((Date.now() - new Date(p.createdAt || Date.now()).getTime()) / 1000)
-        })),
-        fixed: 0,
-        errors: [] as any[]
-      };
-      
-      if (dryRun) {
-        console.log('🔍 Dry run mode - not making any changes');
-        return res.json({
-          success: true,
-          message: `Found ${stuckPayments.length} stuck payments (dry run mode)`,
-          ...results
-        });
-      }
-      
-      // Process each stuck payment
-      for (const booking of stuckPayments) {
-        try {
-          if (!booking.paymentId) {
-            console.log(`⚠️ Booking ${booking.id} has no payment ID, skipping`);
-            continue;
-          }
-          
-          console.log(`🔍 Checking payment status for booking ${booking.id}, payment ${booking.paymentId}`);
-          
-          const verificationResult = await paymentService.verifyPayment(booking.paymentId);
-          
-          if (!verificationResult.success) {
-            console.log(`❌ Failed to verify payment ${booking.paymentId}: ${verificationResult.error}`);
-            results.errors.push({
-              bookingId: booking.id,
-              paymentId: booking.paymentId,
-              error: verificationResult.error || 'Unknown verification error'
-            });
-            continue;
-          }
-          
-          const paymentStatus = verificationResult.status;
-          console.log(`📊 Payment ${booking.paymentId} status: ${paymentStatus}`);
-          
-          if (paymentStatus === 'PAID' || paymentStatus === 'SETTLED') {
-            // Payment was successful - update booking and send tickets
-            console.log(`✅ Payment ${booking.paymentId} was successful, updating booking ${booking.id}`);
-            
-            await storage.updateBookingPaymentStatus(booking.id, 'verified');
-            
-            // Generate guest codes and QR codes
-            const guestCodes = generateGuestCodes(booking.ticketCount);
-            const passIds = generatePassIds(booking.id, booking.ticketCount);
-            const qrCodes = guestCodes.map(code => `TELUGU-NIGHT-${booking.id}-${code}`);
-            
-            await storage.updateBookingQRCodes(booking.id, qrCodes, passIds, guestCodes);
-            
-            // Send confirmation email with tickets
-            try {
-              const updatedBooking = await storage.getBooking(booking.id);
-              if (updatedBooking) {
-                await enhancedEmailService.sendPaymentConfirmationEmail(toBookingData(updatedBooking));
-                console.log(`📧 Confirmation email sent for booking ${booking.id}`);
-              }
-            } catch (emailError) {
-              console.error(`❌ Failed to send confirmation email for booking ${booking.id}:`, emailError);
-            }
-            
-            results.fixed++;
-            console.log(`🎯 Successfully fixed stuck payment ${booking.paymentId} for booking ${booking.id}`);
-            
-          } else if (paymentStatus === 'FAILED' || paymentStatus === 'CANCELLED') {
-            // Payment failed - update status
-            console.log(`❌ Payment ${booking.paymentId} failed (${paymentStatus}), marking booking ${booking.id} as failed`);
-            await storage.updateBookingPaymentStatus(booking.id, 'failed');
-            
-          } else {
-            // Payment still pending
-            console.log(`⏳ Payment ${booking.paymentId} still pending with status: ${paymentStatus}`);
-          }
-          
-        } catch (error: any) {
-          console.error(`❌ Error processing stuck payment for booking ${booking.id}:`, error);
-          results.errors.push({
-            bookingId: booking.id,
-            paymentId: booking.paymentId,
-            error: error.message || 'Unknown processing error'
-          });
-        }
-      }
-      
-      const message = `Processed ${stuckPayments.length} stuck payments. Fixed: ${results.fixed}, Errors: ${results.errors.length}`;
-      console.log(`✅ ${message}`);
-      
-      res.json({
-        success: true,
-        message,
-        ...results
-      });
-      
-    } catch (error: any) {
-      console.error('❌ Error in stuck payment detection:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to process stuck payments',
-        error: error.message
-      });
-    }
-  });
-
-  // WEBHOOK MONITORING STATUS ENDPOINT
-  app.get('/api/admin/webhook-status', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
-    try {
-      const status = await webhookSafetyService.getMonitoringStatus();
-      res.json(status);
-    } catch (error: any) {
-      console.error('Error getting webhook status:', error);
-      res.status(500).json({ message: 'Failed to get webhook status' });
-    }
-  });
-
-  // MANUAL PAYMENT CHECK ENDPOINT (for individual bookings)
-  app.post('/api/bookings/:id/check-status', async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      
-      if (isNaN(bookingId)) {
-        return res.status(400).json({ message: 'Invalid booking ID' });
-      }
-      
-      const booking = await storage.getBooking(bookingId);
-      if (!booking) {
-        return res.status(404).json({ message: 'Booking not found' });
-      }
-      
-      console.log(`🔍 Manual status check for booking ${bookingId}, payment status: ${booking.paymentStatus}`);
-      
-      if (booking.paymentStatus !== 'pending' || !booking.paymentId) {
-        const timePending = Math.round((Date.now() - new Date(booking.createdAt || Date.now()).getTime()) / 1000);
-        return res.json({
-          status: booking.paymentStatus,
-          timePending: `${timePending} seconds`,
-          paymentId: booking.paymentId
-        });
-      }
-      
-      // Check if payment has been pending too long (5+ minutes = failed)
-      const timePending = Date.now() - new Date(booking.createdAt || Date.now()).getTime();
-      if (timePending > 5 * 60 * 1000) {
-        console.log(`⏰ Payment timeout for booking ${bookingId} (${Math.round(timePending / 1000)}s)`);
-        await storage.updateBookingPaymentStatus(bookingId, 'failed');
-        return res.json({
-          status: 'failed',
-          reason: 'Payment timeout',
-          timePending: `${Math.round(timePending / 1000)} seconds`
-        });
-      }
-      
-      // Verify with Cashfree
-      try {
-        const verificationResult = await paymentService.verifyPayment(booking.paymentId);
-        
-        if (verificationResult.success && verificationResult.status === 'PAID') {
-          console.log(`✅ Manual verification successful for booking ${bookingId}`);
-          await storage.updateBookingPaymentStatus(bookingId, 'verified');
-          return res.json({
-            status: 'verified',
-            timePending: `${Math.round(timePending / 1000)} seconds`,
-            message: 'Payment verified successfully'
-          });
-        }
-        
-        res.json({
-          status: booking.paymentStatus,
-          timePending: `${Math.round(timePending / 1000)} seconds`,
-          cashfreeStatus: verificationResult.status || 'unknown'
-        });
-        
-      } catch (error: any) {
-        console.error(`❌ Manual verification failed for booking ${bookingId}:`, error);
-        res.json({
-          status: booking.paymentStatus,
-          timePending: `${Math.round(timePending / 1000)} seconds`,
-          error: 'Verification failed'
-        });
-      }
-      
-    } catch (error: any) {
-      console.error('Error in manual status check:', error);
-      res.status(500).json({ message: 'Status check failed' });
-    }
-  });
 
   // Initialize admin user route (for fixing login issues)
   app.post('/api/admin/init-user', async (req, res) => {
@@ -1187,52 +889,14 @@ export async function registerRoutes(app: Express): Promise<Express> {
         }
       }
       
-      // SAFETY: Extended timeout logic - payments can take up to 10 minutes to complete
-      // This only applies when API verification also fails (extremely rare)
+      // Fallback: Original timeout logic for when API verification fails or is not applicable
       const createdTime = new Date(booking.createdAt || '').getTime();
       const currentTime = Date.now();
       const timeDiff = currentTime - createdTime;
-      const tenMinutes = 10 * 60 * 1000; // 10 minutes instead of 45 seconds
+      const fortyFiveSeconds = 45 * 1000;
       
-      if (booking.paymentStatus === 'pending' && timeDiff > tenMinutes) {
-        console.log(`🕒 Booking ${bookingId} stuck for ${Math.round(timeDiff / 1000)} seconds (${Math.round(timeDiff / 60000)} minutes), marking as failed (extended timeout fallback)`);
-        
-        // Try one final verification before marking as failed
-        try {
-          const finalVerification = await paymentService.verifyPayment(booking.paymentId || '');
-          if (finalVerification.success) {
-            const finalMappedStatus = paymentService.mapCashfreeStatusToInternal(finalVerification.status || '');
-            if (finalMappedStatus === 'verified') {
-              console.log(`💰 Last-chance verification successful for booking ${bookingId}!`);
-              await storage.updateBookingPaymentStatus(bookingId, 'verified');
-              
-              // Generate QR codes and send tickets
-              const guestCodes = generateGuestCodes(booking.ticketCount);
-              const passIds = generatePassIds(booking.id, booking.ticketCount);
-              const qrCodes = guestCodes.map(code => `TELUGU-NIGHT-${booking.id}-${code}`);
-              
-              await storage.updateBookingQRCodes(booking.id, qrCodes, passIds, guestCodes);
-              
-              // Send confirmation email with tickets
-              const updatedBooking = await storage.getBooking(booking.id);
-              if (updatedBooking) {
-                await enhancedEmailService.sendPaymentConfirmationEmail(toBookingData(updatedBooking));
-                console.log(`📧 Last-chance confirmation email sent for booking ${booking.id}`);
-              }
-              
-              return res.json({ 
-                message: 'Payment verified on final check',
-                status: 'verified',
-                bookingId: bookingId,
-                reason: 'last_chance_verification'
-              });
-            }
-          }
-        } catch (finalError) {
-          console.error(`❌ Final verification failed for booking ${bookingId}:`, finalError);
-        }
-        
-        // Only mark as failed after 10 minutes and final verification fails
+      if (booking.paymentStatus === 'pending' && timeDiff > fortyFiveSeconds) {
+        console.log(`🕒 Booking ${bookingId} stuck for ${Math.round(timeDiff / 1000)} seconds, marking as failed (timeout fallback)`);
         await storage.updateBookingPaymentStatus(bookingId, 'failed');
         
         // Send failure email
@@ -1240,15 +904,15 @@ export async function registerRoutes(app: Express): Promise<Express> {
           const { EnhancedEmailService } = await import('./services/enhancedEmailService');
           const enhancedEmailService = new EnhancedEmailService();
           await enhancedEmailService.sendPaymentFailureEmail(toBookingData({...booking, paymentStatus: 'failed'}));
-          console.log(`📧 Payment timeout email sent to ${booking.email} after ${Math.round(timeDiff / 60000)} minutes`);
+          console.log(`📧 Payment timeout email sent to ${booking.email}`);
         } catch (emailError) {
           console.error('Failed to send timeout email:', emailError);
         }
         
         return res.json({ 
-          message: `Payment timed out after ${Math.round(timeDiff / 60000)} minutes and marked as failed`,
+          message: 'Payment timed out and marked as failed',
           status: 'failed',
-          reason: 'extended_timeout',
+          reason: 'timeout',
           bookingId: bookingId
         });
       }
@@ -1267,18 +931,13 @@ export async function registerRoutes(app: Express): Promise<Express> {
 
   // Booking Routes
   app.post('/api/bookings', async (req, res) => {
-    const requestId = Math.random().toString(36).substr(2, 9);
-    const startTime = Date.now();
-    
     try {
-      console.log(`[${requestId}] 📋 Received booking request:`, JSON.stringify(req.body, null, 2));
-      console.log(`[${requestId}] 🌍 Environment: ${process.env.NODE_ENV || 'unknown'}`);
-      console.log(`[${requestId}] 🗄️ Database URL exists: ${!!process.env.DATABASE_URL}`);
+      console.log('📋 Received booking request:', JSON.stringify(req.body, null, 2));
       
       // Validate booking data using Zod schema
       const validationResult = insertBookingSchema.safeParse(req.body);
       if (!validationResult.success) {
-        console.error(`[${requestId}] ❌ Validation failed:`, validationResult.error.issues);
+        console.log('❌ Validation failed:', validationResult.error.issues);
         return res.status(400).json({ 
           message: 'Validation failed', 
           errors: validationResult.error.issues.map(issue => ({
@@ -1290,35 +949,25 @@ export async function registerRoutes(app: Express): Promise<Express> {
       
       const bookingData = validationResult.data;
       
-      console.log(`[${requestId}] 📊 Fetching existing bookings and configuration...`);
+      // Check for duplicate booking (email + phone combination within last 5 minutes)
+      const existingBookings = await storage.getAllBookings();
+      const recentBooking = existingBookings.find(b => 
+        b.email === bookingData.email && 
+        b.phone === bookingData.phone && 
+        (Date.now() - new Date(b.createdAt || new Date()).getTime()) < 5 * 60 * 1000 // 5 minutes
+      );
       
-      // Get all bookings for capacity checking
-      let existingBookings, counts, config;
-      try {
-        existingBookings = await storage.getAllBookings();
-        console.log(`[${requestId}] ✅ Retrieved ${existingBookings.length} existing bookings`);
-      } catch (dbError: any) {
-        console.error(`[${requestId}] ❌ Database error getting bookings:`, dbError);
-        return res.status(500).json({ 
-          message: 'Database error - unable to retrieve bookings', 
-          error: dbError.message,
-          requestId 
+      if (recentBooking) {
+        console.log('⚠️ Duplicate booking attempt detected');
+        return res.status(400).json({ 
+          message: 'Duplicate booking detected. Please wait 5 minutes before creating another booking with the same details.',
+          existingBookingId: recentBooking.id
         });
       }
       
       // Get current ticket counts and config to determine pricing
-      try {
-        counts = await storage.getTicketCounts();
-        config = await storage.getTicketConfig();
-        console.log(`[${requestId}] ✅ Retrieved ticket counts and config:`, { counts, config });
-      } catch (configError: any) {
-        console.error(`[${requestId}] ❌ Database error getting configuration:`, configError);
-        return res.status(500).json({ 
-          message: 'Database error - unable to retrieve ticket configuration', 
-          error: configError.message,
-          requestId 
-        });
-      }
+      const counts = await storage.getTicketCounts();
+      const config = await storage.getTicketConfig();
       
       // Enhanced capacity checking
       const totalCurrentBookings = existingBookings.reduce((sum, b) => sum + b.ticketCount, 0);
@@ -1384,44 +1033,20 @@ export async function registerRoutes(app: Express): Promise<Express> {
       // Generate unique guest codes for each ticket
       const guestCodes = generateGuestCodes(bookingData.ticketCount);
       
-      console.log(`[${requestId}] 💾 Creating booking in database...`);
-      let booking;
-      try {
-        booking = await storage.createBooking({
-          ...bookingData,
-          ticketType,
-          guestCodes,
-          couponCode: bookingData.couponCode || null,
-          totalAmount: totalAmount.toString(),
-          couponDiscount,
-          paymentStatus: 'pending'
-        });
-        console.log(`[${requestId}] ✅ Booking created successfully with ID: ${booking.id}`);
-      } catch (bookingError: any) {
-        console.error(`[${requestId}] ❌ Failed to create booking in database:`, bookingError);
-        console.error(`[${requestId}] Database connection status:`, { 
-          hasConnection: !!process.env.DATABASE_URL,
-          error: bookingError.message,
-          stack: bookingError.stack
-        });
-        return res.status(500).json({ 
-          message: 'Database error - unable to create booking', 
-          error: bookingError.message,
-          requestId 
-        });
-      }
+      const booking = await storage.createBooking({
+        ...bookingData,
+        ticketType,
+        guestCodes,
+        couponCode: bookingData.couponCode || null,
+        totalAmount: totalAmount.toString(),
+        couponDiscount,
+        paymentStatus: 'pending'
+      });
 
       console.log(`✅ Booking created with ID: ${booking.id}`);
 
       // Update ticket counts
-      console.log(`[${requestId}] 🎫 Updating ticket counts for ${ticketType}...`);
-      try {
-        await storage.updateTicketCounts(ticketType, bookingData.ticketCount);
-        console.log(`[${requestId}] ✅ Updated ticket counts for ${ticketType}`);
-      } catch (ticketCountError: any) {
-        console.error(`[${requestId}] ❌ Failed to update ticket counts:`, ticketCountError);
-        // Continue with booking even if ticket count update fails
-      }
+      await storage.updateTicketCounts(ticketType, bookingData.ticketCount);
 
       // Update promoter stats if referrer was used
       if (booking.promoterId) {
@@ -1465,55 +1090,24 @@ export async function registerRoutes(app: Express): Promise<Express> {
       }
 
       // Create Cashfree payment order
-      console.log(`[${requestId}] 💳 Creating Cashfree payment order...`);
-      let paymentResult;
-      try {
-        paymentResult = await paymentService.createPaymentOrder({
-          bookingId: booking.id,
-          amount: totalAmount,
-          customerName: booking.name,
-          customerEmail: booking.email,
-          customerPhone: booking.phone,
-        });
-        
-        if (!paymentResult.success) {
-          console.error(`[${requestId}] ❌ Payment order creation failed:`, {
-            error: paymentResult.error,
-            userMessage: paymentResult.userMessage,
-            bookingId: booking.id,
-            amount: totalAmount
-          });
-          return res.status(500).json({
-            message: paymentResult.userMessage || 'Payment processing is temporarily unavailable',
-            error: paymentResult.error,
-            requestId
-          });
-        }
-        
-        console.log(`[${requestId}] ✅ Payment order created successfully: ${paymentResult.orderId}`);
-      } catch (paymentError: any) {
-        console.error(`[${requestId}] ❌ Unexpected error in payment processing:`, paymentError);
-        return res.status(500).json({
-          message: 'Payment processing failed unexpectedly',
-          error: paymentError.message,
-          requestId
+      const paymentResult = await paymentService.createPaymentOrder({
+        bookingId: booking.id,
+        amount: totalAmount,
+        customerName: booking.name,
+        customerEmail: booking.email,
+        customerPhone: booking.phone,
+      });
+      
+      if (!paymentResult.success) {
+        console.error('Payment order creation failed:', paymentResult.error);
+        return res.status(500).json({ 
+          message: 'Payment order creation failed', 
+          error: paymentResult.userMessage || paymentResult.error 
         });
       }
       
       // Update booking with payment ID
       await storage.updateBookingPaymentId(booking.id, paymentResult.orderId!);
-      
-      // Add payment to webhook safety monitoring for fallback verification
-      try {
-        await webhookSafetyService.addPaymentForMonitoring(paymentResult.orderId!, booking.id);
-        console.log(`🛡️ Added payment ${paymentResult.orderId} to safety monitoring for booking ${booking.id}`);
-      } catch (safetyError) {
-        console.error(`❌ Failed to add payment to safety monitoring:`, safetyError);
-        // Don't fail the booking if safety service fails
-      }
-      
-      const processingTime = Date.now() - startTime;
-      console.log(`[${requestId}] ✅ Booking completed successfully in ${processingTime}ms for booking ${booking.id}`);
       
       res.json({ 
         booking: {
@@ -1523,27 +1117,11 @@ export async function registerRoutes(app: Express): Promise<Express> {
         }, 
         paymentLink: paymentResult.paymentLink,
         orderId: paymentResult.orderId,
-        ticketCounts: await storage.getTicketCounts(),
-        requestId,
-        processingTime: `${processingTime}ms`
+        ticketCounts: await storage.getTicketCounts()
       });
     } catch (error: any) {
-      const processingTime = Date.now() - startTime;
-      console.error(`[${requestId}] ❌ CRITICAL BOOKING ERROR after ${processingTime}ms:`, {
-        error: error.message,
-        stack: error.stack,
-        requestBody: req.body,
-        environment: process.env.NODE_ENV || 'unknown',
-        databaseUrl: !!process.env.DATABASE_URL,
-        timestamp: new Date().toISOString()
-      });
-      
-      res.status(500).json({ 
-        message: 'Booking creation failed unexpectedly', 
-        error: error.message,
-        requestId,
-        processingTime: `${processingTime}ms`
-      });
+      console.error('❌ Booking creation error:', error);
+      res.status(500).json({ message: 'Booking creation failed', error: error.message });
     }
   });
 
@@ -3083,7 +2661,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
     }
   });
 
-  // Enhanced Cashfree webhook endpoint with comprehensive logging and safety service integration
+  // Cashfree webhook endpoint with enhanced error handling and logging
 
   app.post('/api/webhooks/cashfree', async (req, res) => {
     // Force JSON response headers immediately
@@ -3094,11 +2672,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
     const startTime = Date.now();
     
     try {
-      console.log(`🔔 [${webhookId}] === CASHFREE WEBHOOK RECEIVED ===`);
-      console.log(`📡 [${webhookId}] Client IP: ${req.ip || req.connection.remoteAddress || 'unknown'}`);
-      console.log(`📡 [${webhookId}] User-Agent: ${req.headers['user-agent'] || 'unknown'}`);
-      console.log(`📡 [${webhookId}] Content-Length: ${req.headers['content-length'] || 'unknown'}`);
-      console.log(`🔔 [${webhookId}] Incoming Cashfree webhook processing started`);
+      console.log(`🔔 [${webhookId}] Incoming Cashfree webhook started`);
       
       const { CashfreeService } = await import('./services/cashfreeService');
       const cashfreeService = new CashfreeService();
@@ -3180,14 +2754,6 @@ export async function registerRoutes(app: Express): Promise<Express> {
             console.log(`💰 [${webhookId}] Payment successful for booking ${booking.id}, updating status to verified`);
             await storage.updateBookingPaymentStatus(booking.id, 'verified');
             
-            // Remove from webhook safety monitoring since webhook succeeded
-            try {
-              await webhookSafetyService.removePaymentFromMonitoring(order_id);
-              console.log(`🛡️ [${webhookId}] Removed payment ${order_id} from safety monitoring`);
-            } catch (safetyError) {
-              console.error(`❌ [${webhookId}] Failed to remove from safety monitoring:`, safetyError);
-            }
-            
             // Skip payment completion email - only send QR tickets directly
             
             // Update Google Sheets with payment completion
@@ -3220,14 +2786,6 @@ export async function registerRoutes(app: Express): Promise<Express> {
             
             console.log(`💸 [${webhookId}] Payment failed for booking ${booking.id} (status: ${order_status}), updating status to failed`);
             await storage.updateBookingPaymentStatus(booking.id, 'failed');
-            
-            // Remove from webhook safety monitoring since webhook succeeded
-            try {
-              await webhookSafetyService.removePaymentFromMonitoring(order_id);
-              console.log(`🛡️ [${webhookId}] Removed failed payment ${order_id} from safety monitoring`);
-            } catch (safetyError) {
-              console.error(`❌ [${webhookId}] Failed to remove from safety monitoring:`, safetyError);
-            }
             
             // Clear any QR codes/tickets that may have been mistakenly generated
             // TODO: Implement clearBookingTickets method in storage interface

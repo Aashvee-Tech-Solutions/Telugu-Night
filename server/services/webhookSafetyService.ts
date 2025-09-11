@@ -1,4 +1,4 @@
-import { storage } from '../databaseStorage';
+import { storage } from '../storage.js';
 import { CashfreeService } from './cashfreeService.js';
 import { enhancedEmailService } from './enhancedEmailService.js';
 
@@ -15,7 +15,7 @@ export class WebhookSafetyService {
   private pendingPayments = new Map<string, PaymentMonitoringEntry>();
   private cashfreeService = new CashfreeService();
   private monitoringInterval: NodeJS.Timeout | null = null;
-  private readonly CHECK_INTERVAL = 30000; // Check every 30 seconds for faster payment recovery
+  private readonly CHECK_INTERVAL = 60000; // Check every minute
   private readonly MAX_MONITORING_TIME = 3600000; // 1 hour maximum
 
   constructor() {
@@ -138,19 +138,10 @@ export class WebhookSafetyService {
         throw new Error(`Booking ${entry.bookingId} not found`);
       }
 
-      await storage.updateBookingPaymentStatus(entry.bookingId, 'verified');
+      await storage.updateBookingStatus(entry.bookingId, 'confirmed');
 
       // Send confirmation email and tickets
-      const bookingData = {
-        ...booking,
-        guests: booking.guests || [],
-        guestCodes: booking.guestCodes || [],
-        paymentStatus: booking.paymentStatus || 'pending',
-        qrCodes: booking.qrCodes || [],
-        passIds: booking.passIds || [],
-        totalAmount: booking.totalAmount ? booking.totalAmount.toString() : '0'
-      };
-      await enhancedEmailService.sendPaymentConfirmationEmail(bookingData);
+      await enhancedEmailService.sendPaymentConfirmationEmail(booking);
 
       // Remove from monitoring
       this.pendingPayments.delete(orderId);
@@ -172,7 +163,7 @@ export class WebhookSafetyService {
   private async handleFailedPayment(orderId: string, entry: PaymentMonitoringEntry, paymentData: any): Promise<void> {
     try {
       // Update booking status to failed
-      await storage.updateBookingPaymentStatus(entry.bookingId, 'failed');
+      await storage.updateBookingStatus(entry.bookingId, 'payment_failed');
 
       // Remove from monitoring
       this.pendingPayments.delete(orderId);
