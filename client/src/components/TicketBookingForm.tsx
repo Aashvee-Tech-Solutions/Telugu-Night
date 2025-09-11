@@ -87,8 +87,38 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
         console.error('🎯 [MUTATION] Error message:', apiError.message);
         console.error('🎯 [MUTATION] Error stack:', apiError.stack);
         
-        // Re-throw the error with additional context
-        throw new Error(apiError.message || 'Booking request failed');
+        // Fallback to direct fetch if apiRequest fails
+        console.log('🎯 [MUTATION] Attempting fallback with direct fetch...');
+        try {
+          const fallbackResponse = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+          });
+
+          console.log('🎯 [MUTATION] Fallback fetch response status:', fallbackResponse.status);
+          console.log('🎯 [MUTATION] Fallback fetch response headers:', Object.fromEntries(fallbackResponse.headers.entries()));
+
+          if (!fallbackResponse.ok) {
+            let errorMessage;
+            try {
+              const errorData = await fallbackResponse.json();
+              errorMessage = errorData.message || `HTTP ${fallbackResponse.status}`;
+            } catch {
+              errorMessage = await fallbackResponse.text() || `HTTP ${fallbackResponse.status}`;
+            }
+            throw new Error(errorMessage);
+          }
+
+          const fallbackData = await fallbackResponse.json();
+          console.log('🎯 [MUTATION] Fallback fetch successful:', fallbackData);
+          return fallbackData;
+        } catch (fallbackError: any) {
+          console.error('🎯 [MUTATION] Fallback fetch also failed:', fallbackError);
+          throw new Error(`Both apiRequest and fallback fetch failed: ${apiError.message} | ${fallbackError.message}`);
+        }
       }
     },
     onSuccess: (data) => {
