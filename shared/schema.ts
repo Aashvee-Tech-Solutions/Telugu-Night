@@ -220,9 +220,6 @@ export const insertTicketTypeSchema = createInsertSchema(ticketTypes).pick({
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).pick({
-  eventId: true,
-  phaseId: true,
-  ticketTypeId: true,
   name: true,
   email: true,
   phone: true,
@@ -233,6 +230,10 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   couponCode: true,
   promoCode: true,
 }).extend({
+  // Optional fields for multi-event setup
+  eventId: z.number().optional(),
+  phaseId: z.number().optional(),
+  ticketTypeId: z.number().optional(),
   // Enhanced validation
   name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
   phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),

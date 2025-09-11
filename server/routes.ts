@@ -1207,21 +1207,8 @@ export async function registerRoutes(app: Express): Promise<Express> {
       
       const bookingData = validationResult.data;
       
-      // Check for duplicate booking (email + phone combination within last 5 minutes)
+      // Get all bookings for capacity checking
       const existingBookings = await storage.getAllBookings();
-      const recentBooking = existingBookings.find(b => 
-        b.email === bookingData.email && 
-        b.phone === bookingData.phone && 
-        (Date.now() - new Date(b.createdAt || new Date()).getTime()) < 5 * 60 * 1000 // 5 minutes
-      );
-      
-      if (recentBooking) {
-        console.log('⚠️ Duplicate booking attempt detected');
-        return res.status(400).json({ 
-          message: 'Duplicate booking detected. Please wait 5 minutes before creating another booking with the same details.',
-          existingBookingId: recentBooking.id
-        });
-      }
       
       // Get current ticket counts and config to determine pricing
       const counts = await storage.getTicketCounts();
