@@ -142,6 +142,7 @@ export default function PaymentSuccess() {
     }
 
     // Only start new polling when payment is pending and not redirecting
+    // Stop polling once payment is verified or failed
     if (booking && booking.paymentStatus === 'pending' && !isRedirecting && bookingId) {
       console.log('🔄 PaymentSuccess: Starting automatic payment verification polling every 3 seconds');
       
@@ -160,6 +161,9 @@ export default function PaymentSuccess() {
         clearInterval(interval);
         setPollingInterval(null);
       };
+    } else if (booking && booking.paymentStatus === 'verified') {
+      // Stop polling when payment is verified
+      console.log('✅ PaymentSuccess: Payment verified, stopping polling');
     }
   }, [booking?.paymentStatus, isRedirecting, bookingId]);
 
@@ -224,7 +228,7 @@ export default function PaymentSuccess() {
     
     // Show success message for verified payments
     if (booking.paymentStatus === 'verified') {
-      console.log('🎊 Payment successful! Webhook processed tickets automatically.');
+      console.log('🎊 Payment verified! Tickets automatically generated and sent via webhook.');
     }
   }, [booking?.id, booking?.paymentStatus, isRedirecting]);
 
@@ -404,22 +408,34 @@ export default function PaymentSuccess() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Success Header */}
-          <Card className="mb-6 border-green-200 bg-green-50">
+          <Card className={`mb-6 ${isPaymentVerified ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'}`}>
             <CardContent className="text-center p-8">
-              <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
-              <h1 className="text-3xl font-bold text-green-600 mb-2">
-                {isPaymentVerified ? 'Payment Successful! 🎉' : 'Payment Processing 🔄'}
+              {isPaymentVerified ? (
+                <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
+              ) : (
+                <Loader2 className="h-20 w-20 text-blue-500 mx-auto mb-4 animate-spin" />
+              )}
+              <h1 className={`text-3xl font-bold mb-2 ${isPaymentVerified ? 'text-green-600' : 'text-blue-600'}`}>
+                {isPaymentVerified ? '🎉 Payment Successful!' : '🔄 Payment Processing'}
               </h1>
               <p className="text-gray-700 text-lg">
                 {isPaymentVerified 
-                  ? 'Your booking for Telugu Night has been confirmed!' 
-                  : 'Your booking is being processed. You will receive your tickets soon!'}
+                  ? 'Your booking for Telugu Night has been confirmed and QR tickets have been sent to your email!' 
+                  : 'Your payment is being verified. QR tickets will be sent automatically once confirmed.'}
               </p>
-              <div className="mt-4 bg-green-100 border border-green-300 rounded-lg p-3 inline-block">
-                <p className="text-green-800 font-medium">
+              <div className={`mt-4 ${isPaymentVerified ? 'bg-green-100 border-green-300' : 'bg-blue-100 border-blue-300'} border rounded-lg p-3 inline-block`}>
+                <p className={`${isPaymentVerified ? 'text-green-800' : 'text-blue-800'} font-medium`}>
                   Booking ID: #{booking?.id || bookingId}
                 </p>
               </div>
+              {isPaymentVerified && (
+                <div className="mt-4 text-center">
+                  <div className="inline-flex items-center gap-2 bg-green-200 text-green-800 px-4 py-2 rounded-full">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="font-medium">QR Tickets Sent via Email</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -522,71 +538,50 @@ export default function PaymentSuccess() {
             <CardContent>
               {isPaymentVerified ? (
                 <div className="space-y-4">
-                  {hasTickets ? (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 text-green-600 mb-2">
-                        <CheckCircle className="h-5 w-5" />
-                        <p className="font-medium">✅ Payment Successful!</p>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-2">
-                        🎫 Your QR tickets have been sent to <strong>{booking.email}</strong>
-                      </p>
-                      <p className="text-green-600 text-xs mb-3">
-                        📧 Please check your email (including spam folder) for your QR tickets.
-                      </p>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => sendTicketsMutation.mutate()} 
-                          disabled={sendTicketsMutation.isPending}
-                          size="sm"
-                          className="flex items-center gap-2"
-                          data-testid="button-resend-tickets"
-                        >
-                          {sendTicketsMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4" />
-                          )}
-                          {sendTicketsMutation.isPending ? 'Sending...' : 'Resend Tickets'}
-                        </Button>
-                      </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-green-600 mb-3">
+                      <CheckCircle className="h-5 w-5" />
+                      <p className="font-medium text-lg">✅ Payment Successful & Tickets Sent!</p>
                     </div>
-                  ) : (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 text-blue-600 mb-2">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        <p className="font-medium">📧 QR Tickets Being Sent...</p>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-2">
-                        Your QR tickets are being automatically generated and sent to <strong>{booking.email}</strong>
+                    <div className="space-y-2 mb-4">
+                      <p className="text-gray-700 text-sm">
+                        🎫 Your QR tickets have been <strong>automatically sent</strong> to <strong>{booking.email}</strong>
                       </p>
-                      <p className="text-blue-600 text-xs mb-3">
-                        ⏱️ This usually takes 1-2 minutes. Please check your email (including spam folder).
+                      <p className="text-green-700 text-sm font-medium">
+                        📧 Check your email (including spam/junk folder) for your QR tickets.
                       </p>
-                      {sendTicketsMutation.isPending && (
-                        <p className="text-blue-600 text-sm mt-2 font-medium">
-                          🚀 Sending tickets now...
-                        </p>
-                      )}
-                      <div className="flex gap-2 mt-3">
-                        <Button 
-                          onClick={() => sendTicketsMutation.mutate()} 
-                          disabled={sendTicketsMutation.isPending}
-                          size="sm"
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          data-testid="button-send-tickets"
-                        >
-                          {sendTicketsMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4" />
-                          )}
-                          {sendTicketsMutation.isPending ? 'Sending...' : 'Send Tickets Now'}
-                        </Button>
-                      </div>
+                      <p className="text-gray-600 text-xs">
+                        💡 Tickets were generated and sent automatically when your payment was verified.
+                      </p>
                     </div>
-                  )}
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        onClick={() => sendTicketsMutation.mutate()} 
+                        disabled={sendTicketsMutation.isPending}
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        data-testid="button-resend-tickets"
+                      >
+                        {sendTicketsMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        {sendTicketsMutation.isPending ? 'Sending...' : 'Resend to Email'}
+                      </Button>
+                      <Button 
+                        onClick={shareTicket}
+                        size="sm"
+                        variant="secondary"
+                        className="flex items-center gap-2"
+                        data-testid="button-share-ticket"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        Share Booking
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className={`${paymentVerificationTimeout ? 'bg-blue-50 border-blue-200' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4`}>
@@ -639,12 +634,26 @@ export default function PaymentSuccess() {
           {/* Important Notes */}
           <Card>
             <CardHeader>
-              <CardTitle>Important Notes</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5" />
+                Important Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-gray-600">
-              <p>📧 <strong>Check your email:</strong> QR tickets have been sent to {booking.email}</p>
-              <p>🚪 <strong>Entry requirement:</strong> Show your QR code at the venue for entry</p>
-              <p>🎫 <strong>Guest codes:</strong> Each ticket has a unique guest code for individual entry</p>
+              {isPaymentVerified ? (
+                <>
+                  <p>📧 <strong>Email sent:</strong> QR tickets have been automatically sent to {booking.email}</p>
+                  <p>🚪 <strong>Entry requirement:</strong> Show your QR code at the venue for entry</p>
+                  <p>🎫 <strong>Individual codes:</strong> Each guest gets a unique QR code for separate entry</p>
+                  <p>📱 <strong>Save tickets:</strong> Download or screenshot your QR codes for offline access</p>
+                </>
+              ) : (
+                <>
+                  <p>⏳ <strong>Processing:</strong> Your payment is being verified automatically</p>
+                  <p>📧 <strong>Auto-delivery:</strong> QR tickets will be sent to {booking.email} once payment is confirmed</p>
+                  <p>🔄 <strong>Updates:</strong> This page will refresh automatically with your ticket status</p>
+                </>
+              )}
               <p>📞 <strong>Support:</strong> Contact mis@aashveetech.com or +91 6281614117 for assistance</p>
             </CardContent>
           </Card>
