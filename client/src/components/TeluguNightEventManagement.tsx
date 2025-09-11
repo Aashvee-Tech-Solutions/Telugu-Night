@@ -275,15 +275,21 @@ export default function TeluguNightEventManagement() {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-2xl">Telugu Night 2.0</CardTitle>
-              <CardDescription>Single event management system</CardDescription>
+              <CardDescription>Automated event management - All payments processed via Cashfree webhook</CardDescription>
             </div>
             <div className="flex items-center gap-4">
-              <Badge 
-                variant={currentConfig?.bookingOpen ? "default" : "secondary"}
-                className="text-lg px-4 py-2"
-              >
-                {currentConfig?.bookingOpen ? "LIVE" : "STOPPED"}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge 
+                  variant={currentConfig?.bookingOpen ? "default" : "secondary"}
+                  className="text-lg px-4 py-2"
+                >
+                  {currentConfig?.bookingOpen ? "LIVE" : "STOPPED"}
+                </Badge>
+                <Badge variant="outline" className="text-xs px-2 py-1">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Auto-Processing
+                </Badge>
+              </div>
               <Button
                 onClick={() => toggleBookingMutation.mutate(!currentConfig?.bookingOpen)}
                 disabled={toggleBookingMutation.isPending}

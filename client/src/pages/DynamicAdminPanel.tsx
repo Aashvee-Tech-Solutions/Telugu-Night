@@ -840,7 +840,7 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
                 <div>
                   <CardTitle>Booking Management</CardTitle>
                   <CardDescription>
-                    View and manage event bookings
+                    View bookings - All payments and tickets are processed automatically via Cashfree webhook
                   </CardDescription>
                 </div>
                 <PermissionGuard 
@@ -1029,123 +1029,57 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
                         )}
 
                         <div className="flex gap-2 mt-3">
-                          {/* Corrupted screenshot warning */}
-                          {booking.paymentScreenshot && booking.paymentScreenshot.includes('screenshot-17535') && (
-                            <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-2">
-                              <div className="flex items-center gap-2 text-yellow-800">
-                                <span className="text-lg">⚠️</span>
-                                <div className="text-sm">
-                                  <p className="font-medium">Corrupted Screenshot Detected</p>
-                                  <p className="text-xs text-yellow-600">
-                                    Customer needs to re-upload. Send them: 
-                                    <br />
-                                    <code className="bg-yellow-100 px-1 rounded text-xs">
-                                      {window.location.origin}/api/bookings/{booking.id}/reupload
-                                    </code>
-                                  </p>
-                                </div>
+                          {/* Automated Processing Status */}
+                          <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
+                            <div className="flex items-center gap-2 text-green-800">
+                              <span className="text-lg">✅</span>
+                              <div className="text-sm">
+                                <p className="font-medium">Automated Processing Active</p>
+                                <p className="text-xs text-green-600">
+                                  Payments are automatically verified via Cashfree webhook. Tickets sent automatically upon successful payment.
+                                </p>
                               </div>
                             </div>
-                          )}
+                          </div>
 
-                          {/* Screenshot viewing with modal */}
-                          {booking.paymentScreenshot && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    // Use the public uploads route for screenshot viewing
-                                    const screenshotUrl = booking.paymentScreenshot?.startsWith('http') 
-                                      ? booking.paymentScreenshot 
-                                      : `${window.location.origin}${booking.paymentScreenshot || ''}`;
-                                    setSelectedScreenshot(screenshotUrl);
-                                  }}
-                                >
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  View Screenshot
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-4xl max-h-[90vh]">
-                                <DialogHeader>
-                                  <DialogTitle className="flex items-center justify-between">
-                                    Payment Screenshot - Booking #{booking.id}
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                        const screenshotUrl = booking.paymentScreenshot?.startsWith('http') 
-                                          ? booking.paymentScreenshot 
-                                          : `${window.location.origin}${booking.paymentScreenshot || ''}`;
-                                        
-                                        const link = document.createElement('a');
-                                        link.href = screenshotUrl;
-                                        link.download = `payment_screenshot_${booking.id}.jpg`;
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                      }}
-                                    >
-                                      <Download className="w-4 h-4 mr-1" />
-                                      Download
-                                    </Button>
-                                  </DialogTitle>
-                                </DialogHeader>
-                                <div className="flex justify-center items-center bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                                  <img
-                                    src={booking.paymentScreenshot?.startsWith('http') 
-                                      ? booking.paymentScreenshot 
-                                      : `${window.location.origin}${booking.paymentScreenshot || ''}`}
-                                    alt={`Payment screenshot for booking ${booking.id}`}
-                                    className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
-                                    onError={(e) => {
-                                      console.error('Image failed to load:', booking.paymentScreenshot);
-                                      console.error('Attempted URL:', booking.paymentScreenshot?.startsWith('http') 
-                                        ? booking.paymentScreenshot 
-                                        : `${window.location.origin}${booking.paymentScreenshot || ''}`);
-                                      // Show corrupted file warning
-                                      const container = (e.target as HTMLImageElement).parentElement;
-                                      if (container) {
-                                        container.innerHTML = `
-                                          <div class="text-center py-8 bg-yellow-50 rounded-lg border border-yellow-200">
-                                            <div class="text-yellow-600 text-sm mb-2">⚠️ Corrupted Screenshot File</div>
-                                            <div class="text-gray-600 text-xs">File appears to be corrupted. Customer may need to re-upload.</div>
-                                            <div class="text-xs text-gray-500 mt-1">${booking.paymentScreenshot}</div>
-                                          </div>
-                                        `;
-                                      }
-                                    }}
-                                    onLoad={(e) => {
-                                      console.log('Image loaded successfully:', booking.paymentScreenshot);
-                                    }}
-                                  />
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  <p><strong>Booking:</strong> {booking.name} ({booking.email})</p>
-                                  <p><strong>Amount:</strong> ₹{booking.totalAmount}</p>
-                                  <p><strong>Status:</strong> {booking.paymentStatus}</p>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          )}
+                          {/* Automated Status Info */}
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                            <div className="flex items-center gap-2 text-blue-800">
+                              <Clock className="w-4 h-4" />
+                              <div className="text-xs">
+                                <p className="font-medium">Payment Status: {booking.paymentStatus === 'verified' ? 'Verified Automatically' : booking.paymentStatus === 'pending' ? 'Processing...' : booking.paymentStatus}</p>
+                                <p className="text-blue-600">
+                                  {booking.paymentStatus === 'verified' 
+                                    ? 'Tickets automatically sent to customer email' 
+                                    : 'Payment verification in progress via webhook'
+                                  }
+                                </p>
+                              </div>
+                            </div>
+                          </div>
 
-                          {/* Send ticket functionality for all bookings */}
-                          <PermissionGuard 
-                            permissions={['send_tickets']} 
-                            userPermissions={user.permissions}
-                          >
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => sendTicketMutation.mutate(booking.id)}
-                              disabled={sendTicketMutation.isPending}
-                              data-testid={`button-send-ticket-${booking.id}`}
-                            >
-                              <Send className="w-4 h-4 mr-1" />
-                              {sendTicketMutation.isPending ? 'Sending...' : 'Send Ticket'}
-                            </Button>
-                          </PermissionGuard>
+                          {/* Show automated ticket status */}
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                            <div className="flex items-center gap-2 text-gray-700">
+                              <Zap className="w-4 h-4" />
+                              <div className="text-xs">
+                                <p className="font-medium">
+                                  {booking.paymentStatus === 'verified' 
+                                    ? '✅ Tickets Sent Automatically' 
+                                    : booking.paymentStatus === 'pending'
+                                    ? '⏳ Awaiting Payment Verification'
+                                    : '❌ Payment Issue'
+                                  }
+                                </p>
+                                <p className="text-gray-600">
+                                  {booking.paymentStatus === 'verified' 
+                                    ? 'Delivered via automated webhook processing' 
+                                    : 'Will auto-send once payment is confirmed'
+                                  }
+                                </p>
+                              </div>
+                            </div>
+                          </div>
 
                           <PermissionGuard 
                             permissions={['delete_bookings']} 

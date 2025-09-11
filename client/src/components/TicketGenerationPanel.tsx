@@ -213,179 +213,127 @@ export const TicketGenerationPanel = ({ bookings, onRefresh }: TicketGenerationP
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Smart Ticket Generation
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Automated Ticket Processing Status
           </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            All tickets are automatically generated and sent via Cashfree webhook - no manual action required
+          </p>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="single" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="single">Single Booking</TabsTrigger>
-              <TabsTrigger value="batch">Batch Processing</TabsTrigger>
-              <TabsTrigger value="auto">Auto-Generate</TabsTrigger>
-            </TabsList>
-
-            {/* Single Booking Tab */}
-            <TabsContent value="single" className="space-y-4">
-              <div className="grid gap-4">
-                <h3 className="text-lg font-semibold">Verified Bookings Needing Tickets</h3>
-                {verifiedBookingsNeedingTickets.length === 0 ? (
-                  <p className="text-muted-foreground">No bookings need ticket generation</p>
-                ) : (
-                  <div className="space-y-2">
-                    {verifiedBookingsNeedingTickets.slice(0, 10).map(booking => (
-                      <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{booking.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {booking.ticketCount} tickets • ₹{booking.totalAmount}
-                          </p>
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={() => generateSingleTicket(booking.id)}
-                          disabled={isProcessing}
-                        >
-                          <Ticket className="w-4 h-4 mr-1" />
-                          Generate Tickets
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            {/* Batch Processing Tab */}
-            <TabsContent value="batch" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Batch Ticket Generation</h3>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={selectAllVerified}>
-                    Select All ({verifiedBookingsNeedingTickets.length})
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={clearSelection}>
-                    Clear Selection
-                  </Button>
+          <div className="space-y-6">
+            {/* Automated Processing Status */}
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">Automated Processing Active</h3>
+                  <p className="text-green-600 dark:text-green-300 text-sm">Payment verification and ticket generation handled automatically</p>
                 </div>
               </div>
               
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {verifiedBookingsNeedingTickets.map(booking => (
-                  <div key={booking.id} className="flex items-center space-x-3 p-2 border rounded">
-                    <Checkbox
-                      checked={selectedBookings.includes(booking.id)}
-                      onCheckedChange={() => toggleBookingSelection(booking.id)}
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium">{booking.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {booking.ticketCount} tickets • ₹{booking.totalAmount}
-                      </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-200">
+                    {bookings.filter(b => b.paymentStatus === 'verified').length}
+                  </div>
+                  <div className="text-sm text-green-600 dark:text-green-300">Verified Payments</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-200">
+                    {bookings.filter(b => b.paymentStatus === 'pending').length}
+                  </div>
+                  <div className="text-sm text-blue-600 dark:text-blue-300">Processing</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-200">
+                    {bookings.filter(b => b.qrCodes && b.qrCodes.length > 0).length}
+                  </div>
+                  <div className="text-sm text-green-600 dark:text-green-300">Tickets Generated</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-700 dark:text-orange-200">
+                    {bookings.filter(b => b.paymentStatus === 'verified' && (!b.qrCodes || b.qrCodes.length === 0)).length}
+                  </div>
+                  <div className="text-sm text-orange-600 dark:text-orange-300">Awaiting Generation</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Booking Activity */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Recent Booking Activity</h3>
+              {bookings.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No recent bookings to display</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {bookings.slice(0, 10).map(booking => (
+                    <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{booking.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {booking.ticketCount} tickets • ₹{booking.totalAmount}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {booking.paymentStatus === 'verified' ? (
+                          <Badge variant="default" className="bg-green-500">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Auto-Processed
+                          </Badge>
+                        ) : booking.paymentStatus === 'pending' ? (
+                          <Badge variant="secondary">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Processing
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            {booking.paymentStatus}
+                          </Badge>
+                        )}
+                        {booking.qrCodes && booking.qrCodes.length > 0 && (
+                          <Badge variant="outline">
+                            <Ticket className="w-3 h-3 mr-1" />
+                            Tickets Sent
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              <Button 
-                onClick={generateBatchTickets}
-                disabled={isProcessing || selectedBookings.length === 0}
-                className="w-full"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Generate {selectedBookings.length} Selected Tickets
-              </Button>
-            </TabsContent>
-
-            {/* Auto-Generate Tab */}
-            <TabsContent value="auto" className="space-y-4">
-              <div className="text-center space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Automated Ticket Generation</h3>
-                  <p className="text-muted-foreground">
-                    Automatically generate tickets for all verified payments that don't have tickets yet.
-                  </p>
+                  ))}
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <p className="font-medium text-green-800 dark:text-green-200">
-                      {verifiedBookingsNeedingTickets.length}
-                    </p>
-                    <p className="text-green-600 dark:text-green-300">Needing Tickets</p>
-                  </div>
-                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                    <p className="font-medium text-orange-800 dark:text-orange-200">
-                      {pendingBookings.length}
-                    </p>
-                    <p className="text-orange-600 dark:text-orange-300">Pending Verification</p>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={autoGenerateAll}
-                  disabled={isProcessing || verifiedBookingsNeedingTickets.length === 0}
-                  size="lg"
-                  className="w-full"
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Auto-Generate All Tickets
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Active Batches */}
-      {activeBatches.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Active Batch Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {activeBatches.map(batch => (
-              <div key={batch.batchId} className="space-y-3 p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Batch {batch.batchId.split('_')[1]}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {batch.completed + batch.failed} / {batch.totalBookings} processed
-                    </p>
-                  </div>
-                  <Badge variant={batch.status === 'completed' ? 'default' : 'secondary'}>
-                    {batch.status}
-                  </Badge>
-                </div>
-                
-                <Progress value={batch.progress} className="w-full" />
-                
-                <div className="flex justify-between text-sm">
-                  <span className="text-green-600">✓ {batch.completed} completed</span>
-                  <span className="text-red-600">✗ {batch.failed} failed</span>
-                </div>
-
-                {batch.status === 'processing' && (
-                  <div className="space-y-2">
-                    {batch.bookings
-                      .filter(b => b.status === 'generating')
-                      .slice(0, 3)
-                      .map(booking => (
-                        <div key={booking.bookingId} className="text-xs p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                          <p>Booking #{booking.bookingId}: {booking.currentStep}</p>
-                          <Progress value={booking.progress} className="h-1 mt-1" />
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      {/* Webhook Status Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-blue-600" />
+            Cashfree Webhook Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <p className="font-medium text-blue-800 dark:text-blue-200">Webhook Active & Monitoring</p>
+            </div>
+            <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+              <p>• Payments are automatically verified upon completion</p>
+              <p>• Tickets are generated and emailed immediately after verification</p>
+              <p>• No manual intervention required for payment processing</p>
+              <p>• All booking statuses update in real-time</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
