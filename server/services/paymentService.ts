@@ -316,23 +316,34 @@ export class PaymentService {
   }
 
   private getWebhookUrl(): string {
-    // Priority 1: Use SERVER_URL if explicitly set
+    // Priority 1: Use REPLIT_DEV_DOMAIN for automatic Replit domain detection
+    if (process.env.REPLIT_DEV_DOMAIN) {
+      const webhookUrl = `https://${process.env.REPLIT_DEV_DOMAIN}/api/webhooks/cashfree`;
+      console.log(`🌐 Using Replit public domain for webhook: ${webhookUrl}`);
+      return webhookUrl;
+    }
+
+    // Priority 2: Use SERVER_URL if explicitly set
     if (process.env.SERVER_URL) {
       const baseUrl = process.env.SERVER_URL.endsWith('/') 
         ? process.env.SERVER_URL.slice(0, -1) 
         : process.env.SERVER_URL;
-      return `${baseUrl}/api/webhooks/cashfree`;
+      const webhookUrl = `${baseUrl}/api/webhooks/cashfree`;
+      console.log(`🔗 Using SERVER_URL for webhook: ${webhookUrl}`);
+      return webhookUrl;
     }
 
-    // Priority 2: Use APP_BASE_URL if set (alternative environment variable)
+    // Priority 3: Use APP_BASE_URL if set (alternative environment variable)
     if (process.env.APP_BASE_URL) {
       const baseUrl = process.env.APP_BASE_URL.endsWith('/') 
         ? process.env.APP_BASE_URL.slice(0, -1) 
         : process.env.APP_BASE_URL;
-      return `${baseUrl}/api/webhooks/cashfree`;
+      const webhookUrl = `${baseUrl}/api/webhooks/cashfree`;
+      console.log(`🔗 Using APP_BASE_URL for webhook: ${webhookUrl}`);
+      return webhookUrl;
     }
 
-    // Priority 3: For development, use HTTPS localhost since Cashfree requires HTTPS
+    // Priority 4: For development, use HTTPS localhost since Cashfree requires HTTPS
     if (process.env.NODE_ENV === 'development') {
       // Use HTTPS by default for Cashfree compatibility, allow HTTP override for testing
       const forceHttps = process.env.FORCE_HTTPS_LOCALHOST !== 'false'; // Default to true
@@ -346,17 +357,21 @@ export class PaymentService {
         console.warn('⚠️ Using HTTP localhost webhook URL. This will not work with Cashfree in production mode!');
       }
       
-      return `${protocol}://localhost:5000/api/webhooks/cashfree`;
+      const webhookUrl = `${protocol}://localhost:5000/api/webhooks/cashfree`;
+      console.warn(`🚨 Using localhost webhook URL: ${webhookUrl} - This will NOT work with external services!`);
+      return webhookUrl;
     }
 
-    // Priority 4: Fallback to production URL (same as frontend base)
+    // Priority 5: Fallback to production URL (same as frontend base)
     const fallbackUrl = process.env.FRONTEND_URL || 'https://events.qlora.in';
-    console.warn(`⚠️ No SERVER_URL or APP_BASE_URL configured. Using fallback: ${fallbackUrl}`);
+    console.warn(`⚠️ No SERVER_URL, APP_BASE_URL, or REPLIT_DEV_DOMAIN configured. Using fallback: ${fallbackUrl}`);
     console.warn('💡 For production, set SERVER_URL environment variable to your publicly accessible backend URL');
     
     const baseUrl = fallbackUrl.endsWith('/') 
       ? fallbackUrl.slice(0, -1) 
       : fallbackUrl;
-    return `${baseUrl}/api/webhooks/cashfree`;
+    const webhookUrl = `${baseUrl}/api/webhooks/cashfree`;
+    console.warn(`🔗 Using fallback webhook URL: ${webhookUrl}`);
+    return webhookUrl;
   }
 }

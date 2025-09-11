@@ -31,6 +31,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// CRITICAL: Register webhook routes BEFORE any body parsing middleware
+// This ensures webhooks can access raw body for signature verification
+app.use('/api/webhooks/cashfree', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 

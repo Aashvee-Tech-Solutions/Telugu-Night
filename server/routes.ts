@@ -36,10 +36,276 @@ function toBookingData(booking: any): any {
 export async function registerRoutes(app: Express): Promise<Express> {
   // PRIORITY: Cashfree webhook endpoints (must be FIRST to avoid middleware interference)
   app.get('/api/webhooks/cashfree', async (req, res) => {
-    console.log('🎯 GET webhook validation hit!');
+    const timestamp = new Date().toISOString();
+    const validationId = `VAL-${Date.now()}`;
+    
+    console.log(`🎯 [${validationId}] GET webhook validation started at ${timestamp}`);
+    console.log(`📋 [${validationId}] Request details:`, {
+      method: req.method,
+      url: req.url,
+      headers: {
+        'user-agent': req.headers['user-agent'],
+        'x-forwarded-for': req.headers['x-forwarded-for'],
+        'x-real-ip': req.headers['x-real-ip'],
+        'host': req.headers['host'],
+        'origin': req.headers['origin']
+      },
+      query: req.query,
+      ip: req.ip
+    });
     
     // Cashfree webhook validation requires simple 200 response
+    console.log(`✅ [${validationId}] Webhook validation successful - responding with 200 OK`);
     res.status(200).send('OK');
+  });
+
+  // CRITICAL: POST webhook handler for Cashfree payment notifications
+  // Raw body parsing is now handled in server/index.ts before global JSON middleware
+  app.post('/api/webhooks/cashfree', async (req: any, res: any) => {
+    const webhookId = `WH-${Date.now()}`;
+    const timestamp = new Date().toISOString();
+    
+    try {
+      console.log(`🎯 [${webhookId}] POST webhook received at ${timestamp}`);
+      console.log(`📋 [${webhookId}] Request headers:`, {
+        'content-type': req.headers['content-type'],
+        'x-webhook-signature': req.headers['x-webhook-signature'],
+        'x-webhook-timestamp': req.headers['x-webhook-timestamp'],
+        'user-agent': req.headers['user-agent'],
+        'x-forwarded-for': req.headers['x-forwarded-for'],
+        'host': req.headers['host']
+      });
+
+      // Get raw body for signature verification
+      const rawBody = req.body ? req.body.toString() : '';
+      const signature = req.headers['x-webhook-signature'] as string;
+      const webhookTimestamp = req.headers['x-webhook-timestamp'] as string;
+
+      console.log(`📨 [${webhookId}] Webhook payload length: ${rawBody.length} bytes`);
+
+      // Initialize services
+      const cashfreeService = new (await import('./services/cashfreeService')).CashfreeService();
+      const paymentService = new PaymentService();
+
+      // Verify webhook signature
+      console.log(`🔐 [${webhookId}] Verifying webhook signature...`);
+      if (!signature || !webhookTimestamp) {
+        console.error(`❌ [${webhookId}] Missing signature or timestamp headers`);
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Missing webhook signature or timestamp' 
+        });
+      }
+
+      const isValidSignature = await cashfreeService.verifyWebhook(signature, webhookTimestamp, rawBody);
+      if (!isValidSignature) {
+        console.error(`❌ [${webhookId}] Webhook signature verification failed`);
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Invalid webhook signature' 
+        });
+      }
+
+      console.log(`✅ [${webhookId}] Webhook signature verified successfully`);
+
+      // Parse webhook payload
+      let webhookData;
+      try {
+        webhookData = JSON.parse(rawBody);
+      } catch (parseError) {
+        console.error(`❌ [${webhookId}] Failed to parse webhook payload:`, parseError);
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Invalid JSON payload' 
+        });
+      }
+
+      console.log(`📊 [${webhookId}] Webhook data:`, {
+        type: webhookData.type,
+        order_id: webhookData.data?.order?.order_id,
+        order_status: webhookData.data?.order?.order_status,
+        order_amount: webhookData.data?.order?.order_amount,
+        cf_order_id: webhookData.data?.order?.cf_order_id
+      });
+
+      // Process payment webhook
+      const eventType = webhookData.type;
+      if (eventType === 'PAYMENT_SUCCESS_WEBHOOK' || eventType === 'ORDER_PAID') {
+        const orderData = webhookData.data?.order;
+        if (!orderData?.order_id) {
+          console.error(`❌ [${webhookId}] Missing order_id in webhook data`);
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Missing order_id in webhook data' 
+          });
+        }
+
+        console.log(`💰 [${webhookId}] Processing payment success for order: ${orderData.order_id}`);
+
+        // Extract booking ID from order ID
+        const bookingId = parseInt(orderData.order_id.replace('BOOKING-', ''));
+        if (isNaN(bookingId)) {
+          console.error(`❌ [${webhookId}] Invalid booking ID format: ${orderData.order_id}`);
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Invalid booking ID format' 
+          });
+        }
+
+        console.log(`🔍 [${webhookId}] Processing payment for booking ID: ${bookingId}`);
+
+        // Get booking from database
+        let booking;
+        try {
+          booking = await storage.getBooking(bookingId);
+          if (!booking) {
+            console.error(`❌ [${webhookId}] Booking not found: ${bookingId}`);
+            return res.status(404).json({ 
+              success: false, 
+              error: 'Booking not found' 
+            });
+          }
+        } catch (dbError) {
+          console.error(`❌ [${webhookId}] Database error while fetching booking:`, dbError);
+          return res.status(500).json({ 
+            success: false, 
+            error: 'Database error' 
+          });
+        }
+
+        console.log(`📋 [${webhookId}] Found booking: ${booking.name} (${booking.email})`);
+
+        // Verify payment status with Cashfree API
+        console.log(`🔍 [${webhookId}] Verifying payment status with Cashfree API...`);
+        const verificationResult = await paymentService.verifyPaymentWithMapping(orderData.cf_order_id || orderData.order_id);
+
+        if (!verificationResult.success) {
+          console.error(`❌ [${webhookId}] Payment verification failed:`, verificationResult.error);
+          return res.status(500).json({ 
+            success: false, 
+            error: 'Payment verification failed' 
+          });
+        }
+
+        const mappedStatus = verificationResult.mappedStatus;
+        console.log(`📊 [${webhookId}] Payment verification result: ${verificationResult.status} -> ${mappedStatus}`);
+
+        // Only process if payment is verified
+        if (mappedStatus === 'verified') {
+          console.log(`✅ [${webhookId}] Payment verified successfully, processing booking...`);
+
+          // Update booking payment status
+          try {
+            await storage.updateBookingPaymentStatus(bookingId, 'verified');
+            console.log(`📝 [${webhookId}] Updated booking ${bookingId} payment status to verified`);
+          } catch (updateError) {
+            console.error(`❌ [${webhookId}] Failed to update booking payment status:`, updateError);
+            return res.status(500).json({ 
+              success: false, 
+              error: 'Failed to update booking status' 
+            });
+          }
+
+          // Generate tickets and send emails
+          try {
+            console.log(`🎫 [${webhookId}] Generating tickets and sending emails...`);
+            
+            // Generate guest codes and pass IDs if not already generated
+            let guestCodes = booking.guestCodes;
+            let passIds = booking.passIds;
+            
+            if (!guestCodes || guestCodes.length === 0) {
+              const { generateGuestCodes } = await import('./services/emailService');
+              guestCodes = generateGuestCodes(booking.ticketCount);
+              console.log(`🎯 [${webhookId}] Generated guest codes: ${guestCodes.join(', ')}`);
+            }
+            
+            if (!passIds || passIds.length === 0) {
+              const { generatePassIds } = await import('./services/emailService');
+              passIds = generatePassIds(booking.id, booking.ticketCount);
+              console.log(`🎫 [${webhookId}] Generated pass IDs: ${passIds.join(', ')}`);
+            }
+
+            // Update booking with codes if needed
+            if (guestCodes !== booking.guestCodes || passIds !== booking.passIds) {
+              await storage.updateBookingQRCodes(bookingId, [], passIds, guestCodes);
+              console.log(`📝 [${webhookId}] Updated booking codes in database`);
+            }
+
+            // Generate and send tickets via email
+            const ticketGenerationService = new TicketGenerationService();
+            const updatedBooking = await storage.getBooking(bookingId);
+            
+            await ticketGenerationService.generateTicketsForBooking(bookingId);
+            console.log(`📧 [${webhookId}] Tickets generated and emailed successfully`);
+            
+            // Log to Google Sheets if available
+            try {
+              if (updatedBooking) {
+                const googleSheetsService = new GoogleSheetsService();
+                await googleSheetsService.addBookingToSheet(updatedBooking);
+                console.log(`📊 [${webhookId}] Booking logged to Google Sheets`);
+              }
+            } catch (sheetsError) {
+              console.warn(`⚠️ [${webhookId}] Failed to log to Google Sheets (non-critical):`, sheetsError);
+            }
+
+            console.log(`🎉 [${webhookId}] Booking ${bookingId} processed successfully!`);
+            
+          } catch (processingError) {
+            console.error(`❌ [${webhookId}] Error during booking processing:`, processingError);
+            return res.status(500).json({ 
+              success: false, 
+              error: 'Failed to process booking after payment verification' 
+            });
+          }
+        } else {
+          console.log(`⏳ [${webhookId}] Payment status is ${mappedStatus}, not processing booking yet`);
+        }
+
+        // Acknowledge webhook
+        console.log(`✅ [${webhookId}] Webhook processed successfully`);
+        res.status(200).json({ 
+          success: true, 
+          message: 'Webhook processed successfully' 
+        });
+
+      } else if (eventType === 'PAYMENT_FAILED_WEBHOOK' || eventType === 'ORDER_FAILED') {
+        console.log(`❌ [${webhookId}] Payment failed webhook received`);
+        
+        const orderData = webhookData.data?.order;
+        if (orderData?.order_id) {
+          const bookingId = parseInt(orderData.order_id.replace('BOOKING-', ''));
+          if (!isNaN(bookingId)) {
+            try {
+              await storage.updateBookingPaymentStatus(bookingId, 'failed');
+              console.log(`📝 [${webhookId}] Updated booking ${bookingId} payment status to failed`);
+            } catch (updateError) {
+              console.error(`❌ [${webhookId}] Failed to update booking payment status:`, updateError);
+            }
+          }
+        }
+        
+        res.status(200).json({ 
+          success: true, 
+          message: 'Payment failure webhook processed' 
+        });
+
+      } else {
+        console.log(`ℹ️ [${webhookId}] Unhandled webhook type: ${eventType}`);
+        res.status(200).json({ 
+          success: true, 
+          message: 'Webhook acknowledged but not processed' 
+        });
+      }
+
+    } catch (error: any) {
+      console.error(`💥 [${webhookId}] Webhook processing error:`, error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Internal server error during webhook processing' 
+      });
+    }
   });
 
   // Enable compression for faster response times
@@ -1212,6 +1478,121 @@ export async function registerRoutes(app: Express): Promise<Express> {
   //     message: 'Manual payment verification is no longer supported. Payments are automatically processed by the payment gateway.' 
   //   });
   // });
+
+  // Emergency manual payment verification - only for webhook failures
+  app.post('/api/admin/emergency-verify-payment', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
+    try {
+      const { bookingId } = req.body;
+      
+      if (!bookingId || typeof bookingId !== 'number') {
+        return res.status(400).json({ message: 'Valid booking ID is required' });
+      }
+
+      // Get booking details
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+
+      // Check if booking already verified
+      if (booking.paymentStatus === 'verified') {
+        return res.status(400).json({ 
+          message: 'Payment is already verified for this booking' 
+        });
+      }
+
+      // Check if booking has payment ID
+      if (!booking.paymentId) {
+        return res.status(400).json({ 
+          message: 'No payment ID found for this booking. Cannot verify payment.' 
+        });
+      }
+
+      console.log(`🚨 EMERGENCY: Admin ${req.user?.username} manually verifying payment for booking ${bookingId} with payment ID ${booking.paymentId}`);
+
+      // Verify payment with Cashfree
+      const verificationResult = await paymentService.verifyPaymentWithMapping(booking.paymentId);
+      
+      if (!verificationResult.success) {
+        console.error(`❌ Emergency verification failed for booking ${bookingId}:`, verificationResult.error);
+        return res.status(500).json({ 
+          message: `Payment verification failed: ${verificationResult.userMessage || verificationResult.error}` 
+        });
+      }
+
+      console.log(`📊 Emergency verification result for booking ${bookingId}: ${verificationResult.status} -> ${verificationResult.mappedStatus}`);
+
+      // Update booking status based on verification result
+      if (verificationResult.mappedStatus === 'verified') {
+        // Payment is verified - update booking and send tickets
+        await storage.updateBookingPaymentStatus(bookingId, 'verified');
+        
+        // Generate tickets and send email
+        try {
+          const bookingData = toBookingData(booking);
+          await enhancedEmailService.sendTicketEmails(bookingData);
+          console.log(`✅ Emergency verification successful: Tickets sent for booking ${bookingId}`);
+          
+          // Sync to Google Sheets
+          try {
+            await googleSheetsService.addBookingToSheet(booking);
+            console.log(`📊 Booking ${bookingId} synced to Google Sheets after emergency verification`);
+          } catch (sheetError) {
+            console.warn(`⚠️ Failed to sync booking ${bookingId} to Google Sheets:`, sheetError);
+          }
+
+          return res.json({
+            success: true,
+            message: `Emergency verification successful! Payment verified and tickets sent to ${booking.email}`,
+            paymentStatus: 'verified',
+            verificationMethod: 'emergency_manual',
+            verifiedBy: req.user?.username,
+            verifiedAt: new Date().toISOString()
+          });
+
+        } catch (emailError: any) {
+          console.error(`❌ Emergency verification: Payment verified but ticket sending failed for booking ${bookingId}:`, emailError);
+          return res.status(500).json({
+            message: `Payment verified but failed to send tickets: ${emailError.message}. Please try sending tickets manually.`,
+            paymentStatus: 'verified',
+            ticketsSent: false
+          });
+        }
+
+      } else if (verificationResult.mappedStatus === 'failed') {
+        // Payment failed - update status
+        await storage.updateBookingPaymentStatus(bookingId, 'failed');
+        console.log(`❌ Emergency verification: Payment failed for booking ${bookingId}`);
+        
+        return res.json({
+          success: false,
+          message: `Payment verification failed. Payment status: ${verificationResult.status}`,
+          paymentStatus: 'failed',
+          verificationMethod: 'emergency_manual',
+          verifiedBy: req.user?.username,
+          verifiedAt: new Date().toISOString()
+        });
+
+      } else {
+        // Payment still pending
+        console.log(`⏳ Emergency verification: Payment still pending for booking ${bookingId}`);
+        return res.json({
+          success: false,
+          message: `Payment is still pending. Current status: ${verificationResult.status}`,
+          paymentStatus: 'pending',
+          verificationMethod: 'emergency_manual',
+          checkedBy: req.user?.username,
+          checkedAt: new Date().toISOString()
+        });
+      }
+
+    } catch (error: any) {
+      console.error(`❌ Emergency verification error for booking ${req.body.bookingId}:`, error);
+      return res.status(500).json({ 
+        message: `Emergency verification failed: ${error.message}` 
+      });
+    }
+  });
 
   // Coupon Routes
   app.post('/api/coupons', authenticate, requirePermission(PERMISSIONS.MANAGE_COUPONS), async (req, res) => {
