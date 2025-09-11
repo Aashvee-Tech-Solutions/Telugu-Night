@@ -780,7 +780,7 @@ export class CashfreeService {
       // Test 1: Basic connectivity
       await this.performConnectivityCheck();
       
-      // Test 2: API endpoint accessibility
+      // Test 2: API endpoint accessibility - Use a simple authentication test
       const headers = {
         'Accept': 'application/json',
         'x-api-version': '2023-08-01',
@@ -792,16 +792,32 @@ export class CashfreeService {
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       const startTime = Date.now();
-      const response = await fetch(`${this.baseUrl}/orders?limit=1`, {
-        method: 'GET',
-        headers,
+      // Test with a minimal valid order creation request to verify authentication and API access
+      const testOrderData = {
+        order_currency: "INR",
+        order_amount: 1.00,
+        customer_details: {
+          customer_id: "health_check_test",
+          customer_phone: "9999999999"
+        }
+      };
+      
+      const response = await fetch(`${this.baseUrl}/orders`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(testOrderData),
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
       const responseTime = Date.now() - startTime;
       
-      const isHealthy = response.status === 200 || response.status === 400;
+      // Accept 200 (success), 400 (validation error - API accessible), or 422 (unprocessable entity)
+      // These indicate the API is accessible and responding correctly
+      const isHealthy = response.status === 200 || response.status === 400 || response.status === 422;
       
       console.log(`📅 [${healthCheckId}] Cashfree health check result:`, {
         healthy: isHealthy,
@@ -904,6 +920,7 @@ export class CashfreeService {
       const startTime = Date.now();
       const headers = {
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
         'x-api-version': '2023-08-01',
         'x-client-id': this.appId,
         'x-client-secret': this.secretKey,
@@ -912,16 +929,27 @@ export class CashfreeService {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8000);
       
-      const response = await fetch(`${this.baseUrl}/orders?limit=1`, {
-        method: 'GET',
+      // Test API access with a minimal order creation request
+      const testOrderData = {
+        order_currency: "INR",
+        order_amount: 1.00,
+        customer_details: {
+          customer_id: "api_access_test",
+          customer_phone: "9999999999"
+        }
+      };
+      
+      const response = await fetch(`${this.baseUrl}/orders`, {
+        method: 'POST',
         headers,
+        body: JSON.stringify(testOrderData),
         signal: controller.signal
       });
       
       clearTimeout(timeout);
       
       return {
-        success: response.status === 200 || response.status === 400,
+        success: response.status === 200 || response.status === 400 || response.status === 422,
         responseTime: Date.now() - startTime,
         status: response.status,
         authenticated: response.status !== 401
