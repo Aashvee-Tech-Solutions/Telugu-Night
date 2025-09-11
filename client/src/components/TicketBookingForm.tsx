@@ -506,24 +506,21 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                   Rs. {pricing.config?.earlyBird.price || 0}
                                 </div>
                               </div>
-                              <Select 
+                              <Input
+                                type="number"
+                                min="0"
+                                max="15"
+                                className="w-20 text-center"
                                 value={pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird' ? formData.ticketCount.toString() : "0"}
-                                onValueChange={(value) => {
-                                  if (pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird') {
-                                    handleTicketCountChange(parseInt(value));
+                                onChange={(e) => {
+                                  const value = parseInt(e.target.value) || 0;
+                                  if (pricing.config?.earlyBird.isActive && pricing.config?.earlyBird.soldCount < pricing.config?.earlyBird.capacity && pricing.currentTier?.id === 'early_bird' && value >= 0 && value <= 15) {
+                                    handleTicketCountChange(value);
                                   }
                                 }}
                                 disabled={!pricing.config?.earlyBird.isActive || (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) || pricing.currentTier?.id !== 'early_bird'}
-                              >
-                                <SelectTrigger className="w-20">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Array.from({ length: 16 }, (_, i) => (
-                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                                data-testid="input-early-bird-quantity"
+                              />
                             </div>
                           </div>
                         </div>
@@ -555,24 +552,21 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                   Rs. {pricing.config?.phase1.price || 0}
                                 </div>
                               </div>
-                              <Select 
+                              <Input
+                                type="number"
+                                min="0"
+                                max="15"
+                                className="w-20 text-center"
                                 value={pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' ? formData.ticketCount.toString() : "0"}
-                                onValueChange={(value) => {
-                                  if (pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1') {
-                                    handleTicketCountChange(parseInt(value));
+                                onChange={(e) => {
+                                  const value = parseInt(e.target.value) || 0;
+                                  if (pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' && value >= 0 && value <= 15) {
+                                    handleTicketCountChange(value);
                                   }
                                 }}
                                 disabled={!pricing.config?.phase1.isActive || (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) || pricing.currentTier?.id !== 'phase_1'}
-                              >
-                                <SelectTrigger className="w-20">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Array.from({ length: 16 }, (_, i) => (
-                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                                data-testid="input-phase1-quantity"
+                              />
                             </div>
                           </div>
                         </div>
