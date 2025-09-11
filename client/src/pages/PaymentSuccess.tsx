@@ -138,7 +138,7 @@ export default function PaymentSuccess() {
     } else {
       return {
         title: 'Payment Received! 🎉',
-        message: 'We will send your tickets to your email shortly.'
+        message: 'Tickets will be sent to your mail shortly.'
       };
     }
   };

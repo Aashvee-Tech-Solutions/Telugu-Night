@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Users, CreditCard, Tag, Upload, Clock, Star } from "lucide-react";
+import { ArrowLeft, Users, CreditCard, Tag, Upload, Clock, Star, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -734,6 +734,15 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                   </div>
                 )}
 
+                {/* Small Email Notification Box */}
+                {formData.ticketCount > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Mail className="h-4 w-4" />
+                      <span>Tickets will be delivered to your email after payment</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Dynamic Price Display */}
                 {isAnyTicketAvailable && formData.ticketCount > 0 && (

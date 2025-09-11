@@ -1717,6 +1717,54 @@ export async function registerRoutes(app: Express): Promise<Express> {
     }
   });
 
+  // Send payment rejection email
+  app.post('/api/admin/send-rejection-email', authenticate, requirePermission(PERMISSIONS.VERIFY_PAYMENTS), async (req, res) => {
+    try {
+      const { bookingId } = req.body;
+      
+      if (!bookingId || typeof bookingId !== 'number') {
+        return res.status(400).json({ message: 'Valid booking ID is required' });
+      }
+
+      // Get booking details
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+
+      // Check if booking has failed payment status
+      if (booking.paymentStatus !== 'failed') {
+        return res.status(400).json({ 
+          message: `Cannot send rejection email: Payment status is '${booking.paymentStatus}'. Rejection emails can only be sent for failed payments.`,
+          currentStatus: booking.paymentStatus
+        });
+      }
+
+      console.log(`📧 Admin ${req.user?.username} sending rejection email for booking ${bookingId} to ${booking.email}`);
+
+      // Send payment failure email
+      const bookingData = toBookingData(booking);
+      await enhancedEmailService.sendPaymentFailureEmail(bookingData);
+      
+      console.log(`✅ Rejection email sent successfully for booking ${bookingId}`);
+
+      res.json({
+        success: true,
+        message: `Payment rejection email sent to ${booking.email}`,
+        bookingId: bookingId,
+        sentTo: booking.email,
+        sentBy: req.user?.username,
+        sentAt: new Date().toISOString()
+      });
+
+    } catch (error: any) {
+      console.error(`❌ Failed to send rejection email for booking ${req.body.bookingId}:`, error);
+      res.status(500).json({ 
+        message: `Failed to send rejection email: ${error.message}` 
+      });
+    }
+  });
+
   // Coupon Routes
   app.post('/api/coupons', authenticate, requirePermission(PERMISSIONS.MANAGE_COUPONS), async (req, res) => {
     try {
