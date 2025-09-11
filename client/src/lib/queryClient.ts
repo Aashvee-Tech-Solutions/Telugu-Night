@@ -45,10 +45,18 @@ export const queryClient = new QueryClient({
   },
 });
 
-export const apiRequest = async (method: string, url: string, data?: any, headers?: Record<string, string>) => {
+export const apiRequest = async (method: string, url: string, data?: any, headers?: Record<string, string>, timeoutMs: number = 30000) => {
   console.log(`🌐 [API_REQUEST] Starting ${method} request to ${url}`);
   console.log(`🌐 [API_REQUEST] Request data:`, data);
+  console.log(`🌐 [API_REQUEST] Timeout set to:`, timeoutMs, 'ms');
   
+  // Create AbortController for timeout handling
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.log(`🌐 [API_REQUEST] Request timed out after ${timeoutMs}ms`);
+    controller.abort();
+  }, timeoutMs);
+
   try {
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -67,14 +75,18 @@ export const apiRequest = async (method: string, url: string, data?: any, header
     }
     
     console.log(`🌐 [API_REQUEST] Request headers:`, requestHeaders);
-    console.log(`🌐 [API_REQUEST] Making fetch request...`);
+    console.log(`🌐 [API_REQUEST] Making fetch request with timeout...`);
     
     const response = await fetch(url, {
       method,
       headers: requestHeaders,
       body: data ? JSON.stringify(data) : undefined,
+      signal: controller.signal, // Add abort signal for timeout
     });
 
+    // Clear timeout since request completed
+    clearTimeout(timeoutId);
+    
     console.log(`🌐 [API_REQUEST] Fetch completed. Status: ${response.status} ${response.statusText}`);
     console.log(`🌐 [API_REQUEST] Response headers:`, Object.fromEntries(response.headers.entries()));
 
@@ -108,10 +120,22 @@ export const apiRequest = async (method: string, url: string, data?: any, header
       return textData;
     }
   } catch (error: any) {
+    // Clear timeout in case of error
+    clearTimeout(timeoutId);
+    
     console.error(`🌐 [API_REQUEST] Request failed:`, error);
     console.error(`🌐 [API_REQUEST] Error type:`, error.constructor.name);
     console.error(`🌐 [API_REQUEST] Error message:`, error.message);
     console.error(`🌐 [API_REQUEST] Error stack:`, error.stack);
+    
+    // Handle specific error types
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timed out after ${timeoutMs / 1000} seconds. Please try again.`);
+    }
+    
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      throw new Error('Network connection failed. Please check your internet connection and try again.');
+    }
     
     // Re-throw with additional context
     throw new Error(`Network request failed: ${error.message}`);
