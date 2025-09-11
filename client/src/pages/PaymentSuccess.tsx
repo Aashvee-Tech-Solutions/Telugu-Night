@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Clock, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Loader2, Mail, AlertCircle } from 'lucide-react';
 
 export default function PaymentSuccess() {
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -145,8 +145,64 @@ export default function PaymentSuccess() {
 
   const content = getStatusContent();
 
+  // Get email alert content based on status
+  const getEmailAlertContent = () => {
+    if (isLoading) {
+      return {
+        message: "📧 We'll send updates to your email",
+        subMessage: "Please keep checking your inbox for payment status updates",
+        alertBg: "bg-blue-600",
+        alertBorder: "border-blue-500",
+        alertText: "text-white"
+      };
+    } else if (isFailed) {
+      return {
+        message: "📧 CHECK YOUR EMAIL!",
+        subMessage: "Payment failed - we've sent you a detailed notification email",
+        alertBg: "bg-red-600",
+        alertBorder: "border-red-500",
+        alertText: "text-white"
+      };
+    } else if (isPending) {
+      return {
+        message: "📧 CHECK YOUR EMAIL!",
+        subMessage: "We'll send payment confirmation and tickets to your email shortly",
+        alertBg: "bg-orange-600",
+        alertBorder: "border-orange-500",
+        alertText: "text-white"
+      };
+    } else {
+      // Verified or success
+      return {
+        message: "📧 CHECK YOUR EMAIL!",
+        subMessage: "Your tickets have been sent to your email address",
+        alertBg: "bg-green-600",
+        alertBorder: "border-green-500",
+        alertText: "text-white"
+      };
+    }
+  };
+
+  const emailAlert = getEmailAlertContent();
+
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${styles.background} flex items-center justify-center px-4`} data-testid="page-payment-success">
+    <div className={`min-h-screen bg-gradient-to-br ${styles.background} flex flex-col items-center justify-center px-4 py-8`} data-testid="page-payment-success">
+      {/* Prominent Email Alert Box */}
+      <div className={`w-full max-w-lg mb-6 ${emailAlert.alertBg} ${emailAlert.alertBorder} border-2 rounded-xl shadow-2xl transform hover:scale-105 transition-transform duration-200`} data-testid="alert-check-email">
+        <div className="p-6 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <Mail className={`h-12 w-12 ${emailAlert.alertText} animate-bounce`} />
+            <AlertCircle className={`h-8 w-8 ${emailAlert.alertText} ml-2 animate-pulse`} />
+          </div>
+          <h2 className={`text-2xl font-bold ${emailAlert.alertText} mb-2 uppercase tracking-wide`} data-testid="text-email-alert-title">
+            {emailAlert.message}
+          </h2>
+          <p className={`text-lg ${emailAlert.alertText} opacity-90`} data-testid="text-email-alert-message">
+            {emailAlert.subMessage}
+          </p>
+        </div>
+      </div>
+
       <Card className={`max-w-md w-full ${styles.cardBorder} ${styles.cardBg}`}>
         <CardContent className="text-center p-8">
           {getStatusIcon()}
