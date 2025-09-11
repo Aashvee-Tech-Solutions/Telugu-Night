@@ -305,19 +305,32 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
       });
       return;
     }
+
+    // Additional validation to ensure gender is selected
+    if (!formData.gender || formData.gender.trim() === "") {
+      toast({
+        title: "Gender Required",
+        description: "Please select your gender to proceed with booking.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const bookingData = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
       gender: formData.gender,
       ticketCount: formData.ticketCount,
       ticketType: formData.ticketType,
       guests: formData.guests.filter(g => g.trim()),
       guestGenders: formData.guestGenders.filter(g => g.trim()),
-      couponCode: formData.couponCode || null,
-      referrer: formData.referrer || referralCode || null,
+      couponCode: formData.couponCode?.trim() || null,
+      referrer: formData.referrer?.trim() || referralCode || null,
     };
+    
+    // Debug logging to see what's actually being sent
+    console.log('🚀 Booking data being sent:', JSON.stringify(bookingData, null, 2));
     
     createBookingMutation.mutate(bookingData);
   };
