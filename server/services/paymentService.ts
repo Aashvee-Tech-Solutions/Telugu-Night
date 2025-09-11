@@ -1,4 +1,5 @@
 import { CashfreeService, CashfreeAPIError, PaymentRetryError } from './cashfreeService';
+import { getPublicBaseUrlWithFallback } from '../utils/urlUtils';
 
 export interface PaymentOrderData {
   bookingId: number;
@@ -6,6 +7,7 @@ export interface PaymentOrderData {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  baseUrl?: string; // Optional base URL for return/success URLs
 }
 
 export interface PaymentOrderResult {
@@ -61,7 +63,7 @@ export class PaymentService {
           customer_phone: bookingData.customerPhone,
         },
         order_meta: {
-          return_url: `${process.env.FRONTEND_URL || 'https://events.qlora.in'}/payment/success?booking=${bookingData.bookingId}`,
+          return_url: `${bookingData.baseUrl || getPublicBaseUrlWithFallback()}/payment/success?booking=${bookingData.bookingId}`,
           notify_url: this.getWebhookUrl(),
         },
       });
@@ -330,10 +332,21 @@ export class PaymentService {
       return `${baseUrl}/api/webhooks/cashfree`;
     }
 
-    // Priority 3: For development, use localhost with port 5000
+    // Priority 3: For development, use HTTPS localhost since Cashfree requires HTTPS
     if (process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ Using localhost webhook URL for development. This will not work for production webhooks!');
-      return 'http://localhost:5000/api/webhooks/cashfree';
+      // Use HTTPS by default for Cashfree compatibility, allow HTTP override for testing
+      const forceHttps = process.env.FORCE_HTTPS_LOCALHOST !== 'false'; // Default to true
+      const protocol = forceHttps ? 'https' : 'http';
+      
+      if (protocol === 'https') {
+        console.warn('⚠️ Using HTTPS localhost webhook URL for Cashfree compatibility.');
+        console.warn('💡 If you need HTTP for local testing, set FORCE_HTTPS_LOCALHOST=false');
+        console.warn('💡 For production webhooks, use SERVER_URL or APP_BASE_URL environment variables');
+      } else {
+        console.warn('⚠️ Using HTTP localhost webhook URL. This will not work with Cashfree in production mode!');
+      }
+      
+      return `${protocol}://localhost:5000/api/webhooks/cashfree`;
     }
 
     // Priority 4: Fallback to production URL (same as frontend base)

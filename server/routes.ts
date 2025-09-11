@@ -12,6 +12,7 @@ import { PaymentService } from "./services/paymentService";
 import { authService } from "./services/authService";
 import { TicketGenerationService } from "./services/ticketGenerationService";
 import { authenticate, requirePermission, requireRole } from "./middleware/authMiddleware";
+import { getPublicBaseUrl } from "./utils/urlUtils";
 import { insertBookingSchema, insertCouponSchema, insertUserSchema, PERMISSIONS } from "@shared/schema";
 import { db } from "./db";
 import { users } from "@shared/schema";
@@ -1089,13 +1090,14 @@ export async function registerRoutes(app: Express): Promise<Express> {
         // Don't fail the booking if email fails
       }
 
-      // Create Cashfree payment order
+      // Create Cashfree payment order with dynamic base URL
       const paymentResult = await paymentService.createPaymentOrder({
         bookingId: booking.id,
         amount: totalAmount,
         customerName: booking.name,
         customerEmail: booking.email,
         customerPhone: booking.phone,
+        baseUrl: getPublicBaseUrl(req), // Pass request-based URL with correct port
       });
       
       if (!paymentResult.success) {
