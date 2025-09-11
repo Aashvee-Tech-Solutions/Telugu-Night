@@ -68,41 +68,27 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log('🎯 [MUTATION] Starting fetch request to /api/bookings');
+      console.log('🎯 [MUTATION] Starting booking request to /api/bookings');
       console.log('🎯 [MUTATION] Request data:', JSON.stringify(data, null, 2));
+      console.log('🎯 [MUTATION] Using standardized apiRequest function...');
       
       try {
-        console.log('🎯 [MUTATION] About to call fetch...');
+        console.log('🎯 [MUTATION] About to call apiRequest...');
         
-        const response = await fetch('/api/bookings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
+        // Use the standardized apiRequest function instead of manual fetch
+        const responseData = await apiRequest('POST', '/api/bookings', data);
         
-        console.log('🎯 [MUTATION] Fetch completed! Response status:', response.status);
-        console.log('🎯 [MUTATION] Response ok:', response.ok);
-        console.log('🎯 [MUTATION] Response headers:', Object.fromEntries(response.headers.entries()));
-        
-        if (!response.ok) {
-          console.log('🎯 [MUTATION] Response not ok, attempting to read error data...');
-          const errorData = await response.json();
-          console.log('🎯 [MUTATION] Error data:', errorData);
-          throw new Error(errorData.message || 'Booking failed');
-        }
-        
-        console.log('🎯 [MUTATION] Reading successful response...');
-        const responseData = await response.json();
+        console.log('🎯 [MUTATION] apiRequest completed successfully!');
         console.log('🎯 [MUTATION] Success response data:', responseData);
         return responseData;
-      } catch (fetchError: any) {
-        console.error('🎯 [MUTATION] Fetch error occurred:', fetchError);
-        console.error('🎯 [MUTATION] Error type:', fetchError.constructor.name);
-        console.error('🎯 [MUTATION] Error message:', fetchError.message);
-        console.error('🎯 [MUTATION] Error stack:', fetchError.stack);
-        throw fetchError;
+      } catch (apiError: any) {
+        console.error('🎯 [MUTATION] apiRequest error occurred:', apiError);
+        console.error('🎯 [MUTATION] Error type:', apiError.constructor.name);
+        console.error('🎯 [MUTATION] Error message:', apiError.message);
+        console.error('🎯 [MUTATION] Error stack:', apiError.stack);
+        
+        // Re-throw the error with additional context
+        throw new Error(apiError.message || 'Booking request failed');
       }
     },
     onSuccess: (data) => {
@@ -133,25 +119,27 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
         throw new Error('Please enter a coupon code');
       }
 
-      const response = await fetch('/api/coupons/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
+      console.log('🎫 [COUPON] Validating coupon code:', code.trim().toUpperCase());
+      
+      try {
+        const couponData = { 
           code: code.trim().toUpperCase(),
           email: formData.email,
           ticketPrice: basePrice,
           ticketCount: formData.ticketCount
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Invalid coupon');
+        };
+        
+        console.log('🎫 [COUPON] Coupon validation data:', couponData);
+        
+        // Use the standardized apiRequest function
+        const response = await apiRequest('POST', '/api/coupons/validate', couponData);
+        
+        console.log('🎫 [COUPON] Validation successful:', response);
+        return response;
+      } catch (error: any) {
+        console.error('🎫 [COUPON] Validation failed:', error);
+        throw new Error(error.message || 'Invalid coupon');
       }
-      
-      return response.json();
     },
     onSuccess: (data) => {
       setFormData(prev => ({ ...prev, couponDiscount: data.discount }));
