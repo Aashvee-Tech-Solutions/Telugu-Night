@@ -57,9 +57,9 @@ export default function PaymentSuccess() {
 
   // Get payment status from booking data
   const paymentStatus = bookingStatus?.status || bookingStatus?.paymentStatus;
-  const isVerified = paymentStatus === 'verified';
+  const isVerified = paymentStatus === 'verified' || paymentStatus === 'paid';
   const isFailed = paymentStatus === 'failed';
-  const isPending = paymentStatus === 'pending' || paymentStatus === 'paid';
+  const isPending = paymentStatus === 'pending';
 
   // Determine styling based on status
   const getStatusStyles = () => {

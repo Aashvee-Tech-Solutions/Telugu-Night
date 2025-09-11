@@ -1156,30 +1156,66 @@ export async function registerRoutes(app: Express): Promise<Express> {
         }
       }
       
-      // Fallback: Original timeout logic for when API verification fails or is not applicable
+      // CONSERVATIVE timeout logic - only timeout after 15 minutes of no webhook activity
+      // This prevents premature failure marking while Cashfree processes payments
       const createdTime = new Date(booking.createdAt || '').getTime();
       const currentTime = Date.now();
       const timeDiff = currentTime - createdTime;
-      const fortyFiveSeconds = 45 * 1000;
+      const fifteenMinutes = 15 * 60 * 1000; // 15 minutes instead of 45 seconds
       
-      if (booking.paymentStatus === 'pending' && timeDiff > fortyFiveSeconds) {
-        console.log(`🕒 Booking ${bookingId} stuck for ${Math.round(timeDiff / 1000)} seconds, marking as failed (timeout fallback)`);
+      if (booking.paymentStatus === 'pending' && timeDiff > fifteenMinutes) {
+        console.log(`🕒 Booking ${bookingId} pending for ${Math.round(timeDiff / (60 * 1000))} minutes - this indicates a likely payment gateway issue`);
+        
+        // CRITICAL: Before marking as failed, do one final API verification attempt
+        try {
+          if (booking.paymentId) {
+            console.log(`🔍 Final verification attempt before timeout for booking ${bookingId}`);
+            const finalCheck = await paymentService.verifyPaymentWithMapping(booking.paymentId);
+            
+            if (finalCheck.success && finalCheck.mappedStatus === 'verified') {
+              console.log(`✅ CRITICAL: Last-minute verification successful! Booking ${bookingId} is actually verified - preventing false timeout`);
+              
+              // Update status and send success emails
+              await storage.updateBookingPaymentStatus(bookingId, 'verified');
+              
+              try {
+                const ticketGenerationService = new TicketGenerationService();
+                await ticketGenerationService.generateTicketsForBooking(bookingId);
+                console.log(`🎫 Late verification - tickets generated for booking ${bookingId}`);
+              } catch (ticketError) {
+                console.error('Failed to generate tickets after late verification:', ticketError);
+              }
+              
+              return res.json({ 
+                message: 'Payment verified at the last moment! Tickets are being sent.',
+                status: 'verified',
+                bookingId: bookingId,
+                note: 'Late verification prevented timeout'
+              });
+            }
+          }
+        } catch (finalCheckError) {
+          console.error('Final verification check failed:', finalCheckError);
+        }
+        
+        // Only mark as failed after final check confirms it's actually failed
+        console.log(`⚠️ Marking booking ${bookingId} as failed after ${Math.round(timeDiff / (60 * 1000))} minutes timeout`);
         await storage.updateBookingPaymentStatus(bookingId, 'failed');
         
-        // Send failure email
+        // Send failure email with more context
         try {
           const { EnhancedEmailService } = await import('./services/enhancedEmailService');
           const enhancedEmailService = new EnhancedEmailService();
           await enhancedEmailService.sendPaymentFailureEmail(toBookingData({...booking, paymentStatus: 'failed'}));
-          console.log(`📧 Payment timeout email sent to ${booking.email}`);
+          console.log(`📧 Payment timeout email sent to ${booking.email} after 15-minute verification delay`);
         } catch (emailError) {
           console.error('Failed to send timeout email:', emailError);
         }
         
         return res.json({ 
-          message: 'Payment timed out and marked as failed',
+          message: 'Payment verification timed out after 15 minutes. Please try booking again.',
           status: 'failed',
-          reason: 'timeout',
+          reason: 'timeout_after_verification_attempts',
           bookingId: bookingId
         });
       }
@@ -2491,13 +2527,18 @@ export async function registerRoutes(app: Express): Promise<Express> {
       // Delete from database
       await storage.deleteBooking(bookingId);
       
-      // Send failure email notification
-      try {
-        const { EnhancedEmailService } = await import('./services/enhancedEmailService');
-        const enhancedEmailService = new EnhancedEmailService();
-        await enhancedEmailService.sendPaymentFailureEmail(toBookingData(booking));
-      } catch (emailError) {
-        console.error('Failed to send payment failure email:', emailError);
+      // SAFEGUARD: Only send failure email if payment is actually failed, not verified
+      if (booking.paymentStatus !== 'verified') {
+        try {
+          console.log(`📧 Sending deletion notification for failed booking ${bookingId} with status: ${booking.paymentStatus}`);
+          const { EnhancedEmailService } = await import('./services/enhancedEmailService');
+          const enhancedEmailService = new EnhancedEmailService();
+          await enhancedEmailService.sendPaymentFailureEmail(toBookingData(booking));
+        } catch (emailError) {
+          console.error('Failed to send payment failure email:', emailError);
+        }
+      } else {
+        console.log(`🛡️ Skipping failure email for verified booking ${bookingId} that was marked for deletion`);
       }
       
       console.log(`📋 Failed booking ${bookingId} deleted for ${booking.name}`);
@@ -3114,22 +3155,57 @@ export async function registerRoutes(app: Express): Promise<Express> {
             actionTaken = 'payment_failed';
             
             console.log(`💸 [${webhookId}] Payment failed for booking ${booking.id} (status: ${order_status}), updating status to failed`);
+            
+            // SAFEGUARD: Double-check payment status before marking as failed
+            // This prevents false failures due to webhook race conditions
+            try {
+              console.log(`🔍 [${webhookId}] Double-checking payment status before marking booking ${booking.id} as failed`);
+              const doubleCheckResult = await paymentService.verifyPaymentWithMapping(order_id);
+              
+              if (doubleCheckResult.success && doubleCheckResult.mappedStatus === 'verified') {
+                console.log(`🚨 [${webhookId}] CRITICAL PROTECTION: Payment ${order_id} is actually VERIFIED, not failed! Preventing false failure`);
+                // This payment is actually successful - treat as verified instead
+                await storage.updateBookingPaymentStatus(booking.id, 'verified');
+                
+                // Generate tickets for the verified payment
+                try {
+                  const { TicketGenerationService } = await import('./services/ticketGenerationService');
+                  const ticketService = new TicketGenerationService();
+                  await ticketService.generateTicketsForBooking(booking.id);
+                  console.log(`🎫 [${webhookId}] Tickets generated for falsely-failed booking ${booking.id} that was actually verified`);
+                  actionTaken = 'false_failure_corrected_to_verified';
+                } catch (ticketError) {
+                  console.error(`❌ [${webhookId}] Failed to generate tickets for corrected booking ${booking.id}:`, ticketError);
+                }
+                break; // Exit the failed case since payment is actually verified
+              }
+            } catch (doubleCheckError) {
+              console.log(`⚠️ [${webhookId}] Double-check verification failed, proceeding with original failed status: ${doubleCheckError}`);
+            }
+            
+            // Only proceed with failed status if double-check confirms it's actually failed
             await storage.updateBookingPaymentStatus(booking.id, 'failed');
             
             // Clear any QR codes/tickets that may have been mistakenly generated
             // TODO: Implement clearBookingTickets method in storage interface
             
-            // Send payment failure email to customer
-            try {
-              const { EnhancedEmailService } = await import('./services/enhancedEmailService');
-              const enhancedEmailService = new EnhancedEmailService();
-              await enhancedEmailService.sendPaymentFailureEmail(toBookingData(booking));
-              console.log(`📧 [${webhookId}] Payment failure email sent to ${booking.email} for booking ${booking.id}`);
-              actionTaken = 'payment_failed_email_sent';
-            } catch (emailError: any) {
-              console.error(`❌ [${webhookId}] Failed to send payment failure email for booking ${booking.id}:`, emailError);
-              actionTaken = 'payment_failed_email_error';
-              // Don't fail the webhook if email sending fails
+            // SAFEGUARD: Only send failure email if booking wasn't already marked as verified
+            if (booking.paymentStatus !== 'verified') {
+              try {
+                console.log(`📧 [${webhookId}] Sending failure email to ${booking.email} for confirmed failed payment`);
+                const { EnhancedEmailService } = await import('./services/enhancedEmailService');
+                const enhancedEmailService = new EnhancedEmailService();
+                await enhancedEmailService.sendPaymentFailureEmail(toBookingData(booking));
+                console.log(`✅ [${webhookId}] Payment failure email sent to ${booking.email} for booking ${booking.id}`);
+                actionTaken = 'payment_failed_email_sent';
+              } catch (emailError: any) {
+                console.error(`❌ [${webhookId}] Failed to send payment failure email for booking ${booking.id}:`, emailError);
+                actionTaken = 'payment_failed_email_error';
+                // Don't fail the webhook if email sending fails
+              }
+            } else {
+              console.log(`🛡️ [${webhookId}] Skipping failure email for booking ${booking.id} - payment was already verified`);
+              actionTaken = 'failure_email_skipped_already_verified';
             }
             
             // Update Google Sheets with payment failure
