@@ -1109,14 +1109,52 @@ export async function registerRoutes(app: Express): Promise<Express> {
         }
       }
       
-      // Fallback: Original timeout logic for when API verification fails or is not applicable
+      // SAFETY: Extended timeout logic - payments can take up to 10 minutes to complete
+      // This only applies when API verification also fails (extremely rare)
       const createdTime = new Date(booking.createdAt || '').getTime();
       const currentTime = Date.now();
       const timeDiff = currentTime - createdTime;
-      const fortyFiveSeconds = 45 * 1000;
+      const tenMinutes = 10 * 60 * 1000; // 10 minutes instead of 45 seconds
       
-      if (booking.paymentStatus === 'pending' && timeDiff > fortyFiveSeconds) {
-        console.log(`🕒 Booking ${bookingId} stuck for ${Math.round(timeDiff / 1000)} seconds, marking as failed (timeout fallback)`);
+      if (booking.paymentStatus === 'pending' && timeDiff > tenMinutes) {
+        console.log(`🕒 Booking ${bookingId} stuck for ${Math.round(timeDiff / 1000)} seconds (${Math.round(timeDiff / 60000)} minutes), marking as failed (extended timeout fallback)`);
+        
+        // Try one final verification before marking as failed
+        try {
+          const finalVerification = await paymentService.verifyPayment(booking.paymentId || '');
+          if (finalVerification.success) {
+            const finalMappedStatus = paymentService.mapCashfreeStatusToInternal(finalVerification.status || '');
+            if (finalMappedStatus === 'verified') {
+              console.log(`💰 Last-chance verification successful for booking ${bookingId}!`);
+              await storage.updateBookingPaymentStatus(bookingId, 'verified');
+              
+              // Generate QR codes and send tickets
+              const guestCodes = generateGuestCodes(booking.ticketCount);
+              const passIds = generatePassIds(booking.id, booking.ticketCount);
+              const qrCodes = guestCodes.map(code => `TELUGU-NIGHT-${booking.id}-${code}`);
+              
+              await storage.updateBookingQRCodes(booking.id, qrCodes, passIds, guestCodes);
+              
+              // Send confirmation email with tickets
+              const updatedBooking = await storage.getBooking(booking.id);
+              if (updatedBooking) {
+                await enhancedEmailService.sendPaymentConfirmationEmail(toBookingData(updatedBooking));
+                console.log(`📧 Last-chance confirmation email sent for booking ${booking.id}`);
+              }
+              
+              return res.json({ 
+                message: 'Payment verified on final check',
+                status: 'verified',
+                bookingId: bookingId,
+                reason: 'last_chance_verification'
+              });
+            }
+          }
+        } catch (finalError) {
+          console.error(`❌ Final verification failed for booking ${bookingId}:`, finalError);
+        }
+        
+        // Only mark as failed after 10 minutes and final verification fails
         await storage.updateBookingPaymentStatus(bookingId, 'failed');
         
         // Send failure email
@@ -1124,15 +1162,15 @@ export async function registerRoutes(app: Express): Promise<Express> {
           const { EnhancedEmailService } = await import('./services/enhancedEmailService');
           const enhancedEmailService = new EnhancedEmailService();
           await enhancedEmailService.sendPaymentFailureEmail(toBookingData({...booking, paymentStatus: 'failed'}));
-          console.log(`📧 Payment timeout email sent to ${booking.email}`);
+          console.log(`📧 Payment timeout email sent to ${booking.email} after ${Math.round(timeDiff / 60000)} minutes`);
         } catch (emailError) {
           console.error('Failed to send timeout email:', emailError);
         }
         
         return res.json({ 
-          message: 'Payment timed out and marked as failed',
+          message: `Payment timed out after ${Math.round(timeDiff / 60000)} minutes and marked as failed`,
           status: 'failed',
-          reason: 'timeout',
+          reason: 'extended_timeout',
           bookingId: bookingId
         });
       }
@@ -2901,7 +2939,11 @@ export async function registerRoutes(app: Express): Promise<Express> {
     const startTime = Date.now();
     
     try {
-      console.log(`🔔 [${webhookId}] Incoming Cashfree webhook started`);
+      console.log(`🔔 [${webhookId}] === CASHFREE WEBHOOK RECEIVED ===`);
+      console.log(`📡 [${webhookId}] Client IP: ${req.ip || req.connection.remoteAddress || 'unknown'}`);
+      console.log(`📡 [${webhookId}] User-Agent: ${req.headers['user-agent'] || 'unknown'}`);
+      console.log(`📡 [${webhookId}] Content-Length: ${req.headers['content-length'] || 'unknown'}`);
+      console.log(`🔔 [${webhookId}] Incoming Cashfree webhook processing started`);
       
       const { CashfreeService } = await import('./services/cashfreeService');
       const cashfreeService = new CashfreeService();

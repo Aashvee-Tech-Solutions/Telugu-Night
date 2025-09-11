@@ -319,7 +319,9 @@ export class PaymentService {
       const baseUrl = process.env.SERVER_URL.endsWith('/') 
         ? process.env.SERVER_URL.slice(0, -1) 
         : process.env.SERVER_URL;
-      return `${baseUrl}/api/webhooks/cashfree`;
+      const webhookUrl = `${baseUrl}/api/webhooks/cashfree`;
+      console.log(`🔗 Using configured SERVER_URL for webhooks: ${webhookUrl}`);
+      return webhookUrl;
     }
 
     // Priority 2: Use APP_BASE_URL if set (alternative environment variable)
@@ -327,23 +329,47 @@ export class PaymentService {
       const baseUrl = process.env.APP_BASE_URL.endsWith('/') 
         ? process.env.APP_BASE_URL.slice(0, -1) 
         : process.env.APP_BASE_URL;
-      return `${baseUrl}/api/webhooks/cashfree`;
+      const webhookUrl = `${baseUrl}/api/webhooks/cashfree`;
+      console.log(`🔗 Using configured APP_BASE_URL for webhooks: ${webhookUrl}`);
+      return webhookUrl;
     }
 
-    // Priority 3: For development, use localhost with port 5000
+    // Priority 3: Use REPLIT_DOMAINS if available (Replit environment)
+    if (process.env.REPLIT_DOMAINS) {
+      const domain = process.env.REPLIT_DOMAINS.trim();
+      const webhookUrl = `https://${domain}/api/webhooks/cashfree`;
+      console.log(`🔗 Using Replit domain for webhooks: ${webhookUrl}`);
+      return webhookUrl;
+    }
+
+    // Priority 4: Use REPLIT_URL if available (alternative Replit env var)
+    if (process.env.REPLIT_URL) {
+      const baseUrl = process.env.REPLIT_URL.endsWith('/') 
+        ? process.env.REPLIT_URL.slice(0, -1) 
+        : process.env.REPLIT_URL;
+      const webhookUrl = `${baseUrl}/api/webhooks/cashfree`;
+      console.log(`🔗 Using Replit URL for webhooks: ${webhookUrl}`);
+      return webhookUrl;
+    }
+
+    // Priority 5: For development, use localhost with port 5000
     if (process.env.NODE_ENV === 'development') {
       console.warn('⚠️ Using localhost webhook URL for development. This will not work for production webhooks!');
+      console.warn('💡 Set SERVER_URL, APP_BASE_URL, or REPLIT_DOMAINS environment variable for production webhooks');
       return 'http://localhost:5000/api/webhooks/cashfree';
     }
 
-    // Priority 4: Fallback to production URL (same as frontend base)
+    // Priority 6: Fallback to production URL (same as frontend base)
     const fallbackUrl = process.env.FRONTEND_URL || 'https://events.qlora.in';
-    console.warn(`⚠️ No SERVER_URL or APP_BASE_URL configured. Using fallback: ${fallbackUrl}`);
-    console.warn('💡 For production, set SERVER_URL environment variable to your publicly accessible backend URL');
+    console.warn(`⚠️ CRITICAL: No webhook URL configured! Using fallback: ${fallbackUrl}`);
+    console.warn('💡 This may cause webhook delivery failures. Set SERVER_URL, APP_BASE_URL, or REPLIT_DOMAINS environment variable');
+    console.warn('📡 Expected webhook URL format: https://your-server-domain.com/api/webhooks/cashfree');
     
     const baseUrl = fallbackUrl.endsWith('/') 
       ? fallbackUrl.slice(0, -1) 
       : fallbackUrl;
-    return `${baseUrl}/api/webhooks/cashfree`;
+    const webhookUrl = `${baseUrl}/api/webhooks/cashfree`;
+    console.warn(`🔗 Using fallback webhook URL: ${webhookUrl}`);
+    return webhookUrl;
   }
 }

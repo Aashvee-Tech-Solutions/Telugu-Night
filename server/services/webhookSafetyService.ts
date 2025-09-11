@@ -15,7 +15,7 @@ export class WebhookSafetyService {
   private pendingPayments = new Map<string, PaymentMonitoringEntry>();
   private cashfreeService = new CashfreeService();
   private monitoringInterval: NodeJS.Timeout | null = null;
-  private readonly CHECK_INTERVAL = 60000; // Check every minute
+  private readonly CHECK_INTERVAL = 30000; // Check every 30 seconds for faster payment recovery
   private readonly MAX_MONITORING_TIME = 3600000; // 1 hour maximum
 
   constructor() {
