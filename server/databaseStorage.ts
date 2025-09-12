@@ -1648,28 +1648,28 @@ export class MemStorage implements IStorage {
 // Environment-aware storage selection
 function createStorage(): IStorage {
   // Try to use database if available, fall back to memory storage
-  const isDevelopment = process.env.NODE_ENV === 'development';
   const hasDatabase = process.env.DATABASE_URL;
   
-  // Force MemStorage if explicitly requested or if database is known to be disabled
+  // Force MemStorage if explicitly requested
   const forceMemStorage = process.env.FORCE_MEM_STORAGE === 'true';
   
-  if (forceMemStorage || !hasDatabase) {
+  if (forceMemStorage) {
     console.log('🔄 Using MemStorage (in-memory storage)');
-    console.log('   Reason:', forceMemStorage ? 'Forced via FORCE_MEM_STORAGE=true' : 'No DATABASE_URL found');
+    console.log('   Reason: Forced via FORCE_MEM_STORAGE=true');
     return new MemStorage();
   }
   
-  // Try DatabaseStorage in production if database URL is available
+  if (!hasDatabase) {
+    console.log('🔄 Using MemStorage (in-memory storage)');
+    console.log('   Reason: No DATABASE_URL found');
+    return new MemStorage();
+  }
+  
+  // Try DatabaseStorage when database is available
   try {
-    if (!isDevelopment) {
-      console.log('🔄 Attempting DatabaseStorage (persistent storage)');
-      return new DatabaseStorage();
-    } else {
-      // In development, prefer MemStorage to avoid database dependency
-      console.log('🔄 Using MemStorage (development mode)');
-      return new MemStorage();
-    }
+    console.log('🔄 Attempting DatabaseStorage (persistent storage)');
+    console.log('   Database URL available, connecting...');
+    return new DatabaseStorage();
   } catch (error) {
     console.warn('⚠️  DatabaseStorage failed, falling back to MemStorage:', error.message);
     return new MemStorage();
