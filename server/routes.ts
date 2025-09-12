@@ -1626,18 +1626,16 @@ export async function registerRoutes(app: Express): Promise<Express> {
         return res.status(404).json({ message: 'Booking not found' });
       }
 
-      // Enhanced idempotency protection for manual verification
-      const finalizedStatuses = ['verified', 'failed', 'refunded'] as const;
-      if (finalizedStatuses.includes(booking.paymentStatus as any)) {
-        console.log(`🛡️ Manual verification blocked: Booking ${bookingId} already ${booking.paymentStatus}`);
-        return res.status(409).json({ 
-          message: `Cannot manually verify payment: Booking is already ${booking.paymentStatus}. Manual verification is only allowed for pending/paid bookings.`,
-          currentStatus: booking.paymentStatus,
-          bookingId: bookingId,
-          reason: 'ALREADY_FINALIZED',
-          finalizedAt: booking.updatedAt,
-          warning: 'Manual verification bypasses payment gateway checks and should only be used for confirmed payments.'
-        });
+      // Allow manual override for any payment status (pending, failed, verified)
+      console.log(`🔓 Manual override allowed for booking ${bookingId} with current status: ${booking.paymentStatus}`);
+      
+      // Log the current status for audit purposes
+      if (booking.paymentStatus === 'verified') {
+        console.log(`⚠️ WARNING: Manually overriding already verified booking ${bookingId}`);
+      } else if (booking.paymentStatus === 'failed') {
+        console.log(`🔄 Manually overriding failed booking ${bookingId} - converting to verified`);
+      } else {
+        console.log(`✅ Manually verifying ${booking.paymentStatus} booking ${bookingId}`);
       }
 
       console.log(`🚨 MANUAL OVERRIDE: Admin ${adminUser?.username} (${adminUser?.role}) manually verifying payment for booking ${bookingId} WITHOUT gateway verification`);

@@ -294,7 +294,7 @@ export class EnhancedWebhookService {
           // If API returns different status, log warning but trust the SUCCESS webhook
           console.warn(`⚠️ [${webhookId}] API verification shows ${verificationResult.mappedStatus}, but SUCCESS webhook received. Trusting webhook.`);
         }
-      } catch (error) {
+      } catch (error: any) {
         // If verification fails (network, API issues), log warning but trust the SUCCESS webhook
         console.warn(`⚠️ [${webhookId}] Payment verification failed (${error.message}), but SUCCESS webhook received. Trusting webhook for processing.`);
       }
