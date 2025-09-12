@@ -74,6 +74,12 @@ export interface IStorage {
   createTicketType(ticketData: any): Promise<TicketType>;
   getEventPhases(eventId: number): Promise<EventPhase[]>;
   getTicketTypes(eventId: number, phaseId?: number): Promise<TicketType[]>;
+
+  // Session management operations
+  createAdminSession(sessionData: { userId: number; token: string; expiresAt: Date }): Promise<void>;
+  getAdminSessionByToken(token: string): Promise<{ userId: number; expiresAt: Date } | undefined>;
+  deleteAdminSessionByToken(token: string): Promise<void>;
+  deleteExpiredSessions(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -112,11 +118,13 @@ export class DatabaseStorage implements IStorage {
 
   private async initializeDefaultUser() {
     try {
+      // Get admin credentials from environment variables
+      const adminUsername = process.env.ADMIN_USERNAME || 'aashvee';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'Rdura@78611';
+      
       // Check if admin user exists
-      const adminUser = await this.getUserByUsername('aashvee');
+      const adminUser = await this.getUserByUsername(adminUsername);
       if (!adminUser) {
-        // Require ADMIN_PASSWORD in production - fail hard if missing
-        const adminPassword = process.env.ADMIN_PASSWORD;
         if (!adminPassword) {
           throw new Error('ADMIN_PASSWORD environment variable is required to initialize admin user');
         }
