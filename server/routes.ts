@@ -1740,19 +1740,19 @@ export async function registerRoutes(app: Express): Promise<Express> {
 
       console.log(`📧 Admin ${req.user?.username} sending rejection email for booking ${bookingId} to ${booking.email}`);
 
-      // Send payment failure email
-      const bookingData = toBookingData(booking);
-      await enhancedEmailService.sendPaymentFailureEmail(bookingData);
+      // Rejection emails disabled for production
+      console.log(`🚫 Rejection email disabled for production safety - booking ${bookingId}`);
       
-      console.log(`✅ Rejection email sent successfully for booking ${bookingId}`);
+      console.log(`✅ Rejection email request processed (but not sent) for booking ${bookingId}`);
 
       res.json({
         success: true,
-        message: `Payment rejection email sent to ${booking.email}`,
+        message: `Rejection email disabled for production safety`,
         bookingId: bookingId,
-        sentTo: booking.email,
-        sentBy: req.user?.username,
-        sentAt: new Date().toISOString()
+        targetEmail: booking.email,
+        requestedBy: req.user?.username,
+        processedAt: new Date().toISOString(),
+        note: "Rejection emails are disabled in production to prevent false rejections"
       });
 
     } catch (error: any) {

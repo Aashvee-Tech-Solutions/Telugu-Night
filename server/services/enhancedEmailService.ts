@@ -191,6 +191,10 @@ Contact: mis@aashveetech.com | +91 6281614117`);
 
   // Send payment failure notification email
   async sendPaymentFailureEmail(booking: BookingData): Promise<void> {
+    // DISABLED FOR PRODUCTION: No rejection emails to prevent false rejections
+    console.log(`🚫 Rejection email disabled for production - booking ${booking.id} (${booking.email})`);
+    return;
+    
     try {
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">

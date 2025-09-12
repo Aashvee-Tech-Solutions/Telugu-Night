@@ -471,11 +471,9 @@ export class EnhancedWebhookService {
 
       console.log(`❌ [${webhookId}] Processing payment failure for booking ${bookingId}`);
 
-      // Update booking status and send failure email
-      await Promise.allSettled([
-        storage.updateBookingPaymentStatus(bookingId, 'failed'),
-        this.sendPaymentFailureEmail(webhookId, bookingId)
-      ]);
+      // Update booking status only - rejection emails disabled for production
+      await storage.updateBookingPaymentStatus(bookingId, 'failed');
+      console.log(`❌ [${webhookId}] Payment failure processed for booking ${bookingId} - rejection email disabled for production`);
 
       return {
         success: true,
@@ -498,19 +496,12 @@ export class EnhancedWebhookService {
   }
 
   /**
-   * Send payment failure email
+   * Send payment failure email - DISABLED FOR PRODUCTION
    */
   private async sendPaymentFailureEmail(webhookId: string, bookingId: number): Promise<void> {
-    try {
-      const booking = await storage.getBooking(bookingId);
-      if (booking) {
-        const bookingData = this.toBookingData(booking);
-        await enhancedEmailService.sendPaymentFailureEmail(bookingData);
-        console.log(`📧 [${webhookId}] Payment failure email sent to ${booking.email}`);
-      }
-    } catch (emailError) {
-      console.error(`⚠️ [${webhookId}] Failed to send payment failure email:`, emailError);
-    }
+    // DISABLED: No rejection emails in production to prevent false rejections
+    console.log(`🚫 [${webhookId}] Rejection email disabled for production - booking ${bookingId}`);
+    return;
   }
 
   /**
