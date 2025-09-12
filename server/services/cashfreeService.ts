@@ -71,33 +71,28 @@ export class CashfreeService {
   private timeout: number = 30000;
 
   constructor() {
-    // Force production credentials temporarily to fix the cache issue
-    this.appId = process.env.CASHFREE_APP_ID || '106184743b40818ff524e47b3047481601';
-    this.secretKey = process.env.CASHFREE_SECRET_KEY || 'cfsk_ma_prod_fa842d46effd73968e69ae3359efbceb_91352c45';
-    this.webhookSecret = process.env.CASHFREE_WEBHOOK_SECRET || 'ng8v08g8a5ebwi9cuv8c';
+    // In development, use test credentials if environment variables are not set
+    const isDevelopment = process.env.NODE_ENV === 'development';
     
-    // Override if we detect test credentials
-    if (this.appId.startsWith('TEST')) {
-      console.log('🔧 Forcing production credentials (test credentials detected)');
-      this.appId = '106184743b40818ff524e47b3047481601';
-      this.secretKey = 'cfsk_ma_prod_fa842d46effd73968e69ae3359efbceb_91352c45';
+    this.appId = process.env.CASHFREE_APP_ID || (isDevelopment ? 'TEST_DEVELOPMENT_APP_ID' : undefined);
+    this.secretKey = process.env.CASHFREE_SECRET_KEY || (isDevelopment ? 'TEST_DEVELOPMENT_SECRET_KEY' : undefined);
+    this.webhookSecret = process.env.CASHFREE_WEBHOOK_SECRET || (isDevelopment ? 'TEST_DEVELOPMENT_WEBHOOK_SECRET' : undefined);
+    
+    if (!this.appId || !this.secretKey || !this.webhookSecret) {
+      throw new Error('Required Cashfree credentials not found in environment variables: CASHFREE_APP_ID, CASHFREE_SECRET_KEY, CASHFREE_WEBHOOK_SECRET');
     }
     
-    if (!this.webhookSecret) {
-      console.warn('⚠️ CASHFREE_WEBHOOK_SECRET not found, using default (NOT SECURE for production)');
-      this.webhookSecret = 'ng8v08g8a5ebwi9cuv8c';
-    }
-    
-    if (!this.appId || !this.secretKey) {
-      throw new Error('Cashfree credentials not found in environment variables');
+    if (isDevelopment && this.appId.startsWith('TEST_DEVELOPMENT')) {
+      console.warn('⚠️  Using development test credentials for Cashfree. Set environment variables for production.');
     }
 
-    console.log(`🔑 Cashfree Service initialized successfully`);
-    console.log(`   Environment: Production`);
-    console.log(`   Base URL: https://api.cashfree.com/pg`);
+    // Determine environment based on app ID
+    const isProduction = !this.appId.startsWith('TEST');
+    this.baseUrl = isProduction ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
     
-    // Use production environment
-    this.baseUrl = 'https://api.cashfree.com/pg';
+    console.log(`🔑 Cashfree Service initialized successfully`);
+    console.log(`   Environment: ${isProduction ? 'Production' : 'Sandbox'}`);
+    console.log(`   Base URL: ${this.baseUrl}`);
   }
 
   private generateSignature(data: string): string {
@@ -392,8 +387,7 @@ export class CashfreeService {
     const subtotalAfterDiscount = subtotal - discountAmount;
     
     // Get convenience fee from configuration
-    const { DatabaseStorage } = await import('../databaseStorage');
-    const storage = new DatabaseStorage();
+    const { storage } = await import('../databaseStorage');
     const config = await storage.getTicketConfig();
     const convenienceFeePerTicket = parseFloat(config.convenientFee || '0');
     const convenienceFeeTotal = ticketCount * convenienceFeePerTicket;

@@ -1072,4 +1072,577 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Memory Storage Implementation
+export class MemStorage implements IStorage {
+  private users: Map<number, User> = new Map();
+  private bookings: Map<number, Booking> = new Map();
+  private coupons: Map<number, Coupon> = new Map();
+  private promoters: Map<number, Promoter> = new Map();
+  private events: Map<number, Event> = new Map();
+  private eventPhases: Map<number, EventPhase> = new Map();
+  private ticketTypes: Map<number, TicketType> = new Map();
+  private adminSessions: Map<string, AdminSession> = new Map();
+  private temporaryCoupons: Map<number, Coupon> = new Map();
+  
+  // Counters for auto-incrementing IDs
+  private nextUserId = 1;
+  private nextBookingId = 1;
+  private nextCouponId = 1;
+  private nextPromoterId = 1;
+  private nextEventId = 1;
+  private nextEventPhaseId = 1;
+  private nextTicketTypeId = 1;
+  
+  // Telugu Night configuration
+  private teluguNightConfig = {
+    id: 1,
+    eventTitle: "Telugu Night 2.0",
+    eventDescription: null,
+    venue: "Hyderabad",
+    eventDate: null,
+    maxCapacity: 500,
+    bookingOpen: false,
+    earlyBirdPrice: 300,
+    phase1Price: 350,
+    phase2Price: 400,
+    phase3Price: 425,
+    phase4Price: 450,
+    earlyBirdLimit: 90,
+    phase1Limit: 200,
+    phase2Limit: 210,
+    phase3Limit: 100,
+    phase4Limit: 100,
+    isEarlyBirdActive: true,
+    isPhase1Active: true,
+    isPhase2Active: false,
+    isPhase3Active: false,
+    isPhase4Active: false,
+    convenientFee: "12.96",
+    updatedAt: new Date(),
+    updatedBy: null
+  };
+  
+  // Ticket counter
+  private ticketCounter = {
+    id: 1,
+    earlyBirdCount: 0,
+    phase1Count: 0,
+    phase2Count: 0,
+    phase3Count: 0,
+    phase4Count: 0,
+    totalSold: 0,
+    lastUpdated: new Date()
+  };
+
+  constructor() {
+    this.initializeDefaultUser();
+  }
+
+  private async initializeDefaultUser() {
+    try {
+      // Check if admin user exists
+      const adminUser = await this.getUserByUsername('aashvee');
+      if (!adminUser) {
+        const bcrypt = await import('bcryptjs');
+        // Require ADMIN_PASSWORD - use development default in dev mode
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        const adminPassword = process.env.ADMIN_PASSWORD || (isDevelopment ? 'dev_admin_pass_123' : undefined);
+        
+        if (!adminPassword) {
+          throw new Error('ADMIN_PASSWORD environment variable is required to initialize admin user. Please set this environment variable.');
+        }
+        
+        if (isDevelopment && !process.env.ADMIN_PASSWORD) {
+          console.warn('⚠️  Using default development admin password. Set ADMIN_PASSWORD environment variable for production.');
+        }
+        const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+        
+        const newUser: User = {
+          id: this.nextUserId++,
+          username: 'aashvee',
+          password: hashedPassword,
+          role: 'super_admin',
+          permissions: [],
+          isActive: true,
+          lastLogin: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          companyName: null,
+          contactEmail: null,
+          phoneNumber: null,
+        };
+        
+        this.users.set(newUser.id, newUser);
+        console.log('✅ Default admin user created');
+      }
+    } catch (error) {
+      console.error('❌ Admin user initialization failed:', error);
+      // Don't throw error for memory storage
+    }
+  }
+
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    for (const user of Array.from(this.users.values())) {
+      if (user.username === username) {
+        return user;
+      }
+    }
+    return undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const user: User = {
+      id: this.nextUserId++,
+      username: insertUser.username,
+      password: insertUser.password,
+      role: insertUser.role || 'scanner',
+      permissions: (insertUser.permissions as string[]) || [],
+      isActive: true,
+      lastLogin: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      companyName: null,
+      contactEmail: null,
+      phoneNumber: null,
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  async updateUserLastLogin(id: number): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.lastLogin = new Date();
+      user.updatedAt = new Date();
+    }
+  }
+
+  async updateUserRole(id: number, role: string, permissions?: string[]): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    user.role = role as any;
+    if (permissions) {
+      user.permissions = permissions;
+    }
+    user.updatedAt = new Date();
+    return user;
+  }
+
+  // Booking operations
+  async createBooking(bookingData: any): Promise<Booking> {
+    const booking: Booking = {
+      id: this.nextBookingId++,
+      eventId: bookingData.eventId || null,
+      phaseId: bookingData.phaseId || null,
+      ticketTypeId: bookingData.ticketTypeId || null,
+      name: bookingData.name,
+      email: bookingData.email,
+      phone: bookingData.phone,
+      gender: bookingData.gender || null,
+      ticketCount: bookingData.ticketCount,
+      guests: bookingData.guests || [],
+      guestGenders: bookingData.guestGenders || [],
+      guestCodes: bookingData.guestCodes || [],
+      couponCode: bookingData.couponCode || null,
+      couponDiscount: bookingData.couponDiscount || 0,
+      promoterId: bookingData.promoterId || null,
+      promoCode: bookingData.promoCode || null,
+      totalAmount: bookingData.totalAmount,
+      paymentStatus: bookingData.paymentStatus || 'pending',
+      paymentId: bookingData.paymentId || null,
+      paymentMethod: bookingData.paymentMethod || null,
+      paymentScreenshot: bookingData.paymentScreenshot || null,
+      ticketType: bookingData.ticketType || null,
+      qrCodes: bookingData.qrCodes || [],
+      passIds: bookingData.passIds || [],
+      isScanned: false,
+      scannedAt: null,
+      scannedBy: null,
+      scannedGuests: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.bookings.set(booking.id, booking);
+    return booking;
+  }
+
+  async getBooking(id: number): Promise<Booking | undefined> {
+    return this.bookings.get(id);
+  }
+
+  async getAllBookings(): Promise<Booking[]> {
+    return Array.from(this.bookings.values()).sort((a, b) => 
+      (b.createdAt || new Date()).getTime() - (a.createdAt || new Date()).getTime()
+    );
+  }
+
+  async updateBookingPaymentStatus(id: number, status: string, screenshot?: string): Promise<void> {
+    const booking = this.bookings.get(id);
+    if (booking) {
+      booking.paymentStatus = status as any;
+      if (screenshot) {
+        booking.paymentScreenshot = screenshot;
+      }
+      booking.updatedAt = new Date();
+    }
+  }
+
+  async updateBookingQRCodes(id: number, qrCodes: string[], passIds: string[], guestCodes: string[]): Promise<void> {
+    const booking = this.bookings.get(id);
+    if (booking) {
+      booking.qrCodes = qrCodes;
+      booking.passIds = passIds;
+      booking.guestCodes = guestCodes;
+      booking.updatedAt = new Date();
+    }
+  }
+
+  async scanTicket(id: number, scannedBy: number): Promise<void> {
+    const booking = this.bookings.get(id);
+    if (booking) {
+      booking.isScanned = true;
+      booking.scannedAt = new Date();
+      booking.scannedBy = scannedBy;
+      booking.updatedAt = new Date();
+    }
+  }
+
+  async updateBookingVerification(id: number, status: string, guestCodes: string[]): Promise<void> {
+    const booking = this.bookings.get(id);
+    if (booking) {
+      booking.paymentStatus = status as any;
+      booking.guestCodes = guestCodes;
+      booking.updatedAt = new Date();
+    }
+  }
+
+  async updateBookingScannedGuests(id: number, scannedGuests: string[]): Promise<void> {
+    const booking = this.bookings.get(id);
+    if (booking) {
+      booking.scannedGuests = scannedGuests;
+      booking.updatedAt = new Date();
+    }
+  }
+
+  async deleteBooking(id: number): Promise<void> {
+    this.bookings.delete(id);
+  }
+
+  async updateBookingPaymentId(id: number, paymentId: string): Promise<void> {
+    const booking = this.bookings.get(id);
+    if (booking) {
+      booking.paymentId = paymentId;
+      booking.updatedAt = new Date();
+    }
+  }
+
+  async getBookingByPaymentId(paymentId: string): Promise<Booking | undefined> {
+    for (const booking of Array.from(this.bookings.values())) {
+      if (booking.paymentId === paymentId) {
+        return booking;
+      }
+    }
+    return undefined;
+  }
+
+  // Ticket counting operations
+  async getTicketCounts(): Promise<{ earlyBirdCount: number; earlyBirdLimit: number; phase1Count: number }> {
+    return {
+      earlyBirdCount: this.ticketCounter.earlyBirdCount,
+      earlyBirdLimit: this.teluguNightConfig.earlyBirdLimit,
+      phase1Count: this.ticketCounter.phase1Count,
+    };
+  }
+
+  async updateTicketCounts(ticketType: string, ticketCount: number): Promise<void> {
+    switch (ticketType) {
+      case 'early_bird':
+        this.ticketCounter.earlyBirdCount += ticketCount;
+        break;
+      case 'phase_1':
+        this.ticketCounter.phase1Count += ticketCount;
+        break;
+      case 'phase_2':
+        this.ticketCounter.phase2Count += ticketCount;
+        break;
+      case 'phase_3':
+        this.ticketCounter.phase3Count += ticketCount;
+        break;
+      case 'phase_4':
+        this.ticketCounter.phase4Count += ticketCount;
+        break;
+    }
+    this.ticketCounter.totalSold += ticketCount;
+    this.ticketCounter.lastUpdated = new Date();
+  }
+
+  async updateEarlyBirdLimit(limit: number): Promise<void> {
+    this.teluguNightConfig.earlyBirdLimit = limit;
+    this.teluguNightConfig.updatedAt = new Date();
+  }
+
+  // Ticket configuration operations
+  async getTicketConfig(): Promise<any> {
+    return this.teluguNightConfig;
+  }
+
+  async getTeluguNightConfig(): Promise<any> {
+    return this.teluguNightConfig;
+  }
+
+  async updateTicketConfig(config: any, updatedBy: number): Promise<void> {
+    Object.assign(this.teluguNightConfig, config);
+    this.teluguNightConfig.updatedBy = updatedBy as any;
+    this.teluguNightConfig.updatedAt = new Date();
+  }
+
+  async initializeTicketConfig(): Promise<void> {
+    // Already initialized in constructor
+  }
+
+  // Coupon operations
+  async createCoupon(insertCoupon: InsertCoupon): Promise<Coupon> {
+    const coupon: Coupon = {
+      id: this.nextCouponId++,
+      code: insertCoupon.code,
+      discount: insertCoupon.discount,
+      isActive: true,
+      usageLimit: insertCoupon.usageLimit || null,
+      usageCount: 0,
+      validFrom: insertCoupon.validFrom || null,
+      validTo: insertCoupon.validTo || null,
+      createdAt: new Date(),
+    };
+    this.coupons.set(coupon.id, coupon);
+    return coupon;
+  }
+
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    for (const coupon of Array.from(this.coupons.values())) {
+      if (coupon.code === code) {
+        return coupon;
+      }
+    }
+    return undefined;
+  }
+
+  async updateCouponUsage(code: string): Promise<void> {
+    const coupon = await this.getCouponByCode(code);
+    if (coupon) {
+      coupon.usageCount = (coupon.usageCount || 0) + 1;
+    }
+  }
+
+  async validateCoupon(code: string, email: string): Promise<{ valid: boolean; discount: number; message: string }> {
+    const coupon = await this.getCouponByCode(code);
+    if (!coupon) {
+      return { valid: false, discount: 0, message: 'Coupon not found' };
+    }
+    if (!coupon.isActive) {
+      return { valid: false, discount: 0, message: 'Coupon is not active' };
+    }
+    if (coupon.usageLimit && (coupon.usageCount || 0) >= coupon.usageLimit) {
+      return { valid: false, discount: 0, message: 'Coupon usage limit exceeded' };
+    }
+    return { valid: true, discount: coupon.discount, message: 'Coupon is valid' };
+  }
+
+  async getAllCoupons(): Promise<Coupon[]> {
+    return Array.from(this.coupons.values());
+  }
+
+  async updateCoupon(id: number, updateData: Partial<Coupon>): Promise<Coupon> {
+    const coupon = this.coupons.get(id);
+    if (!coupon) {
+      throw new Error('Coupon not found');
+    }
+    Object.assign(coupon, updateData);
+    return coupon;
+  }
+
+  async deleteCoupon(id: number): Promise<void> {
+    this.coupons.delete(id);
+  }
+
+  // Promoter operations
+  async createPromoter(promoterData: any): Promise<Promoter> {
+    const promoter: Promoter = {
+      id: this.nextPromoterId++,
+      promoCode: promoterData.promoCode,
+      email: promoterData.email,
+      password: promoterData.password,
+      name: promoterData.name,
+      isActive: true,
+      totalBookings: 0,
+      totalRevenue: "0",
+      commission: "5",
+      lastLoginAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.promoters.set(promoter.id, promoter);
+    return promoter;
+  }
+
+  async getPromoterByCode(promoCode: string): Promise<Promoter | undefined> {
+    for (const promoter of Array.from(this.promoters.values())) {
+      if (promoter.promoCode === promoCode) {
+        return promoter;
+      }
+    }
+    return undefined;
+  }
+
+  async getPromoterByEmail(email: string): Promise<Promoter | undefined> {
+    for (const promoter of Array.from(this.promoters.values())) {
+      if (promoter.email === email) {
+        return promoter;
+      }
+    }
+    return undefined;
+  }
+
+  async updatePromoterStats(id: number, revenue: number): Promise<void> {
+    const promoter = this.promoters.get(id);
+    if (promoter) {
+      promoter.totalBookings = (promoter.totalBookings || 0) + 1;
+      const currentRevenue = parseFloat(promoter.totalRevenue || "0");
+      promoter.totalRevenue = (currentRevenue + revenue).toString();
+      promoter.updatedAt = new Date();
+    }
+  }
+
+  async getAllPromoters(): Promise<Promoter[]> {
+    return Array.from(this.promoters.values()).sort((a, b) => 
+      (b.createdAt || new Date()).getTime() - (a.createdAt || new Date()).getTime()
+    );
+  }
+
+  async updatePromoterLoginTime(id: number): Promise<void> {
+    const promoter = this.promoters.get(id);
+    if (promoter) {
+      promoter.lastLoginAt = new Date();
+      promoter.updatedAt = new Date();
+    }
+  }
+
+  async updatePromoterStatus(id: number, isActive: boolean): Promise<Promoter> {
+    const promoter = this.promoters.get(id);
+    if (!promoter) {
+      throw new Error('Promoter not found');
+    }
+    promoter.isActive = isActive;
+    promoter.updatedAt = new Date();
+    console.log(`✅ Promoter ${id} status updated: ${isActive ? 'Active' : 'Inactive'}`);
+    return promoter;
+  }
+
+  async deletePromoter(id: number): Promise<void> {
+    // Check if promoter has any bookings first
+    const bookingsWithPromoter = Array.from(this.bookings.values()).filter(b => b.promoterId === id);
+    
+    if (bookingsWithPromoter.length > 0) {
+      throw new Error('Cannot delete promoter with existing bookings. Please deactivate instead.');
+    }
+    
+    this.promoters.delete(id);
+    console.log(`✅ Promoter ${id} deleted successfully`);
+  }
+
+  // Event management operations
+  async createEvent(eventData: any): Promise<Event> {
+    const event: Event = {
+      id: this.nextEventId++,
+      title: eventData.title,
+      description: eventData.description || null,
+      venue: eventData.venue,
+      eventDate: eventData.eventDate,
+      vendorId: eventData.vendorId || null,
+      isActive: true,
+      maxCapacity: eventData.maxCapacity || 500,
+      bookingOpen: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.events.set(event.id, event);
+    return event;
+  }
+
+  async getEvent(id: number): Promise<Event | undefined> {
+    return this.events.get(id);
+  }
+
+  async getAllEvents(): Promise<Event[]> {
+    return Array.from(this.events.values()).sort((a, b) => 
+      (b.createdAt || new Date()).getTime() - (a.createdAt || new Date()).getTime()
+    );
+  }
+
+  async updateEventBookingStatus(id: number, bookingOpen: boolean): Promise<void> {
+    const event = this.events.get(id);
+    if (event) {
+      event.bookingOpen = bookingOpen;
+      event.updatedAt = new Date();
+    }
+  }
+
+  async createEventPhase(phaseData: any): Promise<EventPhase> {
+    const eventPhase: EventPhase = {
+      id: this.nextEventPhaseId++,
+      eventId: phaseData.eventId,
+      phaseName: phaseData.phaseName,
+      phaseOrder: phaseData.phaseOrder,
+      isActive: false,
+      maxTickets: phaseData.maxTickets || 0,
+      soldTickets: 0,
+      startDate: phaseData.startDate || null,
+      endDate: phaseData.endDate || null,
+      createdAt: new Date(),
+    };
+    this.eventPhases.set(eventPhase.id, eventPhase);
+    return eventPhase;
+  }
+
+  async createTicketType(ticketData: any): Promise<TicketType> {
+    const ticketType: TicketType = {
+      id: this.nextTicketTypeId++,
+      eventId: ticketData.eventId,
+      phaseId: ticketData.phaseId || null,
+      typeName: ticketData.typeName,
+      price: ticketData.price,
+      isActive: true,
+      maxQuantity: ticketData.maxQuantity || null,
+      soldQuantity: 0,
+      description: ticketData.description || null,
+      createdAt: new Date(),
+    };
+    this.ticketTypes.set(ticketType.id, ticketType);
+    return ticketType;
+  }
+
+  async getEventPhases(eventId: number): Promise<EventPhase[]> {
+    return Array.from(this.eventPhases.values())
+      .filter(phase => phase.eventId === eventId)
+      .sort((a, b) => a.phaseOrder - b.phaseOrder);
+  }
+
+  async getTicketTypes(eventId: number, phaseId?: number): Promise<TicketType[]> {
+    let ticketTypes = Array.from(this.ticketTypes.values())
+      .filter(type => type.eventId === eventId);
+    
+    if (phaseId) {
+      ticketTypes = ticketTypes.filter(type => type.phaseId === phaseId);
+    }
+    
+    return ticketTypes;
+  }
+}
+
+export const storage = new MemStorage();
