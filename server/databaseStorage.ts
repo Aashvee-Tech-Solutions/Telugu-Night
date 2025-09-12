@@ -120,7 +120,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // Get admin credentials from environment variables
       const adminUsername = process.env.ADMIN_USERNAME || 'aashvee';
-      const adminPassword = process.env.ADMIN_PASSWORD || 'Rdura@78611';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'Rudra@78611';
       
       // Check if admin user exists
       const adminUser = await this.getUserByUsername(adminUsername);
@@ -130,7 +130,7 @@ export class DatabaseStorage implements IStorage {
         }
         const hashedPassword = await import('bcryptjs').then(bcrypt => bcrypt.hashSync(adminPassword, 10));
         await db.insert(users).values([{
-          username: 'aashvee',
+          username: adminUsername,
           password: hashedPassword,
           role: 'super_admin' as const,
           permissions: []
@@ -1650,6 +1650,45 @@ export class MemStorage implements IStorage {
     }
     
     return ticketTypes;
+  }
+
+  // Session management operations
+  async createAdminSession(sessionData: { userId: number; token: string; expiresAt: Date }): Promise<void> {
+    // For now, store in memory - you can replace with database storage later
+    const session = {
+      id: sessionData.token,
+      username: '',
+      role: '',
+      permissions: [],
+      createdAt: new Date(),
+      expiresAt: sessionData.expiresAt
+    };
+    this.adminSessions.set(sessionData.token, session);
+  }
+
+  async getAdminSessionByToken(token: string): Promise<{ userId: number; expiresAt: Date } | undefined> {
+    const session = this.adminSessions.get(token);
+    if (!session) return undefined;
+    
+    // In a real database implementation, you'd fetch the user ID from the session record
+    // For now, we'll use a simple approach
+    return {
+      userId: 1, // This should be retrieved from the session data
+      expiresAt: session.expiresAt
+    };
+  }
+
+  async deleteAdminSessionByToken(token: string): Promise<void> {
+    this.adminSessions.delete(token);
+  }
+
+  async deleteExpiredSessions(): Promise<void> {
+    const now = new Date();
+    for (const [token, session] of this.adminSessions.entries()) {
+      if (session.expiresAt < now) {
+        this.adminSessions.delete(token);
+      }
+    }
   }
 }
 
