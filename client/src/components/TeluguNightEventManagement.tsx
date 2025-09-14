@@ -189,18 +189,17 @@ export default function TeluguNightEventManagement() {
 
   // Function to determine phase status
   const getPhaseStatus = (isActive: boolean, soldCount: number, limit: number) => {
-    if (!isActive) {
-      if (soldCount === 0) {
-        return { text: "Coming Soon", variant: "outline" as const, color: "text-gray-500" };
-      } else {
-        return { text: "Completed", variant: "secondary" as const, color: "text-gray-600" };
-      }
-    }
-    
+    // First priority: Check if sold out (regardless of active status)
     if (soldCount >= limit) {
       return { text: "Sold Out", variant: "destructive" as const, color: "text-red-600" };
     }
     
+    // Second priority: Check if inactive (and not sold out)
+    if (!isActive) {
+      return { text: "Coming Soon", variant: "outline" as const, color: "text-gray-500" };
+    }
+    
+    // For active phases (not sold out)
     if (soldCount > 0) {
       return { text: "Going On", variant: "default" as const, color: "text-green-600" };
     }
