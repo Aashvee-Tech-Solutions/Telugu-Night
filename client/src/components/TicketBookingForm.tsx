@@ -491,10 +491,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Early Bird
                                   </h4>
                                 </div>
-                                {!pricing.config?.earlyBird.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
-                                ) : (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
+                                {(pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
+                                ) : !pricing.config?.earlyBird.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
@@ -537,10 +537,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 1
                                   </h4>
                                 </div>
-                                {!pricing.config?.phase1.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
-                                ) : (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
+                                {(pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
+                                ) : !pricing.config?.phase1.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
@@ -583,10 +583,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 2
                                   </h4>
                                 </div>
-                                {!pricing.config?.phase2.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
-                                ) : (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
+                                {(pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
+                                ) : !pricing.config?.phase2.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
@@ -632,10 +632,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 3 - Premium Access
                                   </h4>
                                 </div>
-                                {!pricing.config?.phase3.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
-                                ) : (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
+                                {(pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
+                                ) : !pricing.config?.phase3.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
@@ -681,10 +681,10 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 4 - VIP Access
                                   </h4>
                                 </div>
-                                {!pricing.config?.phase4.isActive ? (
-                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
-                                ) : (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
+                                {(pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
+                                ) : !pricing.config?.phase4.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
                                 ) : (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
                                 )}
