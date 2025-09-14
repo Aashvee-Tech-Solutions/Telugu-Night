@@ -260,7 +260,7 @@ export default function CouponManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {(coupons as any)?.coupons?.length > 0 ? (
+          {(coupons as any)?.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -273,7 +273,7 @@ export default function CouponManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {((coupons as any)?.coupons || []).map((coupon: Coupon, index: number) => {
+                {((coupons as any) || []).map((coupon: Coupon, index: number) => {
                   const status = getCouponStatus(coupon);
                   return (
                     <TableRow key={coupon.id} data-testid={`row-coupon-${index}`}>
