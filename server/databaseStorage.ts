@@ -102,6 +102,12 @@ export class DatabaseStorage implements IStorage {
     lastUpdated: number;
   } | null = null;
   private bookingsCache: { data: Booking[]; lastUpdated: number } | null = null;
+  
+  // Method to clear ticket count cache
+  clearTicketCountCache(): void {
+    this.ticketCountCache = null;
+    console.log('🗑️ Ticket count cache cleared - next request will calculate fresh counts');
+  }
   private readonly CACHE_TTL = 30000; // 30 seconds cache
 
   constructor() {
@@ -503,7 +509,7 @@ export class DatabaseStorage implements IStorage {
 
 
 
-  // Ticket counting operations
+  // Ticket counting operations - Calculate from actual verified bookings
   async getTicketCounts(): Promise<{ 
     earlyBirdCount: number; 
     earlyBirdLimit: number; 
@@ -537,21 +543,65 @@ export class DatabaseStorage implements IStorage {
     }
 
     try {
-      const [counter] = await db.select().from(teluguNightCounter).limit(1);
+      // Get config for limits
       const [config] = await db.select().from(teluguNightConfig).limit(1);
       
+      // Calculate actual ticket counts from verified bookings
+      const ticketCounts = await db
+        .select({
+          ticketType: bookings.ticketType,
+          totalTickets: sql<number>`SUM(${bookings.ticketCount})`,
+        })
+        .from(bookings)
+        .where(eq(bookings.paymentStatus, 'verified'))
+        .groupBy(bookings.ticketType);
+
+      // Initialize counts
+      let earlyBirdCount = 0;
+      let phase1Count = 0;
+      let phase2Count = 0;
+      let phase3Count = 0;
+      let phase4Count = 0;
+      let totalSold = 0;
+
+      // Process the actual counts from database
+      for (const count of ticketCounts) {
+        const tickets = Number(count.totalTickets) || 0;
+        totalSold += tickets;
+        
+        switch (count.ticketType) {
+          case 'early_bird':
+            earlyBirdCount = tickets;
+            break;
+          case 'phase_1':
+            phase1Count = tickets;
+            break;
+          case 'phase_2':
+            phase2Count = tickets;
+            break;
+          case 'phase_3':
+            phase3Count = tickets;
+            break;
+          case 'phase_4':
+            phase4Count = tickets;
+            break;
+        }
+      }
+
+      console.log(`📊 Real-time ticket counts: Early Bird: ${earlyBirdCount}, Phase1: ${phase1Count}, Phase2: ${phase2Count}, Phase3: ${phase3Count}, Phase4: ${phase4Count}, Total: ${totalSold}`);
+      
       const result = {
-        earlyBirdCount: counter ? (counter.earlyBirdCount || 0) : 0,
-        earlyBirdLimit: config ? (config.earlyBirdLimit || 90) : 90,
-        phase1Count: counter ? (counter.phase1Count || 0) : 0,
+        earlyBirdCount,
+        earlyBirdLimit: config ? (config.earlyBirdLimit || 50) : 50,
+        phase1Count,
         phase1Limit: config ? (config.phase1Limit || 200) : 200,
-        phase2Count: counter ? (counter.phase2Count || 0) : 0,
+        phase2Count,
         phase2Limit: config ? (config.phase2Limit || 210) : 210,
-        phase3Count: counter ? (counter.phase3Count || 0) : 0,
+        phase3Count,
         phase3Limit: config ? (config.phase3Limit || 100) : 100,
-        phase4Count: counter ? (counter.phase4Count || 0) : 0,
+        phase4Count,
         phase4Limit: config ? (config.phase4Limit || 100) : 100,
-        totalSold: counter ? (counter.totalSold || 0) : 0,
+        totalSold,
         maxCapacity: config ? (config.maxCapacity || 500) : 500,
       };
 
@@ -566,7 +616,7 @@ export class DatabaseStorage implements IStorage {
       console.error('Failed to get ticket counts:', error);
       return { 
         earlyBirdCount: 0, 
-        earlyBirdLimit: 90, 
+        earlyBirdLimit: 50, 
         phase1Count: 0,
         phase1Limit: 200,
         phase2Count: 0,
