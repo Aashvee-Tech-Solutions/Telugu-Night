@@ -405,44 +405,44 @@ export class DatabaseStorage implements IStorage {
 
   async validateCoupon(code: string, email: string): Promise<{ valid: boolean; discount: number; message: string }> {
     try {
-      // Define allowed email list for coupons
-      const allowedEmails = [
-        'admin@aashveetech.com',
-        'mis@aashveetech.com',
-        'test@aashveetech.com',
-        'hemanthvardhan.cse21@gmail.com',
-        'support@aashveetech.com'
-      ];
-
-      // Check if email is in allowed list
-      if (!allowedEmails.includes(email.toLowerCase())) {
-        return { valid: false, discount: 0, message: 'Coupon not available for this email address' };
-      }
-
       // Check if coupon code is valid format (at least 3 characters)
       if (!code || code.length < 3) {
         return { valid: false, discount: 0, message: 'Invalid coupon code format' };
       }
 
-      // For allowed emails, provide flat discounts based on coupon code
-      const couponDiscounts: { [key: string]: number } = {
-        'ADMIN20': 20,
-        'STAFF15': 15,
-        'VIP30': 30,
-        'FRIEND10': 10,
-        'SPECIAL25': 25
-      };
-
-      const discount = couponDiscounts[code.toUpperCase()];
-      if (!discount) {
+      // Get coupon from database
+      const [coupon] = await db.select().from(coupons).where(eq(coupons.code, code.toUpperCase()));
+      
+      if (!coupon) {
         return { valid: false, discount: 0, message: 'Invalid coupon code' };
+      }
+
+      // Check if coupon is active
+      if (!coupon.isActive) {
+        return { valid: false, discount: 0, message: 'Coupon is no longer active' };
+      }
+
+      // Check usage limits
+      if (coupon.usageLimit && (coupon.usageCount || 0) >= coupon.usageLimit) {
+        return { valid: false, discount: 0, message: 'Coupon usage limit exceeded' };
+      }
+
+      // Check validity dates
+      const now = new Date();
+      
+      if (coupon.validFrom && new Date(coupon.validFrom) > now) {
+        return { valid: false, discount: 0, message: 'Coupon is not yet valid' };
+      }
+      
+      if (coupon.validTo && new Date(coupon.validTo) < now) {
+        return { valid: false, discount: 0, message: 'Coupon has expired' };
       }
 
       // All checks passed - coupon is valid
       return { 
         valid: true, 
-        discount: discount, 
-        message: `${discount}% discount applied` 
+        discount: coupon.discount, 
+        message: `${coupon.discount}% discount applied` 
       };
     } catch (error) {
       console.error('Coupon validation error:', error);
