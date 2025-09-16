@@ -115,15 +115,42 @@ export class DatabaseStorage implements IStorage {
     this.temporaryCoupons = new Map();
     this.currentCouponId = 1;
 
-    // Initialize default admin user (non-blocking)
-    this.initializeDefaultUser().catch(error => {
-      console.warn('⚠️ Admin user initialization deferred due to database issue:', error.message);
-    });
-    
-    // Initialize ticket counter (non-blocking)
-    this.initializeTicketCounter().catch(error => {
-      console.warn('⚠️ Ticket counter initialization deferred due to database issue:', error.message);
-    });
+    // Initialize database components with retry logic
+    this.initializeWithRetry();
+  }
+
+  private async initializeWithRetry() {
+    const maxRetries = 3;
+    const retryDelay = 2000; // 2 seconds
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Database initialization attempt ${attempt}/${maxRetries}`);
+        
+        // Try to initialize admin user
+        await this.initializeDefaultUser();
+        console.log('✅ Admin user initialization successful');
+        
+        // Try to initialize ticket counter  
+        await this.initializeTicketCounter();
+        console.log('✅ Ticket counter initialization successful');
+        
+        console.log('🎉 Database fully initialized and ready!');
+        return; // Success, exit retry loop
+        
+      } catch (error) {
+        console.warn(`⚠️ Database initialization attempt ${attempt} failed:`, (error as Error).message);
+        
+        if (attempt === maxRetries) {
+          console.error('💥 Database initialization failed after all retries');
+          console.error('   System will continue but some features may not work properly');
+          return; // Give up after max retries
+        }
+        
+        console.log(`   Retrying in ${retryDelay/1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
   }
 
   private async initializeDefaultUser() {
@@ -1751,8 +1778,8 @@ function createStorage(): IStorage {
   // Try to use database if available, fall back to memory storage
   const hasDatabase = process.env.DATABASE_URL;
   
-  // Test original database connection
-  const forceMemStorage = false; // Testing original database connection
+  // Production database connection with fallback protection
+  const forceMemStorage = process.env.FORCE_MEM_STORAGE === 'true';
   
   if (forceMemStorage) {
     console.log('🔄 Using MemStorage (in-memory storage)');
@@ -1766,13 +1793,16 @@ function createStorage(): IStorage {
     return new MemStorage();
   }
   
-  // Try DatabaseStorage when database is available
+  // Primary database connection with robust error handling
   try {
-    console.log('🔄 Attempting DatabaseStorage (persistent storage)');
+    console.log('🔄 Using DatabaseStorage (persistent storage)');
     console.log('   Database URL available, connecting...');
     return new DatabaseStorage();
   } catch (error) {
-    console.warn('⚠️  DatabaseStorage failed, falling back to MemStorage:', (error as Error).message);
+    console.error('💥 CRITICAL: DatabaseStorage failed! Your booking data may be inaccessible.');
+    console.error('   Error:', (error as Error).message);
+    console.warn('🔄 Falling back to MemStorage (temporary data only)');
+    console.warn('   WARNING: New bookings will be lost on restart!');
     return new MemStorage();
   }
 }
