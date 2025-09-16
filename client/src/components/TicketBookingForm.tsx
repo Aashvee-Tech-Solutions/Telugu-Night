@@ -537,7 +537,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 1
                                   </h4>
                                 </div>
-                                {(pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
+                                {(pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) || (pricing.config?.phase1.capacity ?? 0) === 0 ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : !pricing.config?.phase1.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
