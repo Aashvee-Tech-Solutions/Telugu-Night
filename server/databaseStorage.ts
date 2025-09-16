@@ -115,11 +115,15 @@ export class DatabaseStorage implements IStorage {
     this.temporaryCoupons = new Map();
     this.currentCouponId = 1;
 
-    // Initialize default admin user
-    this.initializeDefaultUser();
+    // Initialize default admin user (non-blocking)
+    this.initializeDefaultUser().catch(error => {
+      console.warn('⚠️ Admin user initialization deferred due to database issue:', error.message);
+    });
     
-    // Initialize ticket counter
-    this.initializeTicketCounter();
+    // Initialize ticket counter (non-blocking)
+    this.initializeTicketCounter().catch(error => {
+      console.warn('⚠️ Ticket counter initialization deferred due to database issue:', error.message);
+    });
   }
 
   private async initializeDefaultUser() {
@@ -145,7 +149,7 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error('❌ Admin user initialization failed:', error);
-      throw error; // Fail startup if admin initialization fails
+      // Don't fail startup - allow server to continue running
     }
   }
 
