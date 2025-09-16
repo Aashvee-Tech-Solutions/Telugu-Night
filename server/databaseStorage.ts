@@ -1206,9 +1206,9 @@ export class MemStorage implements IStorage {
       const adminUser = await this.getUserByUsername('aashvee');
       if (!adminUser) {
         const bcrypt = await import('bcryptjs');
-        // Require ADMIN_PASSWORD - use development default in dev mode
+        // Require ADMIN_PASSWORD - use user's actual password
         const isDevelopment = process.env.NODE_ENV === 'development';
-        const adminPassword = process.env.ADMIN_PASSWORD || (isDevelopment ? 'dev_admin_pass_123' : undefined);
+        const adminPassword = process.env.ADMIN_PASSWORD || (isDevelopment ? 'Rudra@78611' : undefined);
         
         if (!adminPassword) {
           throw new Error('ADMIN_PASSWORD environment variable is required to initialize admin user. Please set this environment variable.');
