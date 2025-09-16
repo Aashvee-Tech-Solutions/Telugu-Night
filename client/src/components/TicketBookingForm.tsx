@@ -371,6 +371,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200' 
                       : pricing.currentTier?.id === 'phase_1'
                       ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200'
+                      : pricing.currentTier?.id === 'phase_2'
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
                       : 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200'
                   }`}>
                     <div className="flex items-center justify-between">
@@ -380,6 +382,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                             ? 'bg-orange-500' 
                             : pricing.currentTier?.id === 'phase_1'
                             ? 'bg-blue-500'
+                            : pricing.currentTier?.id === 'phase_2'
+                            ? 'bg-green-500'
                             : 'bg-red-500'
                         }`}></div>
                         <span className={`font-semibold ${
@@ -387,12 +391,16 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                             ? 'text-orange-800' 
                             : pricing.currentTier?.id === 'phase_1'
                             ? 'text-blue-800'
+                            : pricing.currentTier?.id === 'phase_2'
+                            ? 'text-green-800'
                             : 'text-red-800'
                         }`}>
                           {pricing.currentTier?.id === 'early_bird'
                             ? '🎫 Early Bird Phase Active' 
                             : pricing.currentTier?.id === 'phase_1'
                             ? '🎫 Phase 1 Active'
+                            : pricing.currentTier?.id === 'phase_2'
+                            ? '🎫 Phase 2 Active'
                             : '⏸️ Ticket Sales Paused'}
                         </span>
                       </div>
@@ -401,6 +409,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                           ? 'text-orange-700' 
                           : pricing.currentTier?.id === 'phase_1'
                           ? 'text-blue-700'
+                          : pricing.currentTier?.id === 'phase_2'
+                          ? 'text-green-700'
                           : 'text-red-700'
                       }`}>
                         {pricing.currentTier ? pricing.formatCurrency(pricing.currentTier.price) : 'N/A'} per ticket
@@ -412,6 +422,11 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                     {pricing.currentTier?.id === 'phase_1' && (
                       <p className="text-blue-700 text-sm mt-2">
                         🎯 Regular pricing now active. Secure your spot for Telugu Night!
+                      </p>
+                    )}
+                    {pricing.currentTier?.id === 'phase_2' && (
+                      <p className="text-green-700 text-sm mt-2">
+                        🎯 Phase 2 pricing now active. Secure your spot for Telugu Night!
                       </p>
                     )}
                     {!isAnyTicketAvailable && (
@@ -527,7 +542,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                       )}
 
                       {/* Phase 1 Tickets */}
-                      {pricing.config?.phase1.capacity > 1 && (
+                      {pricing.config?.phase1.capacity >= 0 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
