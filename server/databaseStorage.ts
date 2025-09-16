@@ -1738,7 +1738,7 @@ export class MemStorage implements IStorage {
 
   async deleteExpiredSessions(): Promise<void> {
     const now = new Date();
-    for (const [token, session] of this.adminSessions.entries()) {
+    for (const [token, session] of [...this.adminSessions.entries()]) {
       if (session.expiresAt < now) {
         this.adminSessions.delete(token);
       }
@@ -1772,7 +1772,7 @@ function createStorage(): IStorage {
     console.log('   Database URL available, connecting...');
     return new DatabaseStorage();
   } catch (error) {
-    console.warn('⚠️  DatabaseStorage failed, falling back to MemStorage:', error.message);
+    console.warn('⚠️  DatabaseStorage failed, falling back to MemStorage:', (error as Error).message);
     return new MemStorage();
   }
 }
