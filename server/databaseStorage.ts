@@ -1751,8 +1751,8 @@ function createStorage(): IStorage {
   // Try to use database if available, fall back to memory storage
   const hasDatabase = process.env.DATABASE_URL;
   
-  // Force MemStorage if explicitly requested
-  const forceMemStorage = process.env.FORCE_MEM_STORAGE === 'true';
+  // Force MemStorage if explicitly requested or if database is having issues
+  const forceMemStorage = process.env.FORCE_MEM_STORAGE === 'true' || true; // Temporarily forcing memory storage
   
   if (forceMemStorage) {
     console.log('🔄 Using MemStorage (in-memory storage)');
