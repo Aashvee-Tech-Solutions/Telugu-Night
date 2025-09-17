@@ -1131,19 +1131,24 @@ export async function registerRoutes(app: Express): Promise<Express> {
       
       // Check if Early Bird is active and available
       const isEarlyBirdAvailable = config.isEarlyBirdActive && (counts.earlyBirdCount + bookingData.ticketCount) <= counts.earlyBirdLimit;
-      const isPhase1Available = config.isPhase1Active;
+      const isPhase1Available = config.isPhase1Active && (counts.phase1Count + bookingData.ticketCount) <= counts.phase1Limit;
+      const isPhase2Available = config.isPhase2Active && (counts.phase2Count + bookingData.ticketCount) <= counts.phase2Limit;
       
       // Determine ticket type and pricing based on availability and admin settings
-      if (!isEarlyBirdAvailable || ticketType === 'phase_1') {
-        if (isPhase1Available) {
+      if (!isEarlyBirdAvailable || ticketType === 'phase_1' || ticketType === 'phase_2') {
+        if (isPhase1Available && (ticketType === 'phase_1' || !isPhase2Available)) {
           ticketPrice = parseInt(config.phase1Price) || 350;
           ticketType = 'phase_1';
+        } else if (isPhase2Available) {
+          ticketPrice = parseInt(config.phase2Price) || 400;
+          ticketType = 'phase_2';
         } else {
           return res.status(400).json({ 
             message: 'No tickets are currently available for sale',
             availableTickets: {
               earlyBird: Math.max(0, counts.earlyBirdLimit - counts.earlyBirdCount),
-              phase1: isPhase1Available ? 'Available' : 'Not Active'
+              phase1: isPhase1Available ? 'Available' : 'Not Active',
+              phase2: isPhase2Available ? 'Available' : 'Not Active'
             }
           });
         }

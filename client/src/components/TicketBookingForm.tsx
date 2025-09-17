@@ -33,7 +33,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
     guestGenders: [] as string[],
     couponCode: "",
     couponDiscount: 0,
-    ticketType: "early_bird" as "early_bird" | "phase_1",
+    ticketType: "early_bird" as "early_bird" | "phase_1" | "phase_2",
     referrer: referralCode || ""
   });
   
