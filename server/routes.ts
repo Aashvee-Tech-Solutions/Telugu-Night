@@ -12,7 +12,7 @@ import { PaymentService } from "./services/paymentService";
 import { authService } from "./services/authService";
 import { TicketGenerationService } from "./services/ticketGenerationService";
 import { authenticate, requirePermission, requireRole } from "./middleware/authMiddleware";
-import { getPublicBaseUrl } from "./utils/urlUtils";
+import { getPublicBaseUrl, getPublicBaseUrlWithFallback } from "./utils/urlUtils";
 import { insertBookingSchema, insertCouponSchema, insertUserSchema, PERMISSIONS } from "@shared/schema";
 import { db } from "./db";
 import { users } from "@shared/schema";
@@ -1247,7 +1247,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
         customerName: booking.name,
         customerEmail: booking.email,
         customerPhone: booking.phone,
-        baseUrl: getPublicBaseUrl(req), // Pass request-based URL with correct port
+        baseUrl: getPublicBaseUrlWithFallback(req), // Use fallback URL with Replit domain priority
       });
       
       if (!paymentResult.success) {

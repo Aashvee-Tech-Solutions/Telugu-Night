@@ -42,12 +42,19 @@ export function getPublicBaseUrl(req: Request): string {
  * @returns Complete base URL
  */
 export function getPublicBaseUrlWithFallback(req?: Request): string {
-  // Priority 1: If request is available, use it to construct URL
+  // Priority 1: Use REPLIT_DEV_DOMAIN for automatic Replit domain detection
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    const baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+    console.log(`🌐 Using Replit public domain for return URL: ${baseUrl}`);
+    return baseUrl;
+  }
+
+  // Priority 2: If request is available, use it to construct URL
   if (req) {
     return getPublicBaseUrl(req);
   }
 
-  // Priority 2: Use FRONTEND_URL or APP_BASE_URL if explicitly set
+  // Priority 3: Use FRONTEND_URL or APP_BASE_URL if explicitly set
   if (process.env.FRONTEND_URL) {
     return process.env.FRONTEND_URL.endsWith('/') 
       ? process.env.FRONTEND_URL.slice(0, -1)
@@ -60,7 +67,7 @@ export function getPublicBaseUrlWithFallback(req?: Request): string {
       : process.env.APP_BASE_URL;
   }
 
-  // Priority 3: Development fallback - use HTTPS for payment providers that require it
+  // Priority 4: Development fallback - use HTTPS for payment providers that require it
   if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
     // Default to HTTPS for compatibility with payment providers, allow HTTP override
     const forceHttps = process.env.FORCE_HTTPS_LOCALHOST !== 'false'; // Default to true
@@ -68,6 +75,6 @@ export function getPublicBaseUrlWithFallback(req?: Request): string {
     return `${protocol}://localhost:5000`;
   }
 
-  // Priority 4: Production fallback
+  // Priority 5: Production fallback
   return 'https://events.qlora.in';
 }
