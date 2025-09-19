@@ -1133,22 +1133,32 @@ export async function registerRoutes(app: Express): Promise<Express> {
       const isEarlyBirdAvailable = config.isEarlyBirdActive && (counts.earlyBirdCount + bookingData.ticketCount) <= counts.earlyBirdLimit;
       const isPhase1Available = config.isPhase1Active && (counts.phase1Count + bookingData.ticketCount) <= counts.phase1Limit;
       const isPhase2Available = config.isPhase2Active && (counts.phase2Count + bookingData.ticketCount) <= counts.phase2Limit;
+      const isPhase3Available = config.isPhase3Active && (counts.phase3Count + bookingData.ticketCount) <= counts.phase3Limit;
+      const isPhase4Available = config.isPhase4Active && (counts.phase4Count + bookingData.ticketCount) <= counts.phase4Limit;
       
       // Determine ticket type and pricing based on availability and admin settings
-      if (!isEarlyBirdAvailable || ticketType === 'phase_1' || ticketType === 'phase_2') {
-        if (isPhase1Available && (ticketType === 'phase_1' || !isPhase2Available)) {
+      if (!isEarlyBirdAvailable || ticketType === 'phase_1' || ticketType === 'phase_2' || ticketType === 'phase_3' || ticketType === 'phase_4') {
+        if (isPhase1Available && (ticketType === 'phase_1' || (!isPhase2Available && !isPhase3Available && !isPhase4Available))) {
           ticketPrice = parseInt(config.phase1Price) || 350;
           ticketType = 'phase_1';
-        } else if (isPhase2Available) {
+        } else if (isPhase2Available && (ticketType === 'phase_2' || (!isPhase3Available && !isPhase4Available))) {
           ticketPrice = parseInt(config.phase2Price) || 400;
           ticketType = 'phase_2';
+        } else if (isPhase3Available && (ticketType === 'phase_3' || !isPhase4Available)) {
+          ticketPrice = parseInt(config.phase3Price) || 450;
+          ticketType = 'phase_3';
+        } else if (isPhase4Available) {
+          ticketPrice = parseInt(config.phase4Price) || 500;
+          ticketType = 'phase_4';
         } else {
           return res.status(400).json({ 
             message: 'No tickets are currently available for sale',
             availableTickets: {
               earlyBird: Math.max(0, counts.earlyBirdLimit - counts.earlyBirdCount),
               phase1: isPhase1Available ? 'Available' : 'Not Active',
-              phase2: isPhase2Available ? 'Available' : 'Not Active'
+              phase2: isPhase2Available ? 'Available' : 'Not Active',
+              phase3: isPhase3Available ? 'Available' : 'Not Active',
+              phase4: isPhase4Available ? 'Available' : 'Not Active'
             }
           });
         }
