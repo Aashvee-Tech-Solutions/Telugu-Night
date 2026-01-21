@@ -14,7 +14,7 @@ const Index = () => {
       {/* Floating Book Now Button */}
       <a 
         href="/book"
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold py-5 px-10 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none flex items-center gap-2"
+        className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold py-5 px-10 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none flex items-center gap-2"
         style={{ boxShadow: '0 0 30px rgba(234, 179, 8, 0.6)' }}
       >
         <span className="text-lg">🎟️</span>
