@@ -42,29 +42,32 @@ export function getPublicBaseUrl(req: Request): string {
  * @returns Complete base URL
  */
 export function getPublicBaseUrlWithFallback(req?: Request): string {
-  // Priority 1: Use REPLIT_DEV_DOMAIN for automatic Replit domain detection
-  if (process.env.REPLIT_DEV_DOMAIN) {
-    const baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
-    console.log(`🌐 Using Replit public domain for return URL: ${baseUrl}`);
+  // Priority 1: Use APP_BASE_URL for production domain (most important for payment redirects)
+  if (process.env.APP_BASE_URL) {
+    const baseUrl = process.env.APP_BASE_URL.endsWith('/') 
+      ? process.env.APP_BASE_URL.slice(0, -1)
+      : process.env.APP_BASE_URL;
+    console.log(`🌐 Using APP_BASE_URL for return URL: ${baseUrl}`);
     return baseUrl;
   }
 
-  // Priority 2: If request is available, use it to construct URL
-  if (req) {
-    return getPublicBaseUrl(req);
-  }
-
-  // Priority 3: Use FRONTEND_URL or APP_BASE_URL if explicitly set
+  // Priority 2: Use FRONTEND_URL if set
   if (process.env.FRONTEND_URL) {
     return process.env.FRONTEND_URL.endsWith('/') 
       ? process.env.FRONTEND_URL.slice(0, -1)
       : process.env.FRONTEND_URL;
   }
 
-  if (process.env.APP_BASE_URL) {
-    return process.env.APP_BASE_URL.endsWith('/') 
-      ? process.env.APP_BASE_URL.slice(0, -1)
-      : process.env.APP_BASE_URL;
+  // Priority 3: If request is available, use it to construct URL
+  if (req) {
+    return getPublicBaseUrl(req);
+  }
+
+  // Priority 4: Use REPLIT_DEV_DOMAIN as fallback for development
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    const baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+    console.log(`🌐 Using Replit dev domain for return URL: ${baseUrl}`);
+    return baseUrl;
   }
 
   // Priority 4: Development fallback - use HTTPS for payment providers that require it
