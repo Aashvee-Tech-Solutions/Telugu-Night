@@ -14,7 +14,7 @@ const Index = () => {
       {/* Embedded iframe */}
       <div className="w-full h-screen">
         <iframe
-          src="https://v0-telugunightlanding3k.vercel.app/"
+          src="https://landing-page-telugu-night.vercel.app/"
           className="w-full h-full border-0"
           title="Telugu Night Landing Page"
           data-testid="iframe-landing"
