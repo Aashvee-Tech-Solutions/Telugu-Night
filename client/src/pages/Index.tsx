@@ -10,7 +10,17 @@ const Index = () => {
 
 
   const LandingPage = () => (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white relative">
+      {/* Floating Book Now Button */}
+      <a 
+        href="/book"
+        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold py-4 px-8 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none flex items-center gap-2"
+        style={{ boxShadow: '0 0 20px rgba(234, 179, 8, 0.5)' }}
+      >
+        <span className="text-lg">🎟️</span>
+        <span className="text-lg">Book Now</span>
+      </a>
+      
       {/* Embedded iframe */}
       <div className="w-full h-screen">
         <iframe
