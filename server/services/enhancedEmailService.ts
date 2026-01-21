@@ -379,7 +379,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
       </head>
       <body>
         <div class="header">
-          <h1>🎊 Telugu Night - DTR, Manipal</h1>
+          <h1>🎊 Telugu Night 3.0 - HI-point Lounge (SOHO)</h1>
           <p>Your Digital Tickets with QR Codes</p>
         </div>
         
@@ -391,8 +391,8 @@ Contact: mis@aashveetech.com | +91 6281614117`);
 
           <div class="calendar-section">
             <h3>📅 Add to Your Calendar</h3>
-            <p><strong>Telugu Night - September 19, 2025, 6:30 PM</strong></p>
-            <p>DTR, Manipal, Karnataka</p>
+            <p><strong>Telugu Night 3.0 - January 25, 2026, 7:00 PM</strong></p>
+            <p>HI-point Lounge (SOHO)</p>
             <a href="${calendarLink}" class="calendar-button" target="_blank">
               📅 Add to Google Calendar
             </a>
@@ -438,10 +438,10 @@ Contact: mis@aashveetech.com | +91 6281614117`);
           <div class="card">
             <h3>🎯 Event Information:</h3>
             <ul>
-              <li><strong>Event:</strong> Telugu Night - DJ Experience</li>
-              <li><strong>Venue:</strong> DTR, Manipal</li>
-              <li><strong>Date:</strong> September 19, 2025</li>
-              <li><strong>Time:</strong> 6:30 PM - 11:00 PM</li>
+              <li><strong>Event:</strong> Telugu Night 3.0 - DJ Experience</li>
+              <li><strong>Venue:</strong> HI-point Lounge (SOHO)</li>
+              <li><strong>Date:</strong> January 25, 2026</li>
+              <li><strong>Time:</strong> 7:00 PM onwards</li>
               <li><strong>Entry:</strong> Show QR code or guest code</li>
             </ul>
           </div>
@@ -460,7 +460,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
 
         <div class="footer">
           <p>Questions? Contact us at: mis@aashveetech.com | 📞 +91 6281614117</p>
-          <p><em>Telugu Night - The Ultimate DJ Experience in DTR, Manipal</em></p>
+          <p><em>Telugu Night 3.0 - The Ultimate DJ Experience at HI-point Lounge (SOHO)</em></p>
           <p style="margin-top: 15px;">
             <a href="${calendarLink}" style="color: #4285f4;">📅 Add Event to Google Calendar</a>
           </p>

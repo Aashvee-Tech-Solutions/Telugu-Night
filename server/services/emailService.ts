@@ -126,7 +126,7 @@ export class EmailService {
 
           <div class="footer">
             <p>Questions? Contact us at: mis@aashveetech.com | 📞 +91 6281614117</p>
-            <p><em>Telugu Night - The Ultimate DJ Experience in DTR, Manipal</em></p>
+            <p><em>Telugu Night 3.0 - The Ultimate DJ Experience at HI-point Lounge (SOHO)</em></p>
           </div>
         </body>
         </html>
