@@ -19,7 +19,7 @@ export default function BookingPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            Telugu Night
+            Telugu Night 3.0
           </h1>
           <p className="text-xl text-blue-100">
             Book Your Tickets Now!
@@ -37,7 +37,7 @@ export default function BookingPage() {
         <TicketBookingForm 
           referralCode={referralCode} 
           eventDetails={{
-            title: "Telugu Night",
+            title: "Telugu Night 3.0",
             price: 300
           }}
         />
