@@ -469,8 +469,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         </div>
                       )}
 
-                      {/* Phase 1 Tickets */}
-                      {pricing.config?.phase1.capacity >= 0 && (
+                      {/* Phase 1 Tickets - Only show when admin enables */}
+                      {pricing.config?.phase1.isActive && pricing.config?.phase1.capacity >= 0 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
@@ -509,8 +509,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         </div>
                       )}
 
-                      {/* Phase 2 Tickets */}
-                      {pricing.config?.phase2.capacity > 1 && (
+                      {/* Phase 2 Tickets - Only show when admin enables */}
+                      {pricing.config?.phase2.isActive && pricing.config?.phase2.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
@@ -558,8 +558,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         </div>
                       )}
 
-                      {/* Phase 3 Tickets */}
-                      {pricing.config?.phase3.capacity > 1 && (
+                      {/* Phase 3 Tickets - Only show when admin enables */}
+                      {pricing.config?.phase3.isActive && pricing.config?.phase3.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
@@ -607,8 +607,8 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                         </div>
                       )}
 
-                      {/* Phase 4 Tickets */}
-                      {pricing.config?.phase4.capacity > 1 && (
+                      {/* Phase 4 Tickets - Only show when admin enables */}
+                      {pricing.config?.phase4.isActive && pricing.config?.phase4.capacity > 1 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex-1">
