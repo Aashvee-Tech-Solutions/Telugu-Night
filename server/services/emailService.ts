@@ -65,7 +65,7 @@ export class EmailService {
     const mailOptions = {
       from: 'mis@aashveetech.com',
       to: booking.email,
-      subject: '🎊 Telugu Night - Payment Received! Verification in Progress',
+      subject: '🎊 Telugu Night 3.0 - Payment Received! Verification in Progress',
       html: `
         <!DOCTYPE html>
         <html>
@@ -83,7 +83,7 @@ export class EmailService {
         </head>
         <body>
           <div class="header">
-            <h1>🎊 Telugu Night - DTR, Manipal</h1>
+            <h1>🎊 Telugu Night 3.0 - HI-point Lounge (SOHO)</h1>
             <p>Payment Confirmation</p>
           </div>
           
@@ -165,7 +165,7 @@ export class EmailService {
       const mailOptions = {
         from: 'mis@aashveetech.com',
         to: booking.email,
-        subject: '🎫 Your Telugu Night Tickets - Entry Passes Ready!',
+        subject: '🎫 Telugu Night 3.0 Tickets - Entry Passes Ready! | Jan 25, 2026',
         html: this.generateTicketEmailHTML(booking, generatedQRCodes),
         attachments: ticketAttachments
       };
@@ -201,7 +201,7 @@ export class EmailService {
       </head>
       <body>
         <div class="header">
-          <h1>🎊 Telugu Night - DTR, Manipal</h1>
+          <h1>🎊 Telugu Night 3.0 - HI-point Lounge (SOHO)</h1>
           <p>Your Digital Tickets</p>
         </div>
         
@@ -239,8 +239,9 @@ export class EmailService {
           <div class="card">
             <h3>🎯 Event Information:</h3>
             <ul>
-              <li><strong>Event:</strong> Telugu Night - DJ Experience</li>
-              <li><strong>Venue:</strong> DTR, Manipal</li>
+              <li><strong>Event:</strong> Telugu Night 3.0 - DJ Experience</li>
+              <li><strong>Date:</strong> January 25, 2026 | 7:00 PM onwards</li>
+              <li><strong>Venue:</strong> HI-point Lounge (SOHO)</li>
               <li><strong>Entry:</strong> Show your QR codes at the entrance</li>
               <li><strong>Guest Codes:</strong> Each ticket has a unique 6-digit code</li>
             </ul>
@@ -259,7 +260,7 @@ export class EmailService {
 
         <div class="footer">
           <p>Questions? Contact us at: mis@aashveetech.com | 📞 +91 6281614117</p>
-          <p><em>Telugu Night - The Ultimate DJ Experience in DTR, Manipal</em></p>
+          <p><em>Telugu Night 3.0 - The Ultimate DJ Experience at HI-point Lounge (SOHO)</em></p>
         </div>
       </body>
       </html>

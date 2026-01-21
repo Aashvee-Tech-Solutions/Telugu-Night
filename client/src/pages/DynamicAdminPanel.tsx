@@ -570,7 +570,7 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
           >
             <TabsTrigger value="events">
               <Star className="w-4 h-4 mr-2" />
-              Telugu Night 2.0
+              Telugu Night 3.0
             </TabsTrigger>
           </PermissionGuard>
 
@@ -1373,7 +1373,7 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
           </TabsContent>
         </PermissionGuard>
 
-        {/* Telugu Night 2.0 Management Tab */}
+        {/* Telugu Night 3.0 Management Tab */}
         <PermissionGuard 
           permissions={['create_events', 'manage_events']} 
           userPermissions={user.permissions}

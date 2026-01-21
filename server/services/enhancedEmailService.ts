@@ -69,8 +69,8 @@ export class EnhancedEmailService {
 
   // Generate Google Calendar event link
   private generateCalendarEvent(booking: BookingData): string {
-    const eventTitle = encodeURIComponent('Telugu Night - DTR Manipal');
-    const eventDescription = encodeURIComponent(`🎊 Telugu Night Event
+    const eventTitle = encodeURIComponent('Telugu Night 3.0 - HI-point Lounge (SOHO)');
+    const eventDescription = encodeURIComponent(`🎊 Telugu Night 3.0
 
 Booking Details:
 - Booking ID: #${booking.id}
@@ -80,11 +80,11 @@ Booking Details:
 Important: Show your QR code at the venue for entry!
 
 Contact: mis@aashveetech.com | +91 6281614117`);
-    const eventLocation = encodeURIComponent('DTR, Manipal, Karnataka');
+    const eventLocation = encodeURIComponent('HI-point Lounge (SOHO), Manipal, Karnataka');
     
-    // Event date: September 19, 2025, 6:30 PM - 11:00 PM IST (UTC+5:30)
-    const startTime = '20250919T130000Z'; // 6:30 PM IST = 1:00 PM UTC
-    const endTime = '20250919T173000Z';   // 11:00 PM IST = 5:30 PM UTC
+    // Event date: January 25, 2026, 7:00 PM onwards IST (UTC+5:30)
+    const startTime = '20260125T133000Z'; // 7:00 PM IST = 1:30 PM UTC
+    const endTime = '20260125T183000Z';   // 12:00 AM IST = 6:30 PM UTC
     
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&details=${eventDescription}&location=${eventLocation}&sf=true&output=xml`;
   }
@@ -102,7 +102,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
           <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
             <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Payment Successful!</h1>
-            <p style="color: #d1fae5; margin: 10px 0 0 0; font-size: 16px;">Telugu Night - DTR Manipal</p>
+            <p style="color: #d1fae5; margin: 10px 0 0 0; font-size: 16px;">Telugu Night 3.0 - HI-point Lounge (SOHO)</p>
           </div>
           
           <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
@@ -164,11 +164,11 @@ Contact: mis@aashveetech.com | +91 6281614117`);
             </div>
             
             <div style="text-align: center; color: #666; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 5px 0;">📅 Event Date: Coming Soon</p>
-              <p style="margin: 5px 0;">📍 Venue: DTR, Manipal</p>
+              <p style="margin: 5px 0;">📅 Event Date: January 25, 2026 | 7:00 PM onwards</p>
+              <p style="margin: 5px 0;">📍 Venue: HI-point Lounge (SOHO)</p>
               <p style="margin: 5px 0;">📞 Support: +91 6281614117</p>
               <p style="margin: 15px 0 0 0; font-style: italic;">
-                Thank you for choosing Telugu Night! We can't wait to see you dance! 🕺💃
+                Thank you for choosing Telugu Night 3.0! We can't wait to see you dance! 🕺💃
               </p>
             </div>
           </div>
@@ -178,7 +178,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
       await this.transporter.sendMail({
         from: 'mis@aashveetech.com',
         to: booking.email,
-        subject: `🎉 Payment Successful - Telugu Night Tickets Confirmed #${booking.id}`,
+        subject: `🎉 Payment Successful - Telugu Night 3.0 Tickets Confirmed #${booking.id}`,
         html: emailHtml
       });
 
@@ -200,7 +200,7 @@ Contact: mis@aashveetech.com | +91 6281614117`);
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
           <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
             <h1 style="color: white; margin: 0; font-size: 28px;">❌ Payment Failed</h1>
-            <p style="color: #fecaca; margin: 10px 0 0 0; font-size: 16px;">Telugu Night - DTR Manipal</p>
+            <p style="color: #fecaca; margin: 10px 0 0 0; font-size: 16px;">Telugu Night 3.0 - HI-point Lounge (SOHO)</p>
           </div>
           
           <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">

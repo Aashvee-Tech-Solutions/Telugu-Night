@@ -69,9 +69,9 @@ export default function TeluguNightEventManagement() {
   });
 
   const [eventData, setEventData] = useState({
-    eventTitle: "Telugu Night 2.0",
+    eventTitle: "Telugu Night 3.0",
     eventDescription: "",
-    venue: "Hyderabad",
+    venue: "HI-point Lounge (SOHO)",
     eventDate: "",
     maxCapacity: 500,
     earlyBirdPrice: 300,
@@ -95,7 +95,7 @@ export default function TeluguNightEventManagement() {
     onSuccess: () => {
       toast({
         title: "Configuration updated",
-        description: "Telugu Night 2.0 settings have been saved successfully",
+        description: "Telugu Night 3.0 settings have been saved successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/telugu-night-config'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/telugu-night-counts'] });
@@ -211,9 +211,9 @@ export default function TeluguNightEventManagement() {
   useEffect(() => {
     if (currentConfig) {
       setEventData({
-        eventTitle: currentConfig.eventTitle || "Telugu Night 2.0",
+        eventTitle: currentConfig.eventTitle || "Telugu Night 3.0",
         eventDescription: currentConfig.eventDescription || "",
-        venue: currentConfig.venue || "Hyderabad",
+        venue: currentConfig.venue || "HI-point Lounge (SOHO)",
         eventDate: currentConfig.eventDate || "",
         maxCapacity: currentConfig.maxCapacity || 500,
         earlyBirdPrice: parseInt(currentConfig.earlyBirdPrice) || 300,
@@ -273,7 +273,7 @@ export default function TeluguNightEventManagement() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="text-2xl">Telugu Night 2.0</CardTitle>
+              <CardTitle className="text-2xl">Telugu Night 3.0</CardTitle>
               <CardDescription>Automated event management - All payments processed via Cashfree webhook</CardDescription>
             </div>
             <div className="flex items-center gap-4">
@@ -584,7 +584,7 @@ export default function TeluguNightEventManagement() {
               <Label htmlFor="event-title">Event Title</Label>
               <Input
                 id="event-title"
-                placeholder="Telugu Night 2.0"
+                placeholder="Telugu Night 3.0"
                 value={eventData.eventTitle}
                 onChange={(e) => setEventData({...eventData, eventTitle: e.target.value})}
                 data-testid="input-event-title"
@@ -595,7 +595,7 @@ export default function TeluguNightEventManagement() {
               <Label htmlFor="venue">Venue</Label>
               <Input
                 id="venue"
-                placeholder="Hyderabad"
+                placeholder="HI-point Lounge (SOHO)"
                 value={eventData.venue}
                 onChange={(e) => setEventData({...eventData, venue: e.target.value})}
                 data-testid="input-venue"
@@ -630,7 +630,7 @@ export default function TeluguNightEventManagement() {
             <Label htmlFor="event-description">Event Description</Label>
             <Textarea
               id="event-description"
-              placeholder="Describe your Telugu Night 2.0 event..."
+              placeholder="Describe your Telugu Night 3.0 event..."
               value={eventData.eventDescription}
               onChange={(e) => setEventData({...eventData, eventDescription: e.target.value})}
               data-testid="textarea-event-description"

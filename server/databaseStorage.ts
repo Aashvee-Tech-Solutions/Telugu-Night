@@ -794,8 +794,8 @@ export class DatabaseStorage implements IStorage {
         isPhase1Active: false,
         isPhase2Active: false,
         convenientFee: "12.96",
-        eventTitle: "Telugu Night 2.0",
-        venue: "Hyderabad",
+        eventTitle: "Telugu Night 3.0",
+        venue: "HI-point Lounge (SOHO)",
         maxCapacity: 500,
         bookingOpen: false
       };
@@ -812,8 +812,8 @@ export class DatabaseStorage implements IStorage {
         isPhase1Active: false,
         isPhase2Active: false,
         convenientFee: "12.96",
-        eventTitle: "Telugu Night 2.0",
-        venue: "Hyderabad",
+        eventTitle: "Telugu Night 3.0",
+        venue: "HI-point Lounge (SOHO)",
         maxCapacity: 500,
         bookingOpen: false
       };
@@ -1185,9 +1185,9 @@ export class MemStorage implements IStorage {
   // Telugu Night configuration
   private teluguNightConfig = {
     id: 1,
-    eventTitle: "Telugu Night 2.0",
+    eventTitle: "Telugu Night 3.0",
     eventDescription: null,
-    venue: "Hyderabad",
+    venue: "HI-point Lounge (SOHO)",
     eventDate: null,
     maxCapacity: 500,
     bookingOpen: false,

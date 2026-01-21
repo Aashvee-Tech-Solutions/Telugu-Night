@@ -24,20 +24,20 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-slate-800 dark:bg-slate-900 text-white py-12 px-4 border-t-4 border-yellow-500 shadow-2xl">
         <div className="max-w-6xl mx-auto text-center">
-          <h3 className="text-2xl md:text-3xl font-bold mb-6 text-white">Telugu Night 2.0</h3>
-          <p className="text-base md:text-lg text-slate-200 mb-8">Experience the ultimate Telugu DJ night at DTR, Manipal</p>
+          <h3 className="text-2xl md:text-3xl font-bold mb-6 text-white">Telugu Night 3.0</h3>
+          <p className="text-base md:text-lg text-slate-200 mb-8">Experience the ultimate Telugu DJ night at HI-point Lounge (SOHO)</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 text-sm mb-8">
             <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
               <p className="font-bold text-yellow-400 text-base mb-2">📍 Venue</p>
-              <p className="text-slate-200 text-sm">DTR, Down to Road Manipal</p>
+              <p className="text-slate-200 text-sm">HI-point Lounge (SOHO)</p>
             </div>
             <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
               <p className="font-bold text-yellow-400 text-base mb-2">📅 Date</p>
-              <p className="text-slate-200 text-sm">September 19, 2025</p>
+              <p className="text-slate-200 text-sm">January 25, 2026</p>
             </div>
             <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
               <p className="font-bold text-yellow-400 text-base mb-2">🕐 Time</p>
-              <p className="text-slate-200 text-sm">7:00 PM - 11:00 PM</p>
+              <p className="text-slate-200 text-sm">7:00 PM onwards</p>
             </div>
             <div className="p-4 bg-slate-700/50 dark:bg-slate-800/50 rounded-lg shadow-md border border-slate-600">
               <p className="font-bold text-yellow-400 text-base mb-2">💰 Price</p>
@@ -94,7 +94,7 @@ const Index = () => {
         <TicketBookingForm 
           onBack={() => setShowBookingForm(false)}
           eventDetails={{
-            title: "Telugu Night 2.0",
+            title: "Telugu Night 3.0",
             price: 300
           }}
         />

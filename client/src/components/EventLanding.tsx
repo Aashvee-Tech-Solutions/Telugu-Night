@@ -9,14 +9,14 @@ export const EventLanding = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
 
   const eventDetails = {
-    title: "Telugu Night 2.0",
-    date: "September 19, 2025",
-    time: "7:00 PM - 11:00 PM",
-    venue: "DTR, Down to Road Manipal",
+    title: "Telugu Night 3.0",
+    date: "January 25, 2026",
+    time: "7:00 PM onwards",
+    venue: "HI-point Lounge (SOHO)",
     price: 300,
     totalTickets: 500,
     soldTickets: 324,
-    description: "Join us for an amazing Telugu Night 2.0 DJ experience filled with vibrant Telugu songs, dance, and joy at DTR, Down to Road Manipal!"
+    description: "Join us for an amazing Telugu Night 3.0 DJ experience filled with vibrant Telugu songs, dance, and joy at HI-point Lounge (SOHO)!"
   };
 
   const features = [

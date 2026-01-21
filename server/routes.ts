@@ -625,7 +625,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
     }
   });
 
-  // Telugu Night 2.0 Specific Configuration Routes
+  // Telugu Night 3.0 Specific Configuration Routes
   app.get('/api/admin/telugu-night-config', authenticate, requirePermission(PERMISSIONS.SYSTEM_SETTINGS), async (req, res) => {
     try {
       // Redirect to the unified endpoint
@@ -634,7 +634,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       res.json({ config, counts });
     } catch (error) {
       console.error('Error getting Telugu Night config:', error);
-      res.status(500).json({ message: 'Failed to get Telugu Night 2.0 configuration' });
+      res.status(500).json({ message: 'Failed to get Telugu Night 3.0 configuration' });
     }
   });
 
@@ -653,18 +653,18 @@ export async function registerRoutes(app: Express): Promise<Express> {
       if ('isEarlyBirdActive' in config || 'isPhase1Active' in config) {
         if (config.isEarlyBirdActive && !config.isPhase1Active) {
           finalConfig.isPhase1Active = false;
-          console.log('🎫 Telugu Night 2.0: Early Bird started - Phase 1 automatically stopped');
+          console.log('🎫 Telugu Night 3.0: Early Bird started - Phase 1 automatically stopped');
         }
         
         if (config.isPhase1Active && !config.isEarlyBirdActive) {
           finalConfig.isEarlyBirdActive = false;
-          console.log('🎫 Telugu Night 2.0: Phase 1 started - Early Bird automatically stopped');
+          console.log('🎫 Telugu Night 3.0: Phase 1 started - Early Bird automatically stopped');
         }
         
         if (config.isEarlyBirdActive && config.isPhase1Active) {
           finalConfig.isEarlyBirdActive = false;
           finalConfig.isPhase1Active = true;
-          console.log('🎫 Telugu Night 2.0: Phase 1 takes priority, Early Bird stopped');
+          console.log('🎫 Telugu Night 3.0: Phase 1 takes priority, Early Bird stopped');
         }
       }
 
@@ -672,7 +672,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       const updatedConfig = await storage.getTicketConfig();
       const counts = await storage.getTicketCounts();
       
-      let message = 'Telugu Night 2.0 configuration updated successfully';
+      let message = 'Telugu Night 3.0 configuration updated successfully';
       if (finalConfig.isEarlyBirdActive !== config.isEarlyBirdActive || finalConfig.isPhase1Active !== config.isPhase1Active) {
         message += ' (phases adjusted for mutual exclusivity)';
       }
@@ -684,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       });
     } catch (error) {
       console.error('Error updating Telugu Night config:', error);
-      res.status(500).json({ message: 'Failed to update Telugu Night 2.0 configuration' });
+      res.status(500).json({ message: 'Failed to update Telugu Night 3.0 configuration' });
     }
   });
 
@@ -699,12 +699,12 @@ export async function registerRoutes(app: Express): Promise<Express> {
 
       await storage.updateTicketConfig({ bookingOpen }, userId);
       res.json({ 
-        message: bookingOpen ? 'Telugu Night 2.0 bookings opened' : 'Telugu Night 2.0 bookings closed',
+        message: bookingOpen ? 'Telugu Night 3.0 bookings opened' : 'Telugu Night 3.0 bookings closed',
         bookingOpen 
       });
     } catch (error) {
       console.error('Error toggling Telugu Night bookings:', error);
-      res.status(500).json({ message: 'Failed to toggle Telugu Night 2.0 bookings' });
+      res.status(500).json({ message: 'Failed to toggle Telugu Night 3.0 bookings' });
     }
   });
 
@@ -714,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Express> {
       res.json(counts);
     } catch (error) {
       console.error('Error fetching Telugu Night counts:', error);
-      res.status(500).json({ message: 'Failed to fetch Telugu Night 2.0 ticket counts' });
+      res.status(500).json({ message: 'Failed to fetch Telugu Night 3.0 ticket counts' });
     }
   });
 

@@ -145,12 +145,12 @@ export const insertAdminSessionSchema = createInsertSchema(adminSessions).pick({
   expiresAt: true,
 });
 
-// Telugu Night 2.0 Event Configuration
+// Telugu Night 3.0 Event Configuration
 export const teluguNightConfig = pgTable("telugu_night_config", {
   id: serial("id").primaryKey(),
-  eventTitle: text("event_title").default("Telugu Night 2.0"),
+  eventTitle: text("event_title").default("Telugu Night 3.0"),
   eventDescription: text("event_description"),
-  venue: text("venue").default("Hyderabad"),
+  venue: text("venue").default("HI-point Lounge (SOHO)"),
   eventDate: timestamp("event_date"),
   maxCapacity: integer("max_capacity").default(500),
   bookingOpen: boolean("booking_open").default(false),

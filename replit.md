@@ -1,7 +1,13 @@
 # Replit.md
 
 ## Overview
-This project is a comprehensive event management system for "Telugu Night," a Telugu DJ night event. It automates QR ticket generation and delivery, provides a dynamic admin panel with role-based access control, manages bookings with payment verification, integrates with Google Sheets, and handles guest management with unique codes. The system includes a coupon system and UPI payment processing, all built within a monorepo structure separating client, server, and shared components.
+This project is a comprehensive event management system for "Telugu Night 3.0," a Telugu DJ night event scheduled for **January 25, 2026 at 7:00 PM onwards** at **HI-point Lounge (SOHO)**. It automates QR ticket generation and delivery, provides a dynamic admin panel with role-based access control, manages bookings with Cashfree payment processing and automatic webhook verification, integrates with Google Sheets, and handles guest management with unique codes. The system includes a coupon system, multi-phase ticket pricing (Early Bird, Phase 1-4), all built within a monorepo structure separating client, server, and shared components.
+
+## Current Event Details
+- **Event**: Telugu Night 3.0
+- **Date**: January 25, 2026
+- **Time**: 7:00 PM onwards
+- **Venue**: HI-point Lounge (SOHO)
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -47,7 +53,7 @@ Client requests (TanStack Query) are processed by Express.js, which interacts wi
 - UPI payment processing with app-specific links and manual entry options.
 - Automated data synchronization with Google Sheets (including reset and fresh sync).
 - Comprehensive scanner for event entry, supporting individual guest check-in and duplicate scan prevention.
-- Dynamic ticket pricing based on phases (Early Bird, Phase 1) with mutual exclusivity and admin controls.
+- Dynamic ticket pricing based on phases (Early Bird, Phase 1, Phase 2, Phase 3, Phase 4) with mutual exclusivity and admin controls.
 - Real-time attendance tracking and dashboard analytics.
 - Persistent storage using PostgreSQL.
 - Google Calendar integration for event attendees.
@@ -66,6 +72,7 @@ Client requests (TanStack Query) are processed by Express.js, which interacts wi
 - **Date-fns**: Date manipulation utilities.
 
 ### Payment
+- **Cashfree**: Payment gateway with automatic webhook processing for instant ticket verification.
 - **UPI**: UPI app integration (PhonePe, Paytm, Google Pay, BHIM).
 
 ### Email
