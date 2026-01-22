@@ -1406,18 +1406,136 @@ export default function DynamicAdminPanel({ user: propUser, onLogout }: DynamicA
               <CardHeader>
                 <CardTitle>System Settings</CardTitle>
                 <CardDescription>
-                  Manage users and system configuration
+                  Manage ticket phases and system configuration
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Settings className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground mb-4">
-                    System settings and user management interface
+              <CardContent className="space-y-6">
+                {/* Phase Sold Out Controls */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-4">Phase Sold Out Controls</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Manually mark phases as "Sold Out" to stop sales even if capacity is available.
                   </p>
-                  <Button size="lg">
-                    Open Settings
-                  </Button>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Early Bird Sold Out */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Early Bird</p>
+                        <p className="text-xs text-muted-foreground">
+                          {ticketConfig?.config?.isEarlyBirdSoldOut ? 'Marked as Sold Out' : 'Available for sale'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={ticketConfig?.config?.isEarlyBirdSoldOut ? 'destructive' : 'outline'}
+                        onClick={() => {
+                          updateTicketConfigMutation.mutate({
+                            isEarlyBirdSoldOut: !ticketConfig?.config?.isEarlyBirdSoldOut
+                          });
+                        }}
+                        disabled={updateTicketConfigMutation.isPending}
+                      >
+                        {ticketConfig?.config?.isEarlyBirdSoldOut ? 'Sold Out' : 'Mark Sold'}
+                      </Button>
+                    </div>
+
+                    {/* Phase 1 Sold Out */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Phase 1</p>
+                        <p className="text-xs text-muted-foreground">
+                          {ticketConfig?.config?.isPhase1SoldOut ? 'Marked as Sold Out' : 'Available for sale'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={ticketConfig?.config?.isPhase1SoldOut ? 'destructive' : 'outline'}
+                        onClick={() => {
+                          updateTicketConfigMutation.mutate({
+                            isPhase1SoldOut: !ticketConfig?.config?.isPhase1SoldOut
+                          });
+                        }}
+                        disabled={updateTicketConfigMutation.isPending}
+                      >
+                        {ticketConfig?.config?.isPhase1SoldOut ? 'Sold Out' : 'Mark Sold'}
+                      </Button>
+                    </div>
+
+                    {/* Phase 2 Sold Out */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Phase 2</p>
+                        <p className="text-xs text-muted-foreground">
+                          {ticketConfig?.config?.isPhase2SoldOut ? 'Marked as Sold Out' : 'Available for sale'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={ticketConfig?.config?.isPhase2SoldOut ? 'destructive' : 'outline'}
+                        onClick={() => {
+                          updateTicketConfigMutation.mutate({
+                            isPhase2SoldOut: !ticketConfig?.config?.isPhase2SoldOut
+                          });
+                        }}
+                        disabled={updateTicketConfigMutation.isPending}
+                      >
+                        {ticketConfig?.config?.isPhase2SoldOut ? 'Sold Out' : 'Mark Sold'}
+                      </Button>
+                    </div>
+
+                    {/* Phase 3 Sold Out */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Phase 3</p>
+                        <p className="text-xs text-muted-foreground">
+                          {ticketConfig?.config?.isPhase3SoldOut ? 'Marked as Sold Out' : 'Available for sale'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={ticketConfig?.config?.isPhase3SoldOut ? 'destructive' : 'outline'}
+                        onClick={() => {
+                          updateTicketConfigMutation.mutate({
+                            isPhase3SoldOut: !ticketConfig?.config?.isPhase3SoldOut
+                          });
+                        }}
+                        disabled={updateTicketConfigMutation.isPending}
+                      >
+                        {ticketConfig?.config?.isPhase3SoldOut ? 'Sold Out' : 'Mark Sold'}
+                      </Button>
+                    </div>
+
+                    {/* Phase 4 Sold Out */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Phase 4</p>
+                        <p className="text-xs text-muted-foreground">
+                          {ticketConfig?.config?.isPhase4SoldOut ? 'Marked as Sold Out' : 'Available for sale'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={ticketConfig?.config?.isPhase4SoldOut ? 'destructive' : 'outline'}
+                        onClick={() => {
+                          updateTicketConfigMutation.mutate({
+                            isPhase4SoldOut: !ticketConfig?.config?.isPhase4SoldOut
+                          });
+                        }}
+                        disabled={updateTicketConfigMutation.isPending}
+                      >
+                        {ticketConfig?.config?.isPhase4SoldOut ? 'Sold Out' : 'Mark Sold'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Settings Placeholder */}
+                <div className="text-center py-4 border rounded-lg">
+                  <Settings className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground text-sm">
+                    Additional settings will be available here
+                  </p>
                 </div>
               </CardContent>
             </Card>

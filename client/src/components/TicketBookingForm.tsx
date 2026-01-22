@@ -434,7 +434,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Early Bird
                                   </h4>
                                 </div>
-                                {(pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
+                                {pricing.config?.earlyBird.isSoldOut || (pricing.config?.earlyBird.soldCount ?? 0) >= (pricing.config?.earlyBird.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : !pricing.config?.earlyBird.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
@@ -480,7 +480,13 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 1
                                   </h4>
                                 </div>
-                                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
+                                {pricing.config?.phase1.isSoldOut || (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
+                                ) : !pricing.config?.phase1.isActive ? (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-600 text-white w-fit">Available</span>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center justify-between sm:gap-4">
@@ -494,14 +500,14 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                 min="0"
                                 max="15"
                                 className="w-20 text-center"
-                                value={pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' ? formData.ticketCount.toString() : "0"}
+                                value={pricing.config?.phase1.isActive && !pricing.config?.phase1.isSoldOut && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' ? formData.ticketCount.toString() : "0"}
                                 onChange={(e) => {
                                   const value = parseInt(e.target.value) || 0;
-                                  if (pricing.config?.phase1.isActive && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' && value >= 0 && value <= 15) {
+                                  if (pricing.config?.phase1.isActive && !pricing.config?.phase1.isSoldOut && pricing.config?.phase1.soldCount < pricing.config?.phase1.capacity && pricing.currentTier?.id === 'phase_1' && value >= 0 && value <= 15) {
                                     handleTicketCountChange(value);
                                   }
                                 }}
-                                disabled={!pricing.config?.phase1.isActive || (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) || pricing.currentTier?.id !== 'phase_1'}
+                                disabled={!pricing.config?.phase1.isActive || pricing.config?.phase1.isSoldOut || (pricing.config?.phase1.soldCount ?? 0) >= (pricing.config?.phase1.capacity ?? 0) || pricing.currentTier?.id !== 'phase_1'}
                                 data-testid="input-phase1-quantity"
                               />
                             </div>
@@ -520,7 +526,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 2
                                   </h4>
                                 </div>
-                                {(pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
+                                {pricing.config?.phase2.isSoldOut || (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : !pricing.config?.phase2.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
@@ -536,13 +542,13 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                 </div>
                               </div>
                               <Select 
-                                value={pricing.config?.phase2.isActive && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2' ? formData.ticketCount.toString() : "0"}
+                                value={pricing.config?.phase2.isActive && !pricing.config?.phase2.isSoldOut && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2' ? formData.ticketCount.toString() : "0"}
                                 onValueChange={(value) => {
-                                  if (pricing.config?.phase2.isActive && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2') {
+                                  if (pricing.config?.phase2.isActive && !pricing.config?.phase2.isSoldOut && pricing.config?.phase2.soldCount < pricing.config?.phase2.capacity && pricing.currentTier?.id === 'phase_2') {
                                     handleTicketCountChange(parseInt(value));
                                   }
                                 }}
-                                disabled={!pricing.config?.phase2.isActive || (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) || pricing.currentTier?.id !== 'phase_2'}
+                                disabled={!pricing.config?.phase2.isActive || pricing.config?.phase2.isSoldOut || (pricing.config?.phase2.soldCount ?? 0) >= (pricing.config?.phase2.capacity ?? 0) || pricing.currentTier?.id !== 'phase_2'}
                               >
                                 <SelectTrigger className="w-20">
                                   <SelectValue />
@@ -569,7 +575,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 3 - Premium Access
                                   </h4>
                                 </div>
-                                {(pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
+                                {pricing.config?.phase3.isSoldOut || (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : !pricing.config?.phase3.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
@@ -585,13 +591,13 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                 </div>
                               </div>
                               <Select 
-                                value={pricing.config?.phase3.isActive && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3' ? formData.ticketCount.toString() : "0"}
+                                value={pricing.config?.phase3.isActive && !pricing.config?.phase3.isSoldOut && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3' ? formData.ticketCount.toString() : "0"}
                                 onValueChange={(value) => {
-                                  if (pricing.config?.phase3.isActive && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3') {
+                                  if (pricing.config?.phase3.isActive && !pricing.config?.phase3.isSoldOut && pricing.config?.phase3.soldCount < pricing.config?.phase3.capacity && pricing.currentTier?.id === 'phase_3') {
                                     handleTicketCountChange(parseInt(value));
                                   }
                                 }}
-                                disabled={!pricing.config?.phase3.isActive || (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) || pricing.currentTier?.id !== 'phase_3'}
+                                disabled={!pricing.config?.phase3.isActive || pricing.config?.phase3.isSoldOut || (pricing.config?.phase3.soldCount ?? 0) >= (pricing.config?.phase3.capacity ?? 0) || pricing.currentTier?.id !== 'phase_3'}
                               >
                                 <SelectTrigger className="w-20">
                                   <SelectValue />
@@ -618,7 +624,7 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                     Phase 4 - VIP Access
                                   </h4>
                                 </div>
-                                {(pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
+                                {pricing.config?.phase4.isSoldOut || (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-destructive text-destructive-foreground w-fit">Sold Out</span>
                                 ) : !pricing.config?.phase4.isActive ? (
                                   <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground w-fit">Coming Soon</span>
@@ -634,13 +640,13 @@ export const TicketBookingForm = ({ onBack, eventDetails, referralCode }: Ticket
                                 </div>
                               </div>
                               <Select 
-                                value={pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4' ? formData.ticketCount.toString() : "0"}
+                                value={pricing.config?.phase4.isActive && !pricing.config?.phase4.isSoldOut && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4' ? formData.ticketCount.toString() : "0"}
                                 onValueChange={(value) => {
-                                  if (pricing.config?.phase4.isActive && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4') {
+                                  if (pricing.config?.phase4.isActive && !pricing.config?.phase4.isSoldOut && pricing.config?.phase4.soldCount < pricing.config?.phase4.capacity && pricing.currentTier?.id === 'phase_4') {
                                     handleTicketCountChange(parseInt(value));
                                   }
                                 }}
-                                disabled={!pricing.config?.phase4.isActive || (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) || pricing.currentTier?.id !== 'phase_4'}
+                                disabled={!pricing.config?.phase4.isActive || pricing.config?.phase4.isSoldOut || (pricing.config?.phase4.soldCount ?? 0) >= (pricing.config?.phase4.capacity ?? 0) || pricing.currentTier?.id !== 'phase_4'}
                               >
                                 <SelectTrigger className="w-20">
                                   <SelectValue />

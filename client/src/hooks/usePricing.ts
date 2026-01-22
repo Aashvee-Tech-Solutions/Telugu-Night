@@ -7,6 +7,7 @@ export interface PricingTier {
   price: number;
   originalPrice?: number;
   isActive: boolean;
+  isSoldOut: boolean;
   capacity: number;
   soldCount: number;
   startDate?: string;
@@ -78,6 +79,7 @@ export function usePricing(): PricingContextType {
           name: 'Early Bird',
           price: parseInt(configData.config?.earlyBirdPrice) || 300,
           isActive: configData.config?.isEarlyBirdActive || false,
+          isSoldOut: configData.config?.isEarlyBirdSoldOut || false,
           capacity: configData.config?.earlyBirdLimit || 90,
           soldCount: countsData.earlyBirdCount || 0,
           description: 'Limited time offer - Get your tickets at the best price!'
@@ -87,6 +89,7 @@ export function usePricing(): PricingContextType {
           name: 'Phase 1',
           price: parseInt(configData.config?.phase1Price) || 350,
           isActive: configData.config?.isPhase1Active || false,
+          isSoldOut: configData.config?.isPhase1SoldOut || false,
           capacity: configData.config?.phase1Limit || 200,
           soldCount: countsData.phase1Count || 0,
           description: 'Regular pricing with guaranteed entry'
@@ -96,6 +99,7 @@ export function usePricing(): PricingContextType {
           name: 'Phase 2',
           price: parseInt(configData.config?.phase2Price) || 400,
           isActive: configData.config?.isPhase2Active || false,
+          isSoldOut: configData.config?.isPhase2SoldOut || false,
           capacity: configData.config?.phase2Limit || 100,
           soldCount: countsData.phase2Count || 0,
           description: 'Standard pricing'
@@ -105,6 +109,7 @@ export function usePricing(): PricingContextType {
           name: 'Phase 3',
           price: parseInt(configData.config?.phase3Price) || 425,
           isActive: configData.config?.isPhase3Active || false,
+          isSoldOut: configData.config?.isPhase3SoldOut || false,
           capacity: configData.config?.phase3Limit || 0,
           soldCount: countsData.phase3Count || 0,
           description: 'Premium pricing'
@@ -114,6 +119,7 @@ export function usePricing(): PricingContextType {
           name: 'Phase 4',
           price: parseInt(configData.config?.phase4Price) || 450,
           isActive: configData.config?.isPhase4Active || false,
+          isSoldOut: configData.config?.isPhase4SoldOut || false,
           capacity: configData.config?.phase4Limit || 0,
           soldCount: countsData.phase4Count || 0,
           description: 'Final pricing tier'
@@ -195,9 +201,9 @@ export function usePricing(): PricingContextType {
     if (!config) return [];
 
     return [config.earlyBird, config.phase1, config.phase2, config.phase3, config.phase4].filter(tier => {
-      // Check if tier is active and has capacity
+      // Check if tier is active, not manually marked as sold out, and has capacity
       const hasCapacity = tier.soldCount < tier.capacity;
-      return tier.isActive && hasCapacity;
+      return tier.isActive && !tier.isSoldOut && hasCapacity;
     });
   }, [config]);
 

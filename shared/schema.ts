@@ -174,6 +174,12 @@ export const teluguNightConfig = pgTable("telugu_night_config", {
   isPhase3Active: boolean("is_phase3_active").default(false),
   isPhase4Active: boolean("is_phase4_active").default(false),
   
+  isEarlyBirdSoldOut: boolean("is_early_bird_sold_out").default(false),
+  isPhase1SoldOut: boolean("is_phase1_sold_out").default(false),
+  isPhase2SoldOut: boolean("is_phase2_sold_out").default(false),
+  isPhase3SoldOut: boolean("is_phase3_sold_out").default(false),
+  isPhase4SoldOut: boolean("is_phase4_sold_out").default(false),
+  
   convenientFee: numeric("convenient_fee", { precision: 10, scale: 2 }).default("12.96"),
   updatedAt: timestamp("updated_at").defaultNow(),
   updatedBy: integer("updated_by").references(() => users.id),
