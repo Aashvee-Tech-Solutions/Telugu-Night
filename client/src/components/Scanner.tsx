@@ -24,6 +24,10 @@ interface ScanResult {
     scannedGuests: string[];
     totalAmount: string;
     paymentStatus: string;
+    gender?: string;
+    guestGenders?: string[];
+    couponCode?: string;
+    couponDiscount?: number;
   };
   guestInfo?: {
     guestName: string;
@@ -394,6 +398,20 @@ export default function Scanner({ onClose, onScanSuccess, embedded = false }: Sc
                       {lastScanResult.booking.paymentStatus}
                     </Badge>
                   </div>
+                  {lastScanResult.booking.gender && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">Gender:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">{lastScanResult.booking.gender}</span>
+                    </div>
+                  )}
+                  {lastScanResult.booking.couponCode && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">Coupon Used:</span>
+                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 font-medium">
+                        {lastScanResult.booking.couponCode} ({lastScanResult.booking.couponDiscount || 0}% off)
+                      </Badge>
+                    </div>
+                  )}
                   {lastScanResult.booking.guestCodes?.length && (
                     <div className="mt-4">
                       <div className="flex items-center justify-between mb-3">
@@ -409,10 +427,13 @@ export default function Scanner({ onClose, onScanSuccess, embedded = false }: Sc
                         {lastScanResult.booking.guestCodes.map((guestCode, index) => {
                           // Get guest name - if it's the first ticket, use booking name, otherwise use guest names
                           let guestName;
+                          let guestGender;
                           if (index === 0) {
                             guestName = lastScanResult.booking?.name; // Primary ticket holder
+                            guestGender = lastScanResult.booking?.gender;
                           } else {
                             guestName = lastScanResult.booking?.guests?.[index - 1] || `Guest ${index + 1}`;
+                            guestGender = lastScanResult.booking?.guestGenders?.[index - 1];
                           }
                           
                           const isScanned = lastScanResult.booking?.scannedGuests?.includes(guestCode);
@@ -434,6 +455,11 @@ export default function Scanner({ onClose, onScanSuccess, embedded = false }: Sc
                                   <span className="font-medium text-gray-900 dark:text-gray-100">
                                     {guestName}
                                   </span>
+                                  {guestGender && (
+                                    <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-300 capitalize">
+                                      {guestGender}
+                                    </Badge>
+                                  )}
                                   {isCurrentScan && (
                                     <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
                                       Just Scanned
