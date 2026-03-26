@@ -1,0 +1,377 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠙[1G[0K🔄 Using DatabaseStorage (persistent storage)
+   Database URL available, connecting...
+🔄 Database initialization attempt 1/3
+✅ Google Calendar initialized successfully
+🔑 Cashfree Service initialized successfully
+   Environment: Production
+   Base URL: https://api.cashfree.com/pg
+🔑 Cashfree Service initialized successfully
+   Environment: Production
+   Base URL: https://api.cashfree.com/pg
+🛡️ Webhook Safety Service initialized
+🔄 Webhook safety monitoring started
+🔒 Webhook Security Service initialized
+🔧 Enhanced Webhook Service initialized
+🔑 Cashfree Service initialized successfully
+   Environment: Production
+   Base URL: https://api.cashfree.com/pg
+🔑 Cashfree Service initialized successfully
+   Environment: Production
+   Base URL: https://api.cashfree.com/pg
+📊 Webhook monitoring routes registered
+🔧 All webhook system improvements activated
+5:34:08 AM [express] serving on port 5000
+❌ Admin user initialization failed: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getUserByUsername [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:207:20[90m)[39m
+    at async DatabaseStorage.initializeDefaultUser [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:163:25[90m)[39m
+    at async DatabaseStorage.initializeWithRetry [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:131:9[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+✅ Admin user initialization successful
+Telugu Night counter initialization error: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.initializeTicketCounter [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:185:31[90m)[39m
+    at async DatabaseStorage.initializeWithRetry [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:135:9[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+✅ Ticket counter initialization successful
+🎉 Database fully initialized and ready!
+Browserslist: browsers data (caniuse-lite) is 17 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Failed to get ticket config: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketConfig [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:785:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:534:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+Failed to get ticket counts: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketCounts [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:578:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:515:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+5:35:41 AM [express] GET /api/ticket-counts 200 in 262ms :: {"earlyBirdCount":0,"earlyBirdLimit":50,…
+Failed to get ticket counts: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketCounts [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:578:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:535:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+5:35:42 AM [express] GET /api/ticket-config 200 in 499ms :: {"config":{"earlyBirdPrice":300,"phase1P…
+Failed to get ticket config: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketConfig [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:785:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:534:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+Failed to get ticket counts: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketCounts [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:578:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:535:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+5:35:52 AM [express] GET /api/ticket-config 304 in 461ms :: {"config":{"earlyBirdPrice":300,"phase1P…
+Failed to get ticket config: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketConfig [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:785:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:534:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+Failed to get ticket counts: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketCounts [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:578:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:535:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+5:36:25 AM [express] GET /api/ticket-config 304 in 456ms :: {"config":{"earlyBirdPrice":300,"phase1P…
+Failed to get ticket counts: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketCounts [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:578:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:515:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+5:36:26 AM [express] GET /api/ticket-counts 200 in 230ms :: {"earlyBirdCount":0,"earlyBirdLimit":50,…
+Failed to get ticket config: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketConfig [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:785:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:534:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+Failed to get ticket counts: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketCounts [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:578:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:535:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+5:36:29 AM [express] GET /api/ticket-config 304 in 452ms :: {"config":{"earlyBirdPrice":300,"phase1P…
+Failed to get ticket config: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketConfig [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:785:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:534:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+Failed to get ticket counts: error: The endpoint has been disabled. Enable it using the API and retry.
+    at [90mfile:///home/runner/workspace/[39mnode_modules/[4m@neondatabase/serverless[24m/index.mjs:1345:74
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at async NeonPreparedQuery.execute [90m(/home/runner/workspace/[39mnode_modules/[4msrc[24m/neon-serverless/session.ts:102:18[90m)[39m
+    at async DatabaseStorage.getTicketCounts [90m(/home/runner/workspace/[39mserver/databaseStorage.ts:578:24[90m)[39m
+    at async <anonymous> [90m(/home/runner/workspace/[39mserver/routes.ts:535:22[90m)[39m {
+  length: [33m87[39m,
+  severity: [32m'ERROR'[39m,
+  code: [32m'XX000'[39m,
+  detail: [90mundefined[39m,
+  hint: [90mundefined[39m,
+  position: [90mundefined[39m,
+  internalPosition: [90mundefined[39m,
+  internalQuery: [90mundefined[39m,
+  where: [90mundefined[39m,
+  schema: [90mundefined[39m,
+  table: [90mundefined[39m,
+  column: [90mundefined[39m,
+  dataType: [90mundefined[39m,
+  constraint: [90mundefined[39m,
+  file: [90mundefined[39m,
+  line: [90mundefined[39m,
+  routine: [90mundefined[39m
+}
+5:36:32 AM [express] GET /api/ticket-config 304 in 451ms :: {"config":{"earlyBirdPrice":300,"phase1P…
